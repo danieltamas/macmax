@@ -1,0 +1,21 @@
+Processes: 1000 total, 10 running, 990 sleeping, 9000 threads 
+2026/01/01 10:00:00
+Load Avg: 5.00, 4.00, 3.00 
+CPU usage: 50.00% user, 30.00% sys, 20.00% idle 
+SharedLibs: 500M resident, 100M data, 70M linkedit.
+MemRegions: 1000000 total, 17G resident, 140M private, 5000M shared.
+PhysMem: 60G used (10G wired, 28G compressor), 100M unused.
+VM: 500T vsize, 5000M framework vsize, 50000000(0) swapins, 60000000(0) swapouts.
+Networks: packets: 1000000/1G in, 2000000/2G out.
+Disks: 1000000/90T read, 2000000/15T written.
+
+Processes: 1000 total, 12 running, 988 sleeping, 9000 threads 
+2026/01/01 10:00:02
+Load Avg: 6.00, 4.50, 3.10 
+CPU usage: 10.00% user, 5.00% sys, 85.00% idle 
+SharedLibs: 500M resident, 100M data, 70M linkedit.
+MemRegions: 1000000 total, 17G resident, 140M private, 5000M shared.
+PhysMem: 61G used (10G wired, 28G compressor), 90M unused.
+VM: 500T vsize, 5000M framework vsize, 50000100(0) swapins, 60000200(0) swapouts.
+Networks: packets: 1000100/1G in, 2000200/2G out.
+Disks: 1000100/90T read, 2000200/15T written.

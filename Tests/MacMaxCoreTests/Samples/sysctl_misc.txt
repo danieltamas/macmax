@@ -1,0 +1,5 @@
+kern.memorystatus_level: 40
+hw.memsize: 68719476736
+hw.ncpu: 10
+kern.boottime: { sec = 1780000000, usec = 0 } Sat May 29 00:00:00 2026
+vm.loadavg: { 5.00 4.00 3.00 }

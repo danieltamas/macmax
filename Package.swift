@@ -11,6 +11,6 @@ let package = Package(
         // Installed as `macmax`. Named MacMaxCLI because `macmax` collides with `MacMax` on a
         // case-insensitive disk; scripts/bundle.sh renames the binary.
         .executableTarget(name: "MacMaxCLI", dependencies: ["MacMaxCore"]),
-        .testTarget(name: "MacMaxCoreTests", dependencies: ["MacMaxCore"]),
+        .testTarget(name: "MacMaxCoreTests", dependencies: ["MacMaxCore"], exclude: ["Samples"]),
     ]
 )

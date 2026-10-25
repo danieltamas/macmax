@@ -1,0 +1,6 @@
+Note: No thermal warning level has been recorded
+Note: CPU performance limited
+CPU Power notify
+	CPU_Scheduler_Limit 	= 100
+	CPU_Available_CPUs 	= 8
+	CPU_Speed_Limit 	= 72

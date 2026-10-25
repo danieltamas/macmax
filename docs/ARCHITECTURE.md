@@ -65,17 +65,17 @@ source fails its proof, pick the fallback, update this table and PLAN.md, and te
 
 | Reading | Source | Status | Fallback |
 |---------|--------|--------|----------|
-| CPU total and per core | `host_processor_info(PROCESSOR_CPU_LOAD_INFO)` tick deltas | verify in U1 | `top -l 2 -n 0` header |
+| CPU total and per core | `host_processor_info(PROCESSOR_CPU_LOAD_INFO)` tick deltas | verified in U1 | `top -l 2 -n 0` header |
 | Load, cores, uptime | `getloadavg`, `sysctl hw.ncpu hw.perflevel0.logicalcpu kern.boottime` | verified (mac-audit) | none needed |
-| Memory used, wired, compressed, free | `host_statistics64(HOST_VM_INFO64)` | verify in U1 | `vm_stat` (verified) |
+| Memory used, wired, compressed, free | `host_statistics64(HOST_VM_INFO64)` | verified in U1 | `vm_stat` (verified) |
 | Swap used | `sysctl vm.swapusage` | verified (mac-audit) | none |
-| Swap-ins per second | `vm_statistics64.swapins` deltas | verify in U1 | `vm_stat` deltas (verified) |
+| Swap-ins per second | `vm_statistics64.swapins` deltas | verified in U1 | `vm_stat` deltas (verified) |
 | Memory pressure level | `sysctl kern.memorystatus_level` | verified (mac-audit) | `memory_pressure -Q` |
-| Disk free | `URLResourceValues.volumeAvailableCapacityForImportantUsage` on `/` | verify in U1 | `df -k /` (verified) |
-| Disk IO bytes and ops | IOKit `IOBlockStorageDriver` "Statistics" deltas | verify in U1 | `iostat -d -c 2 -w 1` (verified) |
+| Disk free | `URLResourceValues.volumeAvailableCapacityForImportantUsage` on `/` | verified in U1 | `df -k /` (verified) |
+| Disk IO bytes and ops | IOKit `IOBlockStorageDriver` "Statistics" deltas, summed over the internal drivers (the boot disk on a Mac with one internal drive; external drives and disk images are excluded) | verified in U1 | `iostat -d -c 2 -w 1` (verified) |
 | Thermal | `ProcessInfo.thermalState`; `pmset -g therm` CPU_Speed_Limit | verified (mac-audit, pmset) | thermalState only |
-| GPU utilization | IOKit `IOAccelerator` PerformanceStatistics "Device Utilization %" | verify in U1 | `unavailable` |
-| Battery, power source | `IOPSCopyPowerSourcesInfo` | verify in U1 | `pmset -g batt` (verified) |
+| GPU utilization | IOKit `IOAccelerator` PerformanceStatistics "Device Utilization %" | verified in U1 | `unavailable` |
+| Battery, power source | `IOPSCopyPowerSourcesInfo` | verified in U1 | `pmset -g batt` (verified) |
 | Process list | `proc_listallpids` | verify in U2 | `ps -axo` (verified) |
 | Pid, ppid, start time, user | `proc_pidinfo(PROC_PIDTBSDINFO)` (`pbi_start_tvsec/usec`) | verify in U2 | `ps -o lstart` |
 | Footprint, CPU time, disk bytes | `proc_pid_rusage(RUSAGE_INFO_V4)` (`ri_phys_footprint`, `ri_user_time`, `ri_system_time`, `ri_diskio_bytes*`) | verify in U2, including EPERM on root processes | `ps -o rss,time` (rss, not footprint: label it) |

@@ -1,6 +1,6 @@
 # MacMax plan
 
-Status: U0 is done on branch `u0-skeleton` (2026-10-25); start at U1. D9 decided: the gauge icon (2026-10-25); the palette derives from it.
+Status: U0 and U1 are done (2026-10-25); start at U2. D9 decided: the gauge icon (2026-10-25); the palette derives from it.
 Open decisions (bottom of this file) are asked when the unit that needs them starts.
 
 ## What it is
