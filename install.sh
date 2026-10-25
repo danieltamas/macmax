@@ -80,15 +80,15 @@ stage_cli() {
 take_lock() {
   lock="${TMPDIR:-/tmp}/macmax-install.lock"
   ln -s "$$" "$lock" 2>/dev/null && return
-  mkdir "$lock.takeover" 2>/dev/null || fail "another MacMax install is running"
+  mkdir "$lock.takeover" 2>/dev/null || fail "another MacMax install is running (or a crashed one left $lock*: remove it)"
   local other
   other=$(readlink "$lock" || true)
   if [[ $other =~ ^[0-9]+$ ]] && kill -0 "$other" 2>/dev/null; then
     rmdir "$lock.takeover"
-    fail "another MacMax install is running"
+    fail "another MacMax install is running (or a crashed one left $lock*: remove it)"
   fi
   rm -f "$lock"
-  ln -s "$$" "$lock" 2>/dev/null || { rmdir "$lock.takeover"; fail "another MacMax install is running"; }
+  ln -s "$$" "$lock" 2>/dev/null || { rmdir "$lock.takeover"; fail "another MacMax install is running (or a crashed one left $lock*: remove it)"; }
   rmdir "$lock.takeover"
 }
 

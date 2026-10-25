@@ -34,8 +34,9 @@ public struct ProcessRunner: Sendable {
         process.standardError = stderr
         let (exits, exited) = AsyncStream<Void>.makeStream()
         process.terminationHandler = { _ in exited.finish() }
-        // Logged before it runs, so a command that hangs or fails is named in the log.
-        Self.log.info("run \(executable) \(arguments.joined(separator: " ")) timeout \(timeout.description)")
+        // Logged before it runs, so a command that hangs or fails is named in the log. The program is
+        // public; its arguments stay private, since a caller may pass a path or process text.
+        Self.log.info("run \(executable, privacy: .public) \(arguments.joined(separator: " "), privacy: .private) timeout \(timeout.description, privacy: .public)")
         try process.run()
         started?(process.processIdentifier)
 
@@ -48,7 +49,7 @@ public struct ProcessRunner: Sendable {
         // grandchild holding them is stopped at the deadline too. It answers whether it fired.
         let watchdog = Task { () -> Bool in
             do { try await Task.sleep(for: timeout) } catch { return false }
-            Self.log.error("timeout: stopping \(executable) after \(timeout.description)")
+            Self.log.error("timeout: stopping \(executable, privacy: .public) after \(timeout.description, privacy: .public)")
             signal(SIGTERM)
             if (try? await Task.sleep(for: .seconds(2))) != nil { signal(SIGKILL) }
             return true

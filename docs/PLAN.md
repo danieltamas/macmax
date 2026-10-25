@@ -1,6 +1,6 @@
 # MacMax plan
 
-Status: written 2026-10-25, ready for an agent to pick up. Nothing is implemented yet. Start at U0.
+Status: U0 is done on branch `u0-skeleton` (2026-10-25); start at U1. D9 (icon) is still open: the palette and `Brand/icon-app.svg` are provisional.
 Open decisions (bottom of this file) are asked when the unit that needs them starts.
 
 ## What it is
