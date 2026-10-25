@@ -1,6 +1,6 @@
 # MacMax plan
 
-Status: U0 to U4 are done (2026-10-25); start at U5. D9 decided: the gauge icon (2026-10-25); the palette derives from it.
+Status: U0 to U5 are done (2026-10-25); start at U6. D9 decided: the gauge icon (2026-10-25); the palette derives from it.
 Open decisions (bottom of this file) are asked when the unit that needs them starts.
 
 ## What it is

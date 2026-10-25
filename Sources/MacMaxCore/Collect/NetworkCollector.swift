@@ -29,7 +29,7 @@ public actor NetworkCollector {
             return await self.collectOne(processes: processes)
         }
         inFlight = task
-        return await task.value
+        return await withTaskCancellationHandler { await task.value } onCancel: { task.cancel() }
     }
 
     private func collectOne(processes: [ProcessSample]) async -> NetworkSnapshot {
@@ -95,6 +95,7 @@ public actor NetworkCollector {
         let mark = stream.currentSequence
         let deadline = DispatchTime.now().uptimeNanoseconds + UInt64(sampleSeconds + 4) * 1_000_000_000
         while DispatchTime.now().uptimeNanoseconds < deadline {
+            if Task.isCancelled { return .failure("the collection was cancelled") }
             if let block = stream.completedBlock(after: mark) { return .success(block) }
             guard stream.isRunning else { return .failure("nettop stopped; it restarts on the next tick") }
             try? await Task.sleep(for: .milliseconds(40))

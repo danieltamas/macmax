@@ -126,13 +126,29 @@ samples(ts INT, cpu_user REAL, cpu_system REAL, mem_used INT, mem_compressed INT
 app_samples(ts INT, app_key TEXT, cpu REAL, footprint INT, disk_read_bps REAL, disk_write_bps REAL,
             net_in_bytes INT, net_out_bytes INT, procs INT)               -- top 40 apps per tick
 proc_samples(ts INT, pid INT, start_us INT, app_key TEXT, name TEXT, cpu REAL, footprint INT)
-samples_1m, app_samples_1m, samples_1h, app_samples_1h                    -- same columns, avg/max/sum
+samples_1m, app_samples_1m, samples_1h, app_samples_1h                    -- same columns as averages, plus n, maxima and byte sums
 identity(ts INT, public_ip TEXT, public_cc TEXT, isp_ip TEXT, isp_cc TEXT, vpn_service TEXT,
          vpn_state TEXT, route_tunnel INT, verdict TEXT)                  -- on change only
 audits(id INTEGER PRIMARY KEY, ts INT, verdict TEXT, duration_ms INT, snapshot_json TEXT)
 findings(audit_id INT, rule_id TEXT, severity TEXT, title TEXT, evidence_json TEXT)
 actions(ts INT, kind TEXT, target TEXT, result TEXT, detail TEXT)
 ```
+
+Rollup tables (U5): `samples_1m`/`_1h` hold `ts` (bucket start), `n` (raw rows), each `samples` column as the
+average over its non-NULL values, and `cpu_max`, `mem_used_max`, `net_in_bps_max`, `net_out_bps_max`. The
+`app_samples_*` tables hold `(ts, app_key)`, `n`, averaged cpu, footprint and disk rates, summed
+`net_in_bytes`/`net_out_bytes`, `procs` as a maximum, `cpu_max` and `footprint_max`. An hour is built from its
+minutes weighted by `n`; a bucket is rolled up only when complete, so rollup is idempotent. Completeness is per
+`(ts, app_key)`, and an hour waits until every raw minute in it is rolled. Rows added later to a bucket that already
+exists are not folded in: a tick is stamped when it starts and written seconds later, so whoever schedules
+`rollup(now:)` must pass `now` 60 s behind the clock (`Sampler` does not call it). Tick seconds are strictly
+increasing within a process. The `apps` upsert keeps a known `bundle_id` and `path` when a tick has none. The
+database and its `-wal`/`-shm` files are forced to 0600 on open. `app_samples` and
+`proc_samples` are WITHOUT ROWID with the natural key as primary key and no second index: 90 days of synthetic
+samples at the 10 s cadence measured 162 MB (limit 250 MB). A column nobody could read is NULL, never zero.
+The newest schema this build writes is `Database.schemaVersion`; a file with a higher `user_version` opens
+read-only and refuses writes. One sampler tick takes about one nettop interval (2 s) because the network
+reading waits for a fresh block.
 
 Retention: raw 48 hours, 1-minute 14 days, 1-hour 365 days, audits 90 days, actions 365 days.
 Rollup and retention run hourly in bounded batches. Command lines are never stored, only the
