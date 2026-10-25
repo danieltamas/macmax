@@ -154,6 +154,18 @@ Retention: raw 48 hours, 1-minute 14 days, 1-hour 365 days, audits 90 days, acti
 Rollup and retention run hourly in bounded batches. Command lines are never stored, only the
 redacted short form in `proc_samples.name` when needed for display.
 
+## Audit
+
+`AuditRunner` samples the system and processes for three seconds, reads the network identity (the public IP
+check only when asked) and `AuditProbes` (zombies, kernel_task and daemons from one `top` window, Docker VM
+and containers, report counts, launch items, Homebrew prefixes), then `AuditSnapshotBuilder` reduces them to
+an immutable `AuditSnapshot` (docs/RULES.md, "Building the snapshot"). `AuditEngine.evaluate` is a pure
+function of the snapshot, the thresholds and the disabled rules. `AuditService` is the actor around it: one
+audit at a time (a second caller joins the running one), a scheduled loop, a pressure trigger on entering
+critical at most once per gap, the previous audit from the database (else from memory) for the notification
+diff, and a failed write reported in the result without failing the audit. `macmax audit` runs the runner once
+and never writes the database.
+
 ## Settings
 
 `~/.macmax/config.json`, read before every write, validated on load with every number bounded
@@ -165,7 +177,8 @@ Every key is editable in Settings; the file exists for backup and for the CLI.
 
 `macmax <command> [--json]`, one `do { } catch { print the message; exit 3 }` around the switch so
 a missing tool prints a sentence. Commands and JSON shapes: `docs/AGENT-API.md`. Exit codes: 0 OK,
-1 WARN present (audit), 2 CRIT present (audit), 3 error, 64 usage.
+1 WARN present (audit), 2 CRIT present (audit), 3 audit verdict unknown (no rule could be evaluated), 64 usage,
+70 the output could not be encoded.
 
 ## Concurrency
 
