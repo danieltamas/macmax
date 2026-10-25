@@ -33,16 +33,15 @@ written to `~/.macmax`.
 
 | File | What | Size (points) |
 |------|------|---------------|
-| `icon.png` | The app icon, for the README header | 128 x 128 |
-| `hero.png` | Overview and Network panels side by side over the backdrop, slight overlap | about 860 x 640 |
+| `icon.png` | (README unit, not rendered by U7) The app icon, for the README header | 128 x 128 |
+| `hero.png` | (README unit, not rendered by U7) Overview and Network panels side by side over the backdrop, slight overlap | about 860 x 640 |
 | `overview.png` | Overview: verdict WARN with two findings, vitals tiles, identity card (`tunnel_ok`) | 404 x panel height |
 | `apps.png` | Apps sorted by memory, the browser row expanded to its processes | 404 x panel height |
 | `network.png` | Network, 1 hour window, eight apps, interface totals | 404 x panel height |
 | `findings.png` | Findings: one CRIT (Docker VM compressed), two WARN (stale agent sessions, swap) | 404 x panel height |
-| `history.png` | History, 24 hours, a memory spike with "who held it" open | 404 x panel height |
+| `history.png` | (U8, History is not built yet) History, 24 hours, a memory spike with "who held it" open | 404 x panel height |
 | `leak.png` | The identity card in the `leak` state | 404 x card height |
-| `settings.png` | Settings > Audit with the rule list | 760 x 540 |
-| `agent.png` | Settings > Agent access with the MCP line | 760 x 540 |
+| `settings-<pane>.png` | One per Settings pane (general, audit, network, cleanup, agent-access, permissions, about); `settings-audit.png` shows the rule list | 760 x 540 |
 
 ## Synthetic data (the demo store)
 

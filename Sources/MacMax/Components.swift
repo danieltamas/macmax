@@ -116,6 +116,8 @@ extension EnvironmentValues {
     /// Drawn once into an image (the README's screenshots): `ImageRenderer` draws no scroll
     /// view's content and runs no appear animation, so lists lay out flat and fully shown.
     @Entry var stillImage = false
+    /// The README's fixed clock: relative times read the same in every render.
+    @Entry var demoNow: Date?
 }
 
 /// A dot that breathes while something runs. The breath is a Core Animation loop, run by the
@@ -467,9 +469,10 @@ struct AppControls: View {
 struct RelativeTime: View {
     let date: Date
     var format: (String) -> String = { $0 }
+    @Environment(\.demoNow) private var demoNow
 
     var body: some View {
-        TimelineView(.everyMinute) { context in Text(format(Self.text(date, now: context.date))) }
+        TimelineView(.everyMinute) { context in Text(format(Self.text(date, now: demoNow ?? context.date))) }
     }
 
     static func text(_ date: Date, now: Date) -> String {

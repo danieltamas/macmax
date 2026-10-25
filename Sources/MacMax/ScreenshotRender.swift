@@ -10,16 +10,36 @@ enum ScreenshotRender {
     /// `--look solidGlass` draws in another look; the saved choice is neither used nor changed.
     static let lookFlag = "--look"
 
-    static func render(to directory: URL, look: Look = .macmax) throws {
-        Appearance.shared.look = look
+    static let allLooksFlag = "--all-looks"
+    static let stressFlag = "--stress"
+
+    /// Every shot of docs/SCREENSHOTS.md that the app draws, in the chosen look (or all three), optionally with the
+    /// longest names and largest values to check that nothing wraps.
+    static func render(to directory: URL, look: Look = .macmax, allLooks: Bool = false, stress: Bool = false) throws {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        try write(EmptyPanel(), to: directory.appendingPathComponent("empty-panel.png"))
+        for look in allLooks ? Look.allCases : [look] {
+            Appearance.shared.look = look
+            let suffix = look == .macmax || !allLooks ? "" : look == .solidGlass ? "-solid-glass" : "-solid-glass-light"
+            func url(_ name: String) -> URL { directory.appendingPathComponent("\(name)\(suffix).png") }
+            for tab in PanelTab.allCases {
+                let model = DemoStore.model(stress: stress)
+                model.tab = tab
+                if tab == .network { model.window = .hour }
+                try write(PanelView(model: model).frame(height: 780), to: url(tab.rawValue.lowercased()))
+            }
+            let leak = DemoStore.model(stress: stress, leak: true)
+            try write(IdentityCardView(model: leak).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("leak"))
+            for pane in SettingsPane.allCases {
+                let model = DemoStore.model(stress: stress)
+                try write(SettingsView(model: { model.settingsPane = pane; return model }()).frame(width: 760, height: 540), to: url("settings-\(pane.rawValue.lowercased().replacingOccurrences(of: " ", with: "-"))"))
+            }
+        }
     }
 
     /// An offscreen window, not `ImageRenderer`: that one leaves text fields and other
     /// AppKit-backed controls as placeholders.
     private static func write(_ view: some View, to url: URL) throws {
-        let host = NSHostingView(rootView: view.environment(\.stillImage, true))
+        let host = NSHostingView(rootView: view.environment(\.stillImage, true).environment(\.demoNow, DemoStore.now))
         host.frame.size = host.fittingSize
         let window = NSWindow(contentRect: host.frame, styleMask: .borderless, backing: .buffered, defer: false)
         window.contentView = host
@@ -34,14 +54,5 @@ enum ScreenshotRender {
         host.cacheDisplay(in: host.bounds, to: bitmap)
         guard let png = bitmap.representation(using: .png, properties: [:]) else { throw CocoaError(.fileWriteUnknown) }
         try png.write(to: url, options: .atomic)
-    }
-}
-
-/// The panel before any tab exists (U7 replaces it): the canvas at the panel's width.
-struct EmptyPanel: View {
-    var body: some View {
-        EmptyState(symbol: "gauge.with.dots.needle.33percent", title: "MacMax", detail: "Nothing measured yet.")
-            .frame(width: 404, height: 300)
-            .background(Backdrop())
     }
 }

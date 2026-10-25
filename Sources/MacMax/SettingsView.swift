@@ -3,28 +3,44 @@ import MacMaxCore
 import ServiceManagement
 import SwiftUI
 
-/// The panes of the Settings window, in the order of docs/DESIGN.md. A unit adds its pane here.
+/// The panes of the Settings window, in the order of docs/DESIGN.md.
 enum SettingsPane: String, CaseIterable, Identifiable {
-    case general = "General"
+    case general = "General", audit = "Audit", network = "Network", cleanup = "Cleanup"
+    case agent = "Agent access", permissions = "Permissions", about = "About"
 
     var id: String { rawValue }
 
     var symbol: String {
         switch self {
         case .general: "slider.horizontal.3"
+        case .audit: "checklist"
+        case .network: "network"
+        case .cleanup: "trash"
+        case .agent: "terminal"
+        case .permissions: "lock.shield"
+        case .about: "info.circle"
         }
     }
 
     @MainActor var color: Color {
         switch self {
-        case .general: Theme.teal
+        case .general, .agent: Theme.teal
+        case .audit: Theme.warn
+        case .network: Theme.netIn
+        case .cleanup: Theme.disk
+        case .permissions: Theme.unknown
+        case .about: Theme.neutral
         }
     }
 }
 
 /// MacMax's settings window: every setting is edited in place and saved as it changes.
 struct SettingsView: View {
-    @State private var selection = SettingsPane.general
+    let model: PanelModel
+    private var selection: SettingsPane {
+        get { model.settingsPane }
+        nonmutating set { model.settingsPane = newValue }
+    }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -45,7 +61,13 @@ struct SettingsView: View {
 
     @ViewBuilder private var pane: some View {
         switch selection {
-        case .general: GeneralPane()
+        case .general: GeneralPane(model: model)
+        case .audit: AuditPane(model: model)
+        case .network: NetworkPane(model: model)
+        case .cleanup: CleanupPane()
+        case .agent: AgentPane()
+        case .permissions: PermissionsPane()
+        case .about: AboutPane()
         }
     }
 
@@ -90,50 +112,3 @@ struct SettingsView: View {
     }
 }
 
-private struct GeneralPane: View {
-    @State private var problem: String?
-    @State private var opensAtLogin = SMAppService.mainApp.status == .enabled
-    private let home = MacMaxHome()
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            PaneHeader(pane: .general, title: "General", detail: "How MacMax looks and when it opens.")
-            SettingsCard(title: "Theme", detail: "How the panel and this window look. A colour means the same in each.") {
-                HStack(spacing: 6) {
-                    ForEach(Look.allCases) { look in
-                        SegmentChip(title: look.title, selected: Appearance.shared.look == look) {
-                            withAnimation(Motion.gentle) { Appearance.shared.choose(look) }
-                        }
-                    }
-                }
-            }
-            SettingsCard(title: "Open at login", detail: "MacMax only measures while it runs.") {
-                Toggle("Open MacMax when you log in", isOn: Binding(get: { opensAtLogin }, set: { setOpensAtLogin($0) }))
-                    .toggleStyle(.switch).tint(Theme.teal)
-                    .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
-            }
-            SettingsCard(title: "Data folder", detail: "History and logs on this Mac.") {
-                HStack {
-                    Text(home.url.path).font(.system(size: 11.5, design: .monospaced)).foregroundStyle(Theme.textSecondary)
-                        .lineLimit(1).truncationMode(.middle)
-                    Spacer()
-                    PillButton(title: "Show in Finder", symbol: "arrow.up.right", prominent: false) {
-                        try? home.prepare()
-                        NSWorkspace.shared.activateFileViewerSelecting([home.url])
-                    }
-                }
-            }
-            if let problem { ProblemText(text: problem) }
-        }
-    }
-
-    private func setOpensAtLogin(_ on: Bool) {
-        do {
-            if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
-            problem = nil
-        } catch {
-            problem = "macOS refused: \(error.localizedDescription) MacMax must run from an Applications folder."
-        }
-        opensAtLogin = SMAppService.mainApp.status == .enabled
-    }
-}
