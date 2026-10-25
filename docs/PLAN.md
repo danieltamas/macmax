@@ -1,6 +1,6 @@
 # MacMax plan
 
-Status: U0 to U5 are done (2026-10-25); start at U6. D9 decided: the gauge icon (2026-10-25); the palette derives from it.
+Status: U0 to U5 are done (2026-10-25); U6 is built and reviewed. D9 decided: the gauge icon (2026-10-25); the palette derives from it.
 Open decisions (bottom of this file) are asked when the unit that needs them starts.
 
 ## What it is
@@ -407,4 +407,4 @@ Acceptance: `scripts/acceptance.sh` exits 0 (see Measured by).
 | D7 | Homebrew cask | Own tap now, later, never | After v0.1.0, in `danieltamas/homebrew-tap`. | open (owner) |
 | D8 | Planning docs in the public repo | Publish all of `docs/`; keep PLAN, LESSONS and ARCHITECTURE local like Bton | Publish all: they are the contributor guide and hold nothing private (no client names, no real IPs). The GitHub repo already exists and is public, so the first push publishes them, and a README whose images do not exist until U7 (its status line says nothing is released). | open (owner) |
 | D9 | App icon | The implementing agent draws `Brand/*.svg`; the owner supplies or commissions one | The owner supplies it or approves one of three SVG drafts the agent renders in U0, since the palette derives from it. | gauge icon (A), owner 2026-10-25 |
-| D10 | `mac-audit.sh` in this repo | Vendor it into `scripts/` (the owner's own work, MIT); keep it private | Vendor it, so parity runs for anyone and the port is verifiable. | open (owner) |
+| D10 | `mac-audit.sh` in this repo | Vendor it into `scripts/` (the owner's own work, MIT); keep it private | Vendor it, so parity runs for anyone and the port is verifiable. | decided 2026-10-25: keep it private. `parity.sh` reads `$MAC_AUDIT_SH` or `~/agent-os/skills/mac-audit/bin/mac-audit.sh` and skips when absent |

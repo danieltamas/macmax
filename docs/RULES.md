@@ -11,21 +11,25 @@ names (`T_*`) are kept as the default-threshold keys so the two stay comparable.
 
 ## Rule schema
 
-Rules are data in `Sources/MacMaxCore/Rules/RuleSet.swift`, one entry per rule:
+Rules are data in `Sources/MacMaxCore/Rules/` (`RuleSet.all`, in evaluation order), one entry per rule:
 
 ```swift
 struct Rule: Sendable {
     let id: String                 // stable, snake_case, never reused
     let title: String              // plain words, the user's view
-    let inputs: [ReadingKey]       // readings it needs; any failed -> finding is .unknown
     let thresholds: [Threshold]    // key (T_* name), default, unit, bounds for Settings
-    let evaluate: @Sendable (Snapshot, ResolvedThresholds) -> Outcome   // pure
     let why: String                // one line: why it slows the Mac
-    let action: RuleAction?        // what the app can do about it, if anything
-    let scriptPrefix: String?      // mac-audit.sh message prefix, for parity
+    let action: String?            // the next step or what the app can do, if anything
+    let scriptPattern: String?     // anchored regex of the mac-audit.sh message, for parity
+    let evaluate: @Sendable (AuditSnapshot, ResolvedThresholds) -> Outcome   // pure
 }
-enum Outcome { case pass, info(Evidence), warn(Evidence), crit(Evidence), unknown(reason: String) }
+enum Outcome { case pass, info(title:evidence:), warn(...), crit(...), unknown(reason: String) }
 ```
+
+A rule reads `Measure` fields of the snapshot (below): `ok(value)`, `unavailable` (this Mac lacks it:
+the rule passes as not applicable) and `failed` (could not be read: the rule is `unknown`). A rule
+sorts anything it lists as evidence (by value descending, then name), so the order of an array in the
+snapshot never changes the output.
 
 - Evaluation is pure over one immutable snapshot. Findings are ordered CRIT, WARN, INFO, then by
   rule order in the set; the same snapshot always yields byte-identical JSON.
@@ -35,12 +39,64 @@ enum Outcome { case pass, info(Evidence), warn(Evidence), crit(Evidence), unknow
 - Thresholds are editable per rule in Settings > Audit within their bounds; the default is shown
   next to the field; a rule can be turned off.
 
+## Inputs: the audit snapshot
+
+An audit evaluates one immutable `AuditSnapshot`: a flat, `Sendable`, `Codable` struct of readings
+already reduced to what the rules compare, built by `AuditSnapshotBuilder` from the per-tick
+collectors plus one audit-time probe pass. Rounding follows the script before the comparison (uptime
+floor days, swap one decimal of GB, compressor and disk free whole percent), so parity differs only by
+live drift. The stored `snapshot_json` is this struct: it carries no argv, cwd, tty or path.
+
+`unavailable` (this Mac does not have it, such as no Docker) makes a rule pass as not applicable;
+`failed` makes it `unknown` with the reason. A snapshot field nobody filled is `failed("not collected")`.
+
+| Snapshot field | Source | Rules |
+|----------------|--------|-------|
+| `uptimeDays`, `load5`, `coreCount` (`hw.ncpu`, the script's base), `cpuIdlePercent` | `SystemSnapshot` | uptime, load, cpu_idle |
+| `swapUsedGB`, `swapInsPerSecond` (pages/s), `compressorPercent`, `memoryLevel` (`kern.memorystatus_level`) | `SystemSnapshot` | swap_used, swap_in_rate, compressor, memory_level |
+| `diskFreePercent`, `diskIOPS`, `cpuSpeedLimit` | `SystemSnapshot` | disk_free, disk_iops, thermal_limit |
+| `processCount`, `chromeProcesses`, `claudeSessionAgesDays`, `mcpSidecars`, `apps` (grouped footprint) | `[ProcessSample]` and app grouping | process_count, chrome_processes, claude_stale, mcp_sidecars, big_apps |
+| `zombies` | probe: `ps -Axo stat=` count of `Z` | zombies |
+| `kernelTaskCPU`, `daemonResidentMB` (fseventsd, WindowServer, Finder, mds_stores) | probe: `top -l 2 -s 3 -pid` (rusage is EPERM for root processes) | kernel_cpu, daemon_bloat |
+| `dockerVMCompressedGB`, `containerCPU` | probe: `top -pid <VM>`, `docker stats --no-stream` | docker_vm_compressed, docker_hot_containers |
+| `crashReports7d`, `jetsam7d`, `launchItems` | probe: file counts (a denied folder is `failed`: could not check) | crash_reports, jetsam, launch_items |
+| `brewInstalls` | probe: brew prefixes and their architecture | brew_under_rosetta |
+| `translatedProcesses` (last 3 CPU samples) | sampler ring (not wired until the UI unit: `unavailable`) | translated_hot |
+| `identity` (verdict, VPN state, public IP and country) and `previousPublicIP` | `NetworkIdentity`, last stored audit | vpn_leak, vpn_expected_down, ip_changed |
+| `appGrowth` (footprint now and one hour ago, CPU) | store (`app_samples`) | memory_growth |
+
+## Findings, evidence and output
+
+A rule with two severities yields one finding at the higher one (like the script). Evidence is an ordered
+list of `(key, value)` strings so the JSON is byte-identical:
+
+- Threshold rules: `("value", v)` then `("threshold", t)`. Integers print as `%d`, other numbers as
+  `%.1f`, except `load` (`%.2f`; its threshold is cores x the multiplier, plus `("cores", n)` third).
+  `cpu_idle` and `disk_free` compare "below"; the rest "above" or "at least" exactly as in the table.
+- List rules put `("threshold", t)` first, then one item per entry sorted by value descending, then name:
+  `docker_hot_containers` (`name`, `"%.1f%%"`), `daemon_bloat` (`name`, MB as `%d`), `big_apps` (`name`, MB as
+  `%d`), `translated_hot` (`name (app)`, last CPU as `%.1f`), `memory_growth` (`name`, `"+<MB> MB"`).
+  `claude_stale` gives `("value", stale count)`, `("threshold", T_CLAUDE_WARN_N)`, `("total", sessions)`,
+  `("oldest_days", n)`. `brew_under_rosetta`, `vpn_leak`, `vpn_expected_down` and `ip_changed` give facts
+  (`("verdict", ...)`, `("previous", ip country)`, `("current", ip country)`).
+- A finding's `title` is a plain sentence containing the rounded value; `why` and `action` come from the rule.
+
+JSON (`AuditJSON.encode`): `JSONEncoder` with `.sortedKeys` and `.convertToSnakeCase`, UTF-8, no
+pretty printing; severities and verdicts are the strings `crit`, `warn`, `info`, `ok`, `unknown`. The CLI
+prints the report with `source`, `generated_at`, `data_note`, `rules` (id, title and script pattern of every rule)
+and `summary` (`uptime_d`, `claude_stale`, `procs`, `swap_gb`, `disk_free_pct`, `crit`, `warn`; a number the audit
+could not read is left out) added (docs/AGENT-API.md) and exits
+0 for `ok` and `info` only, 1 for `warn`, 2 for `crit`, 3 for `unknown` (no rule could be evaluated).
+
+Notifications: `NotificationDiff.changes(previous:current:)` returns findings of `current` that are new
+or have a higher severity than the same rule in `previous`. With no previous audit only `crit` findings.
+
 ## Ported rules
 
 `>` and `>=` are exactly as in the script. Units as stored. Sample windows: 3 s live sample like
 the script's `T_SAMPLE_S`, taken from the sampler's last ticks when available.
 
-| id | Severity and condition (defaults) | Threshold keys | Script prefix | Action |
+| id | Severity and condition (defaults) | Threshold keys | Script message (pattern in RuleSet) | Action |
 |----|-----------------------------------|----------------|---------------|--------|
 | `uptime` | CRIT days >= 30; WARN days >= 14 | T_UPTIME_CRIT_D, T_UPTIME_WARN_D | `Uptime` | Next step: reboot after closing stale sessions |
 | `load` | CRIT load5 > cores x 2; WARN load5 > cores x 1 | T_LOAD_CRIT_X, T_LOAD_WARN_X | `Load` | Open Apps sorted by CPU |
@@ -77,19 +133,60 @@ tested on its own fixtures.
 |----|------------------------|-----|--------|
 | `brew_under_rosetta` | WARN on Apple Silicon when `/usr/local/bin/brew` is an x86_64 install and `/opt/homebrew` has none | Every brew tool runs translated and slower; native installs are skipped | Next step: install native Homebrew in `/opt/homebrew`, link to the guide |
 | `translated_hot` | WARN any process under Rosetta above 10% CPU for 3 samples | Translated code costs extra CPU and battery | Shows the process and its app |
-| `vpn_leak` | CRIT identity verdict `leak` | The VPN says connected but traffic leaves outside it | Open Network; next step: reconnect the VPN |
+| `vpn_leak` | CRIT identity verdict `leak`; verdict `unknown` (a read failed) is `unknown`; verdict `off` (IP check disabled) is not applicable | The VPN says connected but traffic leaves outside it | Open Network; next step: reconnect the VPN |
 | `vpn_expected_down` | WARN a VPN the user marked "should be on" is disconnected (off by default) | Traffic is not protected | Open Network |
 | `ip_changed` | INFO public IP or its country changed since the last audit | Know when the VPN exit or the network changed | none |
 | `memory_growth` | WARN an app's footprint grew by more than 1 GB and 50% over 1 hour while its CPU stayed under 5% | A likely leak; relaunching frees it | Quit app (relaunch) |
 
 New rules need their own golden fixtures, and their thresholds have bounds in Settings like the rest.
 
+## Building the snapshot
+
+`AuditSnapshotBuilder.build` is a pure function of `AuditInputs` (docs above) and applies these reductions,
+the script's own roundings first:
+
+- `timestamp` = whole epoch seconds of `now`. `uptimeDays` = whole days, rounded down. `swapUsedGB` = GB
+  (2^30) to one decimal, ties to even. `compressorPercent` and `diskFreePercent` = whole percent, ties to
+  even (`diskFreePercent` is free / total of the data volume; a zero total is `failed`). `diskIOPS` = read plus
+  write operations per second. `cpuSpeedLimit` = the thermal limit, 100 when pmset reported none.
+  `memoryLevel` = the pressure reading's `availablePercent`; `ramBytes` = physical memory.
+- From the process list: `processCount`; `chromeProcesses` = processes whose path contains `Google Chrome`;
+  `claudeSessionAgesDays` = whole days since start (never negative) of processes whose path ends in `/claude`
+  or matches `/claude/versions/<digits and dots>`; `mcpSidecars` = processes whose redacted argv joined by
+  spaces matches `supergateway|playwright-mcp|@playwright/mcp|server-pdf|context7|mcp-remote|mcp-wrapper|npm exec`
+  (a process whose argv could not be read does not match). If the process list itself is not `ok`, all of
+  these are `failed` with its reason.
+- `apps`: footprint summed per app (`AppGrouping`), a process without a footprint adds nothing.
+  `translatedProcesses`: processes with `isTranslated` true, app = their group's name, `cpuSamples` = the last
+  three of `cpuHistory[identity]`; when `cpuHistory` is empty and any process is translated the field is
+  `failed("CPU history not collected")`; with no translated process it is `ok([])`.
+- `appGrowth`: apps present now and in `footprintOneHourAgo` (by app key), with the CPU summed over the app's
+  processes; an app with any process whose CPU is not `ok` is left out (a growth we cannot call idle is not
+  reported). `footprintOneHourAgo` not `ok` gives the same outcome kind (`failed` or `unavailable`).
+- `identity`: `vpnConnected` is true when any VPN service is `connected`; the field is `failed` when the
+  services reading is `failed`, `failed("network identity not collected")` when `identity` is nil.
+  `publicIP`/`publicCountry` come from the public IP reading when it is ok, else nil. `previousIdentity`:
+  `unavailable("first audit")` without `previous`; `unavailable` when the previous snapshot had no public IP.
+- Rounding snaps to six decimals before the tie rule applies, so a byte count a few bytes short of a tie still
+  counts as the tie (the script reads decimal text, which has no such error).
+- `disk_free` reads the data volume's plain available capacity (what `df` reports), not the important-usage
+  figure of the Overview, which adds purgeable space: a nearly full disk must not hide behind space the system
+  may not give back. `claude_stale` counts a process whose binary was replaced by an update (no readable path)
+  by its kernel command name, `claude` or a version number, as the script's `ps` does.
+- The top probe samples a 3 second window (`top -l 2 -s 3`), like the script. kernel_task CPU swings widely on
+  a Mac that is swapping (37 to 169 percent within a minute was measured) and the two tools sample about 40
+  seconds apart, so `kernel_cpu` near its threshold can differ between them.
+- `vpn_leak`: a `leak` verdict is CRIT, `unknown` makes the rule unknown with a reason, `off` is not applicable.
+- Probe fields are copied as they are, except that `NamedValue` names go through `Redaction.sanitizeText`.
+- A `Reading` that is not ok keeps its kind (`unavailable` stays `unavailable`, `failed` stays `failed`) and its
+  reason in the matching field.
+
 ## Parity with mac-audit.sh
 
 `scripts/parity.sh` (U6) runs, outside the Claude Code sandbox:
 1. `mac-audit.sh -o $tmp/report.md --json-summary` and `macmax audit --json` within 60 seconds.
 2. Parses the script's verdict list (`N. [CRIT] message -> action`) and maps each line to a rule id
-   by the `scriptPrefix` column above.
+   by the rule's `scriptPattern` (an anchored regex on the message after `[SEV] `, defined once in `RuleSet`).
 3. Passes when every (rule id, severity) the script reports is reported by MacMax, except a rule
    whose measured value is within 5 percent of its threshold in either tool (live samples differ by
    seconds); those are printed as "near threshold" and do not fail.

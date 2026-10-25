@@ -124,7 +124,7 @@ macmax snapshot            # verdict, vitals, top apps, IP and VPN
 macmax apps --by memory    # apps by CPU, memory, disk or network
 macmax network --window 1h # traffic per app
 macmax ip                  # public IP, ISP IP, VPN state, leak verdict
-macmax audit               # a fresh audit; exits 0 OK, 1 WARN, 2 CRIT
+macmax audit               # a fresh audit; exits 0 OK, 1 WARN, 2 CRIT, 3 unknown
 macmax history swap --range 7d
 macmax mcp                 # the read-only agent server on stdio
 ```
