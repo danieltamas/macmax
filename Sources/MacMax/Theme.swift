@@ -28,8 +28,8 @@ enum Theme {
     static var textTertiary: Color { palette.textTertiary }
 
     // Brand
-    static var mint: Color { palette.mint }
-    static var blue: Color { palette.blue }
+    static var teal: Color { palette.teal }
+    static var dialLight: Color { palette.dialLight }
     static var brand: LinearGradient { palette.brand }
 
     // Signals
@@ -80,9 +80,9 @@ struct Backdrop: View {
         ZStack {
             Theme.canvas
             if Theme.lit {
-                RadialGradient(colors: [Theme.blue.opacity(0.22), .clear], center: .init(x: 0.1, y: -0.05),
+                RadialGradient(colors: [Theme.teal.opacity(0.16), .clear], center: .init(x: 0.1, y: -0.05),
                                startRadius: 0, endRadius: 260)
-                RadialGradient(colors: [Theme.mint.opacity(0.12), .clear], center: .init(x: 0.95, y: 0.02),
+                RadialGradient(colors: [Theme.dialLight.opacity(0.07), .clear], center: .init(x: 0.95, y: 0.02),
                                startRadius: 0, endRadius: 220)
             }
         }

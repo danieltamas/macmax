@@ -81,7 +81,7 @@ struct GlassField: View {
             .background(Theme.canvas.opacity(0.7), in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: Radius.control, style: .continuous)
-                    .strokeBorder(focused ? Theme.mint.opacity(0.6) : Theme.hairline, lineWidth: focused ? 1 : 0.5)
+                    .strokeBorder(focused ? Theme.teal.opacity(0.6) : Theme.hairline, lineWidth: focused ? 1 : 0.5)
             }
             .animation(Motion.snappy, value: focused)
     }

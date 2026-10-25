@@ -17,7 +17,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
 
     @MainActor var color: Color {
         switch self {
-        case .general: Theme.mint
+        case .general: Theme.teal
         }
     }
 }
@@ -109,7 +109,7 @@ private struct GeneralPane: View {
             }
             SettingsCard(title: "Open at login", detail: "MacMax only measures while it runs.") {
                 Toggle("Open MacMax when you log in", isOn: Binding(get: { opensAtLogin }, set: { setOpensAtLogin($0) }))
-                    .toggleStyle(.switch).tint(Theme.mint)
+                    .toggleStyle(.switch).tint(Theme.teal)
                     .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
             }
             SettingsCard(title: "Data folder", detail: "History and logs on this Mac.") {

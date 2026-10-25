@@ -106,5 +106,5 @@ Check the test count grows when tests are added. Check the installed build is th
 - **Warn the owner before anything that prompts them** (admin password, keychain, TCC dialogs) and
   never run `sudo`, `sfltool` or `screencapture`.
 - **Decisions are the owner's**: PLAN.md's open decisions (D1 signing, D3 IP endpoint, D4 cleanup,
-  D7 Homebrew, D8 public docs, D9 icon, D10 vendoring mac-audit.sh) are asked as choices with the recommendation first, never assumed.
+  D7 Homebrew, D8 public docs, D10 vendoring mac-audit.sh) are asked as choices with the recommendation first, never assumed.
   Do not create the GitHub repo, push, tag or publish a release without the owner's go.

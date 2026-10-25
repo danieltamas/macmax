@@ -36,7 +36,7 @@ the menu bar icon, notifications). Values are set per palette; names are fixed:
 | Disk | `disk` | Disk free, IO |
 | Download | `netIn` | Bytes in |
 | Upload | `netOut` | Bytes out |
-| Brand | `brand` | Accent, the active tab, selection |
+| Brand | `brand` | Accent, the active tab, selection. In the MacMax look the solid hue is `teal` and the gradient runs teal to green (the other looks set their own neutral values). The icon's amber appears only as the backdrop light (`dialLight`), never in the gradient, on a control or on a status, where it would read as WARN |
 
 A verdict color is never used for a resource, and a resource color never signals health.
 

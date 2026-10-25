@@ -205,8 +205,8 @@ struct StartingLabel: View {
 
     var body: some View {
         HStack(spacing: 5) {
-            PulseDot(color: Theme.mint, pulsing: true)
-            Text("starting").font(.system(size: 10, weight: .medium)).foregroundStyle(Theme.mint).lineLimit(1)
+            PulseDot(color: Theme.teal, pulsing: true)
+            Text("starting").font(.system(size: 10, weight: .medium)).foregroundStyle(Theme.teal).lineLimit(1)
         }
         .help("Starts at the next sync with a free agent slot in \(repo), once no other job holds it")
     }
@@ -377,9 +377,9 @@ struct EmptyState: View {
                 .foregroundStyle(Theme.brand)
                 .frame(width: 54, height: 54)
                 .background(Circle().fill(Theme.core))
-                .overlay(Circle().strokeBorder(LinearGradient(colors: [Theme.mint.opacity(0.5), Theme.blue.opacity(0.1)],
+                .overlay(Circle().strokeBorder(LinearGradient(colors: [Theme.teal.opacity(0.5), Theme.teal.opacity(0.1)],
                                                               startPoint: .top, endPoint: .bottom), lineWidth: 0.75))
-                .shadow(color: Theme.mint.opacity(0.18), radius: 16)
+                .shadow(color: Theme.teal.opacity(0.18), radius: 16)
             VStack(spacing: 4) {
                 Text(title).font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.textPrimary)
                 if let detail {
