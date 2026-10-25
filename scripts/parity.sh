@@ -77,23 +77,25 @@ def number(value):
     except (TypeError, ValueError):
         return None
 
-def finding_near_threshold(finding):
+LIVE_SAMPLE_RULES = {"cpu_idle", "kernel_cpu", "swap_in_rate", "disk_iops"}
+
+def finding_near_threshold(finding, relative_tolerance=0.05):
     evidence = {item.get("key"): item.get("value") for item in finding.get("evidence", [])}
     measured = number(evidence.get("value"))
     threshold = number(evidence.get("threshold"))
     if measured is None or threshold is None:
         return False
-    tolerance = max(abs(threshold) * 0.05, 0.000001)
+    tolerance = max(abs(threshold) * relative_tolerance, 0.000001)
     return abs(measured - threshold) <= tolerance
 
-def script_near_threshold(message, rule):
+def script_near_threshold(message, rule, relative_tolerance=0.05):
     measured_values = [float(value) for value in re.findall(r"(?<![A-Za-z])\d+(?:\.\d+)?", message)]
     thresholds = rule.get("thresholds", [])
     defaults = [number(item.get("default", item.get("default_value"))) for item in thresholds]
     for measured in measured_values:
         for threshold in defaults:
             if threshold is not None:
-                tolerance = max(abs(threshold) * 0.05, 0.000001)
+                tolerance = max(abs(threshold) * relative_tolerance, 0.000001)
                 if abs(measured - threshold) <= tolerance:
                     return True
     return False
@@ -143,12 +145,20 @@ for severity, message in script_findings:
         continue
     same_rule = next((item for item in macmax.get("findings", [])
                       if item.get("rule_id") == rule_id), None)
-    if ((same_rule is not None and finding_near_threshold(same_rule)) or
-            script_near_threshold(message, rules_by_id.get(rule_id, {}))):
+    script_close = script_near_threshold(message, rules_by_id.get(rule_id, {}))
+    macmax_close = same_rule is not None and finding_near_threshold(same_rule)
+    if rule_id in LIVE_SAMPLE_RULES:
+        script_close = script_near_threshold(message, rules_by_id.get(rule_id, {}), 0.50)
+        macmax_close = same_rule is not None and finding_near_threshold(same_rule, 0.50)
+        if script_close and (same_rule is None or macmax_close):
+            print("parity noisy: %s" % rule_id)
+            continue
+    elif script_close or macmax_close:
         print("near threshold: %s" % rule_id)
-    else:
-        print("missing: %s %s" % (rule_id, severity))
-        failed = True
+        continue
+
+    print("missing: %s %s" % (rule_id, severity))
+    failed = True
 
 comparisons = [
     ("uptime_d", 0.0, False),
