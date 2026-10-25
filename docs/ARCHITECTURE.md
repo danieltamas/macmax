@@ -83,9 +83,9 @@ source fails its proof, pick the fallback, update this table and PLAN.md, and te
 | Argv, cwd | `sysctl KERN_PROCARGS2` (argc strings only, never the environment); `proc_pidinfo(PROC_PIDVNODEPATHINFO)`; both `unavailable` for the same root-owned set | verified in U2 | omit (never `ps` full lines into logs) |
 | Rosetta | `kinfo_proc.kp_proc.p_flag & P_TRANSLATED` (0x20000) | verified in U2 | `unavailable` |
 | Compressed memory per process (Docker VM) | `top -l 1 -stats pid,cmprs` (what mac-audit uses) | verified (mac-audit) | `unavailable` |
-| Bytes in and out per process | `/usr/bin/nettop -P -L 1 -x -J bytes_in,bytes_out` | verified | none: `failed` |
-| Same, streaming | `nettop -P -L 0 -s <interval> -x -J bytes_in,bytes_out` (one long-lived child) | verify in U3 | one-shot `-L 1` per tick |
-| Connections of one process | `nettop -m tcp -L 1 -x -n -p <pid>` or `lsof -nP -i -a -p <pid>` | verify in U3 | the other one |
+| Bytes in and out per process, one-shot | `/usr/bin/nettop -P -L 1 -x -J bytes_in,bytes_out` | verified: loses totals of closed sockets, so not used per tick | none: `failed` |
+| Same, streaming | `nettop -P -L 0 -s <interval> -x -J bytes_in,bytes_out` (one long-lived child on a pty, behind an `sh` guard) | verified in U3 | none: `failed` for the tick, restart on the next |
+| Connections of one process | `nettop -m tcp -L 1 -x -n -p <pid>` | verified in U3 | `failed` |
 | VPN services and state | `/usr/sbin/scutil --nc list` | verified (Outline, Tailscale, Pangolin listed) | `unknown` |
 | Default route interface | `route -n get default` (interface `utun*` = tunnel); `NWPathMonitor` for changes | verify in U4 | `unknown` |
 | Public IP, country | `curl https://1.1.1.1/cdn-cgi/trace` (`ip=`, `loc=`) | verified (VPN IP shown, country DE) | `failed`, shown as unknown |

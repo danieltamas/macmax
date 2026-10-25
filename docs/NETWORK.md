@@ -23,26 +23,30 @@ prints a CSV snapshot of every process with network activity since it started:
 reading (its earlier traffic is attributed to "before MacMax looked", not to this interval). A
 counter that went down marks that process's interval `failed`.
 
-**Streaming (verify in U3).** One long-lived child, `nettop -P -L 0 -s <interval> -x -J
-bytes_in,bytes_out` (and `-d` for delta mode if it proves reliable), avoids a process spawn every
-tick. U3's first task is a live test that the stream emits one block per interval, that blocks are
-delimited by the header line, and that deltas match the one-shot method within 5 percent. If not,
-use one `-L 1` run per tick (it took well under a second on the owner's Mac) and record the choice
-in ARCHITECTURE.md.
+**Streaming (verified in U3).** One long-lived child, `nettop -P -L 0 -s <interval> -x -J
+bytes_in,bytes_out`. The one-shot `-L 1` run is not an option: a process's totals vanish once its
+sockets close (a 5 MiB loopback download read 5242943 bytes while the socket was open and 0 after
+close), so a one-shot run misses every short connection. The running child keeps the totals. Two
+facts the reader depends on: nettop prints no block terminator (a block starts at the header line
+`,bytes_in,bytes_out,`), and through a pipe it buffers 4 KB so a block's tail arrives one sample late;
+on a pty it flushes the whole block at once. So the child's stdout is a pty (lines end in `\r\n`), a block
+counts as complete when its rows stop arriving for 200 ms, and `collect` waits for the first block
+that started after the call, so a transfer that just ended is in it (up to one interval of latency).
 
-**Supervision.** The child is started by the sampler, killed with the app (its own process group,
-killed in `applicationWillTerminate` and by a parent-death check on the next launch: a stray
-`nettop` from a crashed MacMax is found by name and parent pid 1 and ended), restarted with
-backoff (1, 2, 5, 10, 30 s), and while it is down the network readings are `failed` with the
-reason. A CPU check on the child is part of `scripts/perf.sh`.
+**Supervision.** The child is a small `sh` guard that runs nettop and ends it when the app exits (the
+guard polls its parent pid), when nettop exits, or when the app terminates the guard; nettop itself
+does not exit when its reader goes away. The collector starts it on the first `collect`; if it dies
+or produces no block within the interval plus 4 s, that tick's process readings are `failed` with the
+reason and the next tick starts a new child (restart backoff arrives with the sampler in U5). A CPU check on the child is part of `scripts/perf.sh`.
 
 **Grouping and storage.** Rows are grouped by app (ARCHITECTURE.md, App grouping) and stored as
 `app_samples.net_in_bytes` and `net_out_bytes` per tick; interface totals come from the sum and
-from `getifaddrs` byte counters per interface (`if_data.ifi_ibytes`, `ifi_obytes`; verify in U3),
+from the kernel's 64-bit interface counters (`sysctl NET_RT_IFLIST2`, `if_data64`; `getifaddrs` counters are
+32-bit and wrap within minutes on a fast link; loopback is left out),
 so traffic of processes that ended between ticks still shows in the totals.
 
 **Connections on demand.** Expanding an app in the Network tab reads its current connections once:
-`nettop -m tcp -L 1 -x -n -p <pid>` or `lsof -nP -i -a -p <pid>` (whichever U3 proves). Remote
+`nettop -m tcp -L 1 -x -n -p <pid>` (verified in U3; open sockets only, which is what the panel shows). Remote
 addresses are shown as IPs; reverse DNS only on a press per row (it is a network call to the
 resolver and can be slow).
 
