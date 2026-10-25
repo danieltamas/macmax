@@ -76,10 +76,10 @@ Not every VPN is a Network Extension service (some run a `utun` interface from a
 check below catches those: a default route through `utun*` with no service listed is shown as
 "Tunnel active (unknown app)".
 
-### Default route (verify in U4)
+### Default route (verified in U4)
 
 `route -n get default` gives the interface of the default route; `utun*`, `ipsec*` or `ppp*` means
-the route goes through a tunnel. `NWPathMonitor` triggers a re-check on every path change (Wi-Fi
+the route goes through a tunnel. The physical interface comes from `scutil --nwi` (first non-tunnel, non-`lo` entry in the service order; with Outline connected `utun7` is listed before `en0`). `NWPathMonitor` (wired in U5) triggers a re-check on every path change (Wi-Fi
 switch, VPN connect or disconnect, sleep and wake). Split-tunnel VPNs keep the default route on the
 physical interface; the verdict accounts for that (below).
 
@@ -94,7 +94,7 @@ physical interface; the verdict accounts for that (below).
   returned the home ISP's IP and RO.
 - Requests by IP literal avoid a DNS lookup that could itself leak or fail; TLS is verified (the
   certificate covers 1.1.1.1). Both values are validated as IPv4 or IPv6 literals; anything else is
-  `failed`. Both requests run through ProcessRunner with the timeouts above.
+  `failed`. Both requests run through ProcessRunner with the timeouts above. The client runs `/usr/bin/curl` with `--proto =http,https`, a 64 KiB body cap and `-w` for the status; only an HTTP 200 whose body parses is `ok`. The endpoint must start with `http://` or `https://`, is passed after `--`, and the interface must be letters then digits, so neither can become a curl flag.
 - When: at launch, on every path change (debounced 3 s), every 5 minutes, and on "Check now". Never
   more than once per 30 s.
 - Turned off in Settings > Network: no request is made, the card says the check is off.
@@ -110,7 +110,7 @@ any lookup failed. Rules, first match wins:
 |-----------|---------|-------|
 | IP check turned off | `off` | "IP check is off" (neutral) |
 | a lookup failed or timed out | `unknown` | "Could not check: <reason>" (grey, never green) |
-| no VPN connected and no tunnel route | `no_vpn` | "No VPN. Your IP: <public> (<cc>)" |
+| no VPN connected and no tunnel route ("in use" below means a connected service or a tunnel route) | `no_vpn` | "No VPN. Your IP: <public> (<cc>)" |
 | VPN connected and public IP equals ISP IP | `leak` | "VPN connected, but traffic leaves through your ISP" (red, CRIT) |
 | VPN connected, route not via tunnel, public IP differs from ISP IP | `split_tunnel` | "VPN connected for some traffic; your default traffic leaves as <public>" (warn color, INFO finding) |
 | VPN connected, route via tunnel, public IP differs from ISP IP | `tunnel_ok` | "Traffic goes through <VPN name> as <public> (<cc>)" |

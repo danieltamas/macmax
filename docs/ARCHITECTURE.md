@@ -87,7 +87,8 @@ source fails its proof, pick the fallback, update this table and PLAN.md, and te
 | Same, streaming | `nettop -P -L 0 -s <interval> -x -J bytes_in,bytes_out` (one long-lived child on a pty, behind an `sh` guard) | verified in U3 | none: `failed` for the tick, restart on the next |
 | Connections of one process | `nettop -m tcp -L 1 -x -n -p <pid>` | verified in U3 | `failed` |
 | VPN services and state | `/usr/sbin/scutil --nc list` | verified (Outline, Tailscale, Pangolin listed) | `unknown` |
-| Default route interface | `route -n get default` (interface `utun*` = tunnel); `NWPathMonitor` for changes | verify in U4 | `unknown` |
+| Default route interface | `route -n get default` (interface `utun*`, `ipsec*`, `ppp*` = tunnel); the path-change trigger (`NWPathMonitor`) arrives with the sampler in U5 | verified in U4 | `failed` |
+| Physical interface for the ISP IP | `scutil --nwi`: first non-tunnel, non-`lo` interface in the service order | verified in U4 | `unavailable` (only a tunnel is up) or `failed` |
 | Public IP, country | `curl https://1.1.1.1/cdn-cgi/trace` (`ip=`, `loc=`) | verified (VPN IP shown, country DE) | `failed`, shown as unknown |
 | ISP IP behind a VPN | same request with `curl --interface <physical>` | verified (ISP IP shown, country RO) | `failed` |
 | Docker containers | `docker stats --no-stream --format '{{json .}}'`, `docker info` | verified (mac-audit) | `unavailable` (no Docker) |
