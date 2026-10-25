@@ -76,12 +76,12 @@ source fails its proof, pick the fallback, update this table and PLAN.md, and te
 | Thermal | `ProcessInfo.thermalState`; `pmset -g therm` CPU_Speed_Limit | verified (mac-audit, pmset) | thermalState only |
 | GPU utilization | IOKit `IOAccelerator` PerformanceStatistics "Device Utilization %" | verified in U1 | `unavailable` |
 | Battery, power source | `IOPSCopyPowerSourcesInfo` | verified in U1 | `pmset -g batt` (verified) |
-| Process list | `proc_listallpids` | verify in U2 | `ps -axo` (verified) |
-| Pid, ppid, start time, user | `proc_pidinfo(PROC_PIDTBSDINFO)` (`pbi_start_tvsec/usec`) | verify in U2 | `ps -o lstart` |
-| Footprint, CPU time, disk bytes | `proc_pid_rusage(RUSAGE_INFO_V4)` (`ri_phys_footprint`, `ri_user_time`, `ri_system_time`, `ri_diskio_bytes*`) | verify in U2, including EPERM on root processes | `ps -o rss,time` (rss, not footprint: label it) |
-| Executable path | `proc_pidpath` | verify in U2 | `ps -o comm` |
-| Argv, cwd | `sysctl KERN_PROCARGS2`; `proc_pidinfo(PROC_PIDVNODEPATHINFO)` | verify in U2 | omit (never `ps` full lines into logs) |
-| Rosetta | `sysctl` `kinfo_proc.kp_proc.p_flag & P_TRANSLATED` | verify in U2 | `unavailable` |
+| Process list | `proc_listallpids` | verified in U2 | `ps -axo` (verified) |
+| Pid, ppid, start time, user | `sysctl KERN_PROC_PID` (`p_starttime`, `e_ppid`, `cr_uid`); `proc_pidinfo(PROC_PIDTBSDINFO)` is denied (EPERM) for about 20% of processes, root-owned ones included | verified in U2 (the sysctl, not pidinfo) | `ps -o lstart` |
+| Footprint, CPU time, disk bytes | `proc_pid_rusage(RUSAGE_INFO_V4)` (`ri_phys_footprint`, `ri_user_time`, `ri_system_time`, `ri_diskio_bytes*`) | verified in U2: EPERM on root-owned processes is `unavailable` (about 18% of processes) | `ps -o rss,time` (rss, not footprint: label it) |
+| Executable path | `proc_pidpath` (ENOENT when the binary was replaced while running: `unavailable`) | verified in U2 | `ps -o comm` |
+| Argv, cwd | `sysctl KERN_PROCARGS2` (argc strings only, never the environment); `proc_pidinfo(PROC_PIDVNODEPATHINFO)`; both `unavailable` for the same root-owned set | verified in U2 | omit (never `ps` full lines into logs) |
+| Rosetta | `kinfo_proc.kp_proc.p_flag & P_TRANSLATED` (0x20000) | verified in U2 | `unavailable` |
 | Compressed memory per process (Docker VM) | `top -l 1 -stats pid,cmprs` (what mac-audit uses) | verified (mac-audit) | `unavailable` |
 | Bytes in and out per process | `/usr/bin/nettop -P -L 1 -x -J bytes_in,bytes_out` | verified | none: `failed` |
 | Same, streaming | `nettop -P -L 0 -s <interval> -x -J bytes_in,bytes_out` (one long-lived child) | verify in U3 | one-shot `-L 1` per tick |
