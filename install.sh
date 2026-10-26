@@ -53,14 +53,14 @@ stop_running() {
 }
 
 # The CLI is only ever copied over a previous MacMax CLI. Checked before the app is touched, so a
-# refusal leaves the old install as it was. The CLI carries the marker `macmax-cli:`.
+# refusal leaves the old install as it was. The CLI carries the marker `macmax-cli:` (the first build kept it only inside the code, so its usage line is accepted too).
 cli_link=$HOME/.local/bin/macmax
 check_cli_slot() {
   local text
   # Read in full before matching: grep -q closing the pipe early would fail the pipeline.
   [[ -e $cli_link ]] && text=$(strings "$cli_link" 2>/dev/null || true)
   # -L too: a dangling link is somebody's file, not ours to replace.
-  if [[ -e $cli_link || -L $cli_link ]] && [[ ${text:-} != *'macmax-cli:'* ]]; then
+  if [[ -e $cli_link || -L $cli_link ]] && [[ ${text:-} != *'macmax-cli:'* && ${text:-} != *'usage: macmax audit'* ]]; then
     fail "$cli_link exists and is not the MacMax command: remove it and run this again"
   fi
 }
