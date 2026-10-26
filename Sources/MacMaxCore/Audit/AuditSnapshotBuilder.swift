@@ -88,7 +88,6 @@ public enum AuditSnapshotBuilder {
             max(0, saturatingInt(((nowMicroseconds - Double($0.identity.startTimeMicroseconds)) / microsecondsPerDay).rounded(.down)))
         })
         // The script's own list of MCP sidecar command lines.
-        let sidecar = /supergateway|playwright-mcp|@playwright\/mcp|server-pdf|context7|mcp-remote|mcp-wrapper|npm exec/
         if let reason = processes.compactMap({ process -> String? in
             if case let .failed(reason) = process.argv { return reason }
             return nil
@@ -96,7 +95,7 @@ public enum AuditSnapshotBuilder {
             snapshot.mcpSidecars = .failed(reason)
         } else {
             snapshot.mcpSidecars = .ok(processes.filter { process in
-                process.argv.value.map { $0.joined(separator: " ").contains(sidecar) } ?? false
+                process.argv.value.map { TidyAnalysis.isMCPSidecar($0.joined(separator: " ")) } ?? false
             }.count)
         }
 

@@ -25,6 +25,7 @@ struct CleanupPane: View {
             PaneHeader(pane: .cleanup, title: "Cleanup", detail: "Reclaim space from caches. Everything goes to the Trash, so you can put it back.")
             rules
             if !model.cleanupResults.isEmpty { results }
+            LargeFoldersCard(model: model)
             ProtectedPathsCard(model: model)
             shownOnly
             history

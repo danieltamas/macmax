@@ -12,6 +12,15 @@ claude mcp add macmax -- ~/.local/bin/macmax mcp
 Settings > Agent access shows this line with a copy button. Any MCP client that launches a stdio
 server works the same way (`command: ~/.local/bin/macmax`, `args: ["mcp"]`).
 
+## The boundary: agent access
+
+Off by default. Settings > Agent access has the switch ("Let agents read MacMax data"), stored as
+`agent_access` in `config.json`. `macmax mcp` reads it at every `tools/call`, so flipping it takes effect
+at once. While off, `initialize` and `tools/list` answer, and a call for a known tool returns a result with
+`isError: true` and the text "Agent access is off. Turn it on in MacMax > Settings > Agent access." and no
+data. An unreadable config counts as off (fail closed). The server runs under the terminal's permissions,
+not MacMax's Full Disk Access grant.
+
 ## Protocol
 
 - JSON-RPC 2.0 over stdin and stdout, one message per line, MCP protocol version negotiated in

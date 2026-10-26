@@ -43,6 +43,8 @@ enum PanelAction {
     case endSession(ProcessLine, force: Bool)
     case quit(AppRow, force: Bool)
     case stopContainer(ContainerLine)
+    /// Ask each leftover to end (SIGTERM, after the usual guards). `group` names the press, for its state line.
+    case endTidy(group: String, items: [TidyItem])
 
     var key: String {
         switch self {
@@ -51,6 +53,7 @@ enum PanelAction {
         case let .endSession(line, _): "session-\(line.pid)-\(line.startUs ?? 0)"
         case let .quit(row, _): "quit-\(row.id)-\(row.pids.min() ?? 0)"
         case let .stopContainer(container): "container-\(container.id)"
+        case let .endTidy(group, _): "tidy-\(group)"
         }
     }
 }

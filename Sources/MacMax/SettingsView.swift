@@ -65,8 +65,8 @@ struct SettingsView: View {
         case .audit: AuditPane(model: model)
         case .network: NetworkPane(model: model)
         case .cleanup: CleanupPane(model: model)
-        case .agent: AgentPane()
-        case .permissions: PermissionsPane()
+        case .agent: AgentPane(model: model)
+        case .permissions: PermissionsPane(model: model)
         case .about: AboutPane()
         }
     }

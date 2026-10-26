@@ -240,7 +240,7 @@ func configRoundTripAndEncodingShape() throws {
     #expect(Set(object.keys) == [
         "sampling_seconds", "menu_bar_text", "audit_every_hours", "audit_on_critical_pressure",
         "notify_on", "ip_check_enabled", "ip_endpoint", "thresholds", "disabled_rules", "look_name",
-        "protected_paths",
+        "protected_paths", "agent_access",
     ])
     let orderedKeys = object.keys.sorted()
     let positions = try orderedKeys.map { key in

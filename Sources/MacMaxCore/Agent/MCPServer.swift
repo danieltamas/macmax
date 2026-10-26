@@ -19,11 +19,18 @@ public struct MCPServer: Sendable {
 
     private let backend: any AgentBackend
     private let now: @Sendable () -> Date
+    private let agentAccess: @Sendable () -> Bool
 
-    public init(backend: any AgentBackend, now: @escaping @Sendable () -> Date = { Date() }) {
+    /// `agentAccess` is asked at every tool call, so turning it off in the app takes effect at once. A client can still
+    /// connect and list the tools; it just gets no data.
+    public init(backend: any AgentBackend, now: @escaping @Sendable () -> Date = { Date() },
+                agentAccess: @escaping @Sendable () -> Bool = { true }) {
         self.backend = backend
         self.now = now
+        self.agentAccess = agentAccess
     }
+
+    static let accessOff = "Agent access is off. Turn it on in MacMax > Settings > Agent access."
 
     /// nil for a notification (a message without an id).
     public func handle(line: String) async -> String? {
@@ -65,6 +72,10 @@ public struct MCPServer: Sendable {
     private func callTool(_ id: JSONValue, _ params: JSONValue) async -> String {
         guard case let .string(name)? = params["name"], let tool = AgentCatalog.tools.first(where: { $0.name == name }) else {
             return Self.failure(id, -32602, "unknown tool")
+        }
+        guard agentAccess() else {
+            return Self.success(id, .object(["content": .array([.object(["type": .string("text"), "text": .string(Self.accessOff)])]),
+                                            "isError": .bool(true)]))
         }
         let arguments = params["arguments"] ?? .object([:])
         guard case let .object(fields) = arguments else { return Self.failure(id, -32602, "arguments must be an object") }

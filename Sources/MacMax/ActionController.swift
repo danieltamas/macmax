@@ -17,6 +17,10 @@ final class ActionController {
         model.scanCleanup = { [weak self] in self?.scanCleanup() }
         model.moveToTrash = { [weak self] in self?.moveToTrash($0) }
         model.loadLastCleanups = { [weak self] in self?.loadLastCleanups() }
+        model.scanTidy = { [weak self] in self?.scanTidy() }
+        model.scanLarge = { [weak self] in self?.scanLarge() }
+        model.refreshPermissions = { [weak self] in self?.refreshPermissions() }
+        model.requestNotifications = { [weak self] in self?.requestNotifications() }
     }
 
     private static let cleanupKey = "cleanup"
@@ -70,6 +74,7 @@ final class ActionController {
         case let .endSession(line, force): end(line, force: force, session: true, key: key)
         case let .quit(row, force): quit(row, force: force, key: key)
         case let .stopContainer(container): stop(container, key: key)
+        case let .endTidy(group, items): endTidy(group, items, key: key)
         }
     }
 
@@ -137,6 +142,86 @@ final class ActionController {
             for _ in 0 ..< 20 where !app.isTerminated { try? await Task.sleep(for: .milliseconds(500)) }
             if app.isTerminated { asked.remove(identity) }
             set(key, app.isTerminated ? .done("Quit.") : .asked("Still running. Press again to force quit."))
+        }
+    }
+
+    // MARK: - Tidy
+
+    private func scanTidy() {
+        guard model.tidyState != .loading("Reading the process table...") else { return }
+        model.tidyState = .loading("Reading the process table...")
+        Task {
+            switch await TidyScanner().scan() {
+            case let .ok(scan, _, _):
+                model.tidy = scan
+                model.tidyState = .ready
+            case let .unavailable(reason), let .failed(reason):
+                model.tidy = nil
+                model.tidyState = .failed(collector: "The process table", reason: reason)
+            }
+        }
+    }
+
+    /// The polite request, once for each listed process, each re-read and checked by `ProcessActions` first.
+    private func endTidy(_ group: String, _ items: [TidyItem], key: String) {
+        var sent = 0, refused = 0
+        for item in items {
+            let target = "\(item.name) (pid \(item.identity.pid))"
+            switch processes.end(item.identity, force: false) {
+            case .done:
+                sent += 1
+                record(kind: "end_process", target: target, result: "term_sent", detail: "tidy \(group)", key: key)
+            case let .refused(reason):
+                refused += 1
+                record(kind: "end_process", target: target, result: "refused", detail: reason, key: key)
+            case let .failed(reason):
+                refused += 1
+                record(kind: "end_process", target: target, result: "failed", detail: reason, key: key)
+            }
+        }
+        set(key, refused == 0 ? .done("Asked \(sent) to end.") : sent == 0 ? .refused("None could be ended (\(refused) refused).")
+            : .done("Asked \(sent) to end, \(refused) refused."))
+        // What really went away shows in the rescan, not in this line; the press is offered again for what is left.
+        Task {
+            try? await Task.sleep(for: .seconds(3))
+            model.actionStates[key] = nil
+            scanTidy()
+        }
+    }
+
+    // MARK: - Large folders
+
+    private func scanLarge() {
+        guard model.largeState != .loading("Measuring your home folder. This takes a few minutes...") else { return }
+        guard let protected = protectedPaths() else {
+            model.largeState = .failed(collector: "The settings file", reason: "It could not be read, so MacMax cannot tell what is protected.")
+            return
+        }
+        model.largeState = .loading("Measuring your home folder. This takes a few minutes...")
+        Task {
+            switch await LargeItemScanner(userProtected: protected).scan() {
+            case let .ok(scan, _, _):
+                model.largeItems = scan.items
+                model.largeIncomplete = scan.incomplete
+                model.largeState = .ready
+            case let .unavailable(reason), let .failed(reason):
+                model.largeState = .failed(collector: "The disk", reason: reason)
+            }
+        }
+    }
+
+    // MARK: - Permissions
+
+    private func refreshPermissions() {
+        Task {
+            model.fullDiskAccess = await Task.detached { PermissionProbe.fullDiskAccess() }.value
+            model.notifications = await SystemNotifications.current()
+        }
+    }
+
+    private func requestNotifications() {
+        Task {
+            model.notifications = await SystemNotifications.request()
         }
     }
 

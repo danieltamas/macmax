@@ -10,7 +10,11 @@ cli=$scratch/debug/MacMaxCLI
 [[ -x $cli ]] || { echo "acceptance: build first, $cli is missing" >&2; exit 2; }
 
 mcp() {
-  local out lines
+  local out lines home
+  # A scratch home: agent access is off by default, so the run turns it on for itself and leaves the real config alone.
+  home=$(mktemp -d); chmod 700 "$home"
+  trap 'rm -rf "$home"' RETURN
+  printf '{"agent_access": true}\n' > "$home/config.json"
   out=$(printf '%s\n' \
     '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}' \
     '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
@@ -20,7 +24,7 @@ mcp() {
     '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"cleanup_preview","arguments":{}}}' \
     '{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"nope","arguments":{}}}' \
     '{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"top_apps","arguments":{"limit":"x"}}}' \
-    | "$cli" mcp)
+    | MACMAX_HOME="$home" "$cli" mcp)
   lines=$(printf '%s\n' "$out" | wc -l | tr -d ' ')
   [[ $lines -eq 7 ]] || { echo "acceptance: expected 7 replies (the notification gets none), got $lines" >&2; exit 1; }
   printf '%s' "$out" | /usr/bin/python3 -I -c '
@@ -49,6 +53,21 @@ print("acceptance: mcp ok (%d tools, 3 calls, 2 invalid calls refused)" % len(na
 '
 }
 
+access_off() {
+  local home out
+  home=$(mktemp -d); chmod 700 "$home"
+  trap 'rm -rf "$home"' RETURN
+  out=$(printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"snapshot","arguments":{}}}' \
+    | MACMAX_HOME="$home" "$cli" mcp)
+  printf '%s' "$out" | /usr/bin/python3 -I -c '
+import json, sys
+result = json.loads(sys.stdin.read())["result"]
+assert result["isError"] is True and "Agent access is off" in result["content"][0]["text"]
+assert "structuredContent" not in result
+print("acceptance: agent access off blocks tool calls")
+'
+}
+
 usage() {
   local code=0
   "$cli" bogus >/dev/null 2>&1 || code=$?
@@ -57,6 +76,6 @@ usage() {
 }
 
 case ${1:-mcp} in
-  mcp) mcp; usage ;;
+  mcp) mcp; access_off; usage ;;
   *) echo "usage: acceptance.sh [mcp]" >&2; exit 2 ;;
 esac

@@ -190,6 +190,23 @@ final class PanelModel {
     var moveToTrash: ([CleanupCandidate]) -> Void = { _ in }
     var loadLastCleanups: () -> Void = {}
 
+    // Tidy: leftovers a finding can offer to end
+    var tidy: TidyScan?
+    var tidyState: SectionState = .ready
+    var scanTidy: () -> Void = {}
+
+    // Large folders
+    var largeItems: [LargeItem]?
+    var largeIncomplete = false
+    var largeState: SectionState = .ready
+    var scanLarge: () -> Void = {}
+
+    // Permissions, as macOS answers now
+    var fullDiskAccess: PermissionState = .unknown
+    var notifications: NotificationAccess = .unknown
+    var refreshPermissions: () -> Void = {}
+    var requestNotifications: () -> Void = {}
+
     // Settings
     var settingsPane: SettingsPane = .general
     /// Nil in the screenshots: edits then change only this model.
