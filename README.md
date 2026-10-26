@@ -21,7 +21,7 @@
   <img src="docs/media/hero.png" alt="MacMax: the Overview and Network panels" width="860">
 </p>
 
-> **Status:** in development, nothing is released yet. The install line below works from v0.1.0.
+> **Status:** version 0.1.0, the first release. It is signed ad hoc, not notarized, so macOS asks you to confirm the first open.
 
 ## Install
 
