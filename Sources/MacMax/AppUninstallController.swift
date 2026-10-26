@@ -91,6 +91,8 @@ extension ActionController {
             model.uninstallProgress = nil
             model.appLeftovers[app.path] = nil
             scanInstalledApps()
+            // An app that stayed keeps its leftovers list: without this the row would wait for them forever.
+            if results.first?.outcome != .done { loadLeftovers(app) }
         }
     }
 

@@ -23,6 +23,12 @@ public enum AppUninstallPolicy {
         let parent = (app.path as NSString).deletingLastPathComponent
         let allowed = ["/Applications", (CleanupPolicy.canonical(home) ?? home) + "/Applications"]
         guard allowed.contains(CleanupPolicy.canonical(parent) ?? parent) else { return "it is not directly in an Applications folder" }
+        // Moving a folder needs write access to the folder itself. An app an installer put there as root has none, and the
+        // Trash then asks for an administrator, which MacMax never does. An app that cannot be read at all is left to the move.
+        var info = stat()
+        if lstat(app.path, &info) == 0, access(app.path, W_OK) != 0 {
+            return "it was installed for all users, so moving it needs an administrator. Drag it to the Trash in Finder instead"
+        }
         return nil
     }
 

@@ -195,7 +195,7 @@ struct AppUninstallCard: View {
                 case .done: EmptyView()
                 case let .refused(reason), let .failed(reason):
                     Text(Redaction.sanitizeText("\((result.path as NSString).lastPathComponent): \(reason)")).font(.meta).foregroundStyle(Theme.warn)
-                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(5).fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
