@@ -13,14 +13,18 @@ extension ActionController {
             let home = NSHomeDirectory()
             // The list comes back at once; sizes follow one by one, so a big app does not hold up the others.
             let found = await Task.detached(priority: .utility) { AppLister.list(folders: ["/Applications", home + "/Applications"], measure: false) }.value
-            model.installedApps = found.apps
+            // Sizes already measured stay: a refresh must not blank the list again.
+            let known = Dictionary(model.installedApps?.compactMap { app in app.bytes.map { (app.path, $0) } } ?? [], uniquingKeysWith: { first, _ in first })
+            let apps = found.apps.map { app in known[app.path].map(app.withBytes) ?? app }
+            model.installedApps = apps
+            model.installedAppsAt = .now
             model.installedAppsUnreadable = found.unreadable
             model.installedAppsState = .ready
-            model.measuringApps = Set(found.apps.map(\.path))
+            model.measuringApps = Set(apps.filter { $0.bytes == nil }.map(\.path))
             let paths = found.apps.map(\.path)
             model.appLastOpened = await Task.detached(priority: .utility) { Dictionary(uniqueKeysWithValues: paths.map { ($0, AppLastOpened.read(path: $0)) }) }.value
             await withTaskGroup(of: (String, Int64?).self) { group in
-                var pending = found.apps.makeIterator()
+                var pending = apps.filter { $0.bytes == nil }.makeIterator()
                 func next() { if let app = pending.next() { group.addTask(priority: .utility) { (app.path, AppLister.measuredBytes(of: app.path)) } } }
                 for _ in 0 ..< 4 { next() }
                 for await (path, bytes) in group {

@@ -224,6 +224,7 @@ final class PanelModel {
     var inspectStartup: (StartupItem) -> Void = { _ in }
 
     // Apps: the installed ones, what each left behind (by app path), and the last uninstall
+    var installedAppsAt: Date?
     var installedApps: [InstalledApp]?
     var installedAppsUnreadable = 0
     var installedAppsState: SectionState = .ready

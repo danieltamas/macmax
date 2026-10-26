@@ -12,6 +12,8 @@ struct AppUninstallCard: View {
     @State private var added: Set<String> = []
     @State private var confirming = false
     @State private var sort = Sort.name
+    @Environment(\.panelVisible) private var panelVisible
+    private static let staleSeconds: TimeInterval = 60
     enum Sort: String, CaseIterable { case name = "Name", size = "Size", opened = "Last opened" }
     private static let preview = 6
     private static let sizeWidth: CGFloat = 70
@@ -37,6 +39,10 @@ struct AppUninstallCard: View {
             }
         }
         .onAppear { if model.installedApps == nil { model.scanInstalledApps() } }
+        // Apps come and go outside MacMax: a list older than a minute is read again when the panel opens.
+        .onChange(of: panelVisible) { _, visible in
+            if visible, model.installedApps != nil, Date().timeIntervalSince(model.installedAppsAt ?? .distantPast) > Self.staleSeconds { model.scanInstalledApps() }
+        }
     }
 
     @ViewBuilder private func list(_ apps: [InstalledApp]) -> some View {
@@ -199,6 +205,8 @@ struct AppUninstallCard: View {
         confirming = false
         model.uninstallResults = []
         if selected == app.path { selected = nil; return }
+        // Removed outside MacMax since the list was read: say so by reading the list again.
+        guard FileManager.default.fileExists(atPath: app.path) else { model.scanInstalledApps(); return }
         selected = app.path
         excluded = []
         added = []
