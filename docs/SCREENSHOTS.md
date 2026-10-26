@@ -33,13 +33,14 @@ written to `~/.macmax`.
 
 | File | What | Size (points) |
 |------|------|---------------|
-| `icon.png` | (README unit, not rendered by U7) The app icon, for the README header | 128 x 128 |
-| `hero.png` | (README unit, not rendered by U7) Overview and Network panels side by side over the backdrop, slight overlap | about 860 x 640 |
+| `icon.png` | The app icon (`sips -s format png -z 256 256 Support/AppIcon.icns`, not rendered by the app), for the README header | 256 x 256 |
+| `hero.png` | Overview and Network panels side by side over the backdrop | about 926 x 860 |
 | `overview.png` | Overview: verdict WARN with two findings, vitals tiles, identity card (`tunnel_ok`) | 404 x panel height |
 | `apps.png` | Apps sorted by memory, the browser row expanded to its processes | 404 x panel height |
 | `network.png` | Network, 1 hour window, eight apps, interface totals | 404 x panel height |
 | `findings.png` | Findings: one CRIT (Docker VM compressed), two WARN (stale agent sessions, swap) | 404 x panel height |
 | `history-1h.png`, `history-7d.png`, `history.png` | History, 24 hours, a memory spike with "who held it" open | 404 x panel height |
+| `cleanup.png`, `cleanup-results.png`, `large-folders.png`, `access-prompt.png`, `this-mac.png` | The Cleanup tab, the just-moved and last-cleanups cards, the large folders card, the one permission prompt, the This Mac card | 404 wide |
 | `leak.png` | The identity card in the `leak` state | 404 x card height |
 | `settings-<pane>.png` | One per Settings pane (general, audit, network, cleanup, agent-access, permissions, about); `settings-audit.png` shows the rule list | 760 x 540 |
 
@@ -69,3 +70,9 @@ written to `~/.macmax`.
 - Renders check layout only. A change is not done until the live panel was looked at, or the
   report says "UI not exercised live".
 - PNGs are committed as rendered (no external optimizers that change pixels); keep each under 1 MB.
+
+## The README and its pictures
+
+`scripts/check.sh` fails when the README shows a `docs/media` image that does not exist or names an
+`install.sh` option the script lacks. A feature that reaches the app is moved from the README's
+"Coming next" to "What you get" with its shot in the same commit (docs/PLAN.md, U13..U16).

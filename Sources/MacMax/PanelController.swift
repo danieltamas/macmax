@@ -21,6 +21,7 @@ final class PanelController {
     private var windowTask: Task<Void, Never>?
     private var historyLoader: HistoryLoader?
     private var actions: ActionController?
+    private var updates: UpdateController?
     /// The audit reads its thresholds off the main actor; this carries them across.
     private let settings = SettingsBox()
 
@@ -31,6 +32,7 @@ final class PanelController {
         model.loadConnections = { [weak self] id in self?.loadConnections(appKey: id) }
         model.clearHistory = { [weak self] in self?.clearHistory() }
         actions = ActionController(model: model, database: { [weak self] in self?.database })
+        updates = UpdateController(model: model, home: home)
         model.windowChanged = { [weak self] in self?.showWindowTraffic() }
         model.openSettings = { [model] pane in
             model.settingsPane = pane
@@ -40,6 +42,7 @@ final class PanelController {
     }
 
     func start() {
+        updates?.start()
         loadSnoozes()
         switch ConfigStore(home: home).load() {
         case let .ok(config): model.config = config
@@ -132,6 +135,8 @@ final class PanelController {
         model.processes = PanelData.processes(rows.processes)
         model.topConsumers = PanelData.topConsumers(model.apps)
         model.interfaces = PanelData.interfaces(rows.system, each: rows.interfaces)
+        model.live = rows.live
+        if model.hardware == nil { model.hardware = HardwareProfile.read() }
         nowTraffic = PanelData.nowTraffic(rows.apps, names: names, interval: Double(interval))
         if model.window == .now {
             model.traffic = nowTraffic

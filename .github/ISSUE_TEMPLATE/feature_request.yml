@@ -1,0 +1,13 @@
+name: Feature request
+description: Something MacMax should do
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What are you trying to do, and what gets in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like MacMax to do?

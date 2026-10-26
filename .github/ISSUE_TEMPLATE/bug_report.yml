@@ -1,0 +1,28 @@
+name: Bug report
+description: Something in MacMax is wrong or looks wrong
+body:
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: MacMax version (Settings, About)
+    validations:
+      required: true
+  - type: input
+    id: mac
+    attributes:
+      label: Mac and macOS version (for example, MacBook Pro M2, macOS 15.2, or an Intel Mac)
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+  - type: markdown
+    attributes:
+      value: Please do not paste tokens, real IP addresses or private paths. For a security problem use the private report on the Security tab instead.

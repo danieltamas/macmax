@@ -138,6 +138,9 @@ final class PanelModel {
     /// Set by the live controller: the rows shown must match the chosen window at once, not at the next tick.
     var windowChanged: () -> Void = {}
     var interfaces: [InterfaceLine] = []
+    /// What this Mac is made of (read once) and how hard its cores, GPU and memory work this tick.
+    var hardware: HardwareProfile?
+    var live: SystemLive?
     var traffic: [TrafficLine] = []
     var trafficState: SectionState = .loading("Reading network usage...")
     var connections: [String: [ConnectionLine]] = [:]
@@ -184,6 +187,8 @@ final class PanelModel {
     var cleanupPreview: CleanupPreview?
     var cleanupState: SectionState = .ready
     var cleanupResults: [CleanupResult] = []
+    /// What was asked to move, in the order of `cleanupResults`, for the size and the rule of each.
+    var cleanupMovedFrom: [CleanupCandidate] = []
     var cleanupMoving = false
     var cleanupLogProblem: String?
     var lastCleanups: [ActionRow] = []
@@ -208,6 +213,23 @@ final class PanelModel {
     var notifications: NotificationAccess = .unknown
     var refreshPermissions: () -> Void = {}
     var requestNotifications: () -> Void = {}
+
+    // Updates: the newest release, where this build stands, and the installer's progress
+    var latestRelease: ReleaseInfo?
+    var releaseCheck: SectionState = .ready
+    var updateState: UpdateState = .idle
+    var checkForUpdate: () -> Void = {}
+    var installUpdate: () -> Void = {}
+    var runningVersion: String { (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "0.0.0" }
+    var buildSource: String? { Bundle.main.infoDictionary?["MacMaxSource"] as? String }
+    var standing: Standing { MacMaxRelease.standing(version: runningVersion, source: buildSource, latestTag: latestRelease?.tag) }
+    /// The version Update would install; nil unless this is the installed app and it is behind a valid release.
+    var updateVersion: String? {
+        UpdateOffer.version(standing: standing, installed: UpdateOffer.isInstalledLocation(bundlePath: Bundle.main.bundleURL.path,
+                            home: FileManager.default.homeDirectoryForCurrentUser.path), latestTag: latestRelease?.tag)
+    }
+    /// A newer release exists, even when this copy cannot update itself (a build folder): the header arrow follows it.
+    var newerRelease: Bool { standing == .behind }
 
     // Settings
     var settingsPane: SettingsPane = .general

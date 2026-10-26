@@ -42,7 +42,26 @@ enum DemoStore {
             ActionRow(ts: Int64(now.timeIntervalSince1970) - 86_400, kind: "cleanup", target: "/Users/example/.npm/_cacache",
                       result: "trashed", detail: "npm_cache, 640 MB"),
         ]
+        let demoPaths = ["ro.example.pixel", "ro.example.relay", "ro.example.atlas"].map { "/Users/example/Library/Caches/\($0)" }
+        model.hardware = HardwareProfile(chip: "Apple M2 Pro", performanceCores: 6, efficiencyCores: 4, totalCores: 10,
+                                         gpuName: "Apple M2 Pro", gpuCores: 19, memoryBytes: 34_359_738_368)
+        model.live = SystemLive(coreBusyPercent: [92, 71, 64, 38, 12, 8, 55, 41, 6, 3], gpuPercent: 14, gpuMemoryUsedBytes: 1_190_723_584, gpuMemoryAllocatedBytes: 9_453_600_768,
+                                memoryUsedBytes: 27_917_287_424, memoryTotalBytes: 34_359_738_368)
+        model.cleanupMovedFrom = demoPaths.enumerated().map { CleanupCandidate(ruleID: "app_caches", path: $1, bytes: 400_000_000 + Int64($0) * 90_000_000, device: 1, inode: UInt64($0)) }
+            + [CleanupCandidate(ruleID: "old_logs", path: "/Users/example/Library/Logs/old.log", bytes: 12_000_000, device: 1, inode: 9)]
+        model.cleanupResults = model.cleanupMovedFrom.map { CleanupResult(path: $0.path, outcome: .done) }
+            + [CleanupResult(path: "/Users/example/Library/Caches/ro.example.live", outcome: .refused("the app is running"))]
+        let base = Int64(now.timeIntervalSince1970) - 7_200
+        model.lastCleanups += (0 ..< 4).map { ActionRow(ts: base - Int64($0), kind: "cleanup", target: "/Users/example/Library/Logs/run\($0).log", result: "trashed", detail: "old_logs, 3 MB") }
         model.config.protectedPaths = ["/Users/example/Projects"]
+        model.fullDiskAccess = .granted
+        model.notifications = .allowed
+        model.largeItems = [
+            LargeItem(path: "/Users/example/Library/Developer/Xcode/iOS DeviceSupport", bytes: 14_200_000_000, modified: now.addingTimeInterval(-86_400 * 40), isProtected: false),
+            LargeItem(path: "/Users/example/Movies/Screen Recordings", bytes: 9_800_000_000, modified: now.addingTimeInterval(-86_400 * 12), isProtected: false),
+            LargeItem(path: "/Users/example/Projects/northwind", bytes: 6_100_000_000, modified: now.addingTimeInterval(-3_600), isProtected: true),
+            LargeItem(path: "/Users/example/Library/Containers/ro.example.relay", bytes: 3_400_000_000, modified: now.addingTimeInterval(-86_400 * 3), isProtected: false),
+        ]
         return model
     }
 

@@ -24,6 +24,15 @@ enum SystemNotifications {
         return await current()
     }
 
+    /// A plain notification; nothing happens when the person has not allowed them.
+    static func post(title: String, body: String) async {
+        guard await current() == .allowed else { return }
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        _ = try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
+    }
+
     private static func access(_ status: UNAuthorizationStatus) -> NotificationAccess {
         switch status {
         case .authorized, .provisional, .ephemeral: .allowed

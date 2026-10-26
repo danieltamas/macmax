@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Installs MacMax on this Mac. Today it installs a local build:
+# Installs MacMax on this Mac:
 #
-#   install.sh --app <path to MacMax.app>     (scripts/install-from-source.sh)
+#   install.sh                                the latest release (MACMAX_VERSION=X.Y.Z pins one)
+#   install.sh --app <path to MacMax.app>     a local build (scripts/install-from-source.sh)
+#   install.sh --uninstall [--purge]          remove the app and the command; --purge also removes ~/.macmax
 #
-# Downloading and verifying a published release is added with the release unit (docs/RELEASE.md).
+# A release is downloaded with its SHA256SUMS and installed only when the checksum matches.
 # Everything runs from main, called on the last line: a download cut short defines nothing and
 # runs nothing.
 set -euo pipefail
@@ -13,11 +15,46 @@ fail() { echo "macmax: $*" >&2; exit 1; }
 # /Applications when this user can write it, else ~/Applications, so a non-admin installs without
 # a password. An existing install keeps its location.
 destination() {
+  # The updater names the folder of the copy that is running, so the running copy is the one replaced.
+  case ${MACMAX_INSTALL_ROOT:-} in
+    /Applications|"$HOME/Applications") mkdir -p "${MACMAX_INSTALL_ROOT}" && echo "$MACMAX_INSTALL_ROOT"; return ;;
+  esac
   if [[ -d /Applications/MacMax.app ]]; then echo /Applications
   elif [[ -d $HOME/Applications/MacMax.app ]]; then echo "$HOME/Applications"
   elif [[ -w /Applications ]]; then echo /Applications
   else mkdir -p "$HOME/Applications" && echo "$HOME/Applications"
   fi
+}
+
+repo=danieltamas/macmax
+work=   # the download folder, global so the exit trap can remove it
+fetch() { curl -fsSL --connect-timeout 20 --speed-limit 1024 --speed-time 60 "$@"; }
+
+# The version to install: MACMAX_VERSION when set (X.Y.Z only), else the tag GitHub redirects "latest" to.
+release_version() {
+  local version=${MACMAX_VERSION:-} url
+  if [[ -z $version ]]; then
+    url=$(curl -fsSLI --connect-timeout 20 -o /dev/null -w '%{url_effective}' "https://github.com/$repo/releases/latest") \
+      || fail "could not look up the latest release"
+    version=${url##*/tag/v}
+  fi
+  [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "not a release version: $version"
+  echo "$version"
+}
+
+# Downloads MacMax-X.Y.Z.zip and SHA256SUMS into $2, checks the zip against exactly one matching line, and unpacks it.
+# Sets $app to the unpacked MacMax.app.
+download_release() {
+  local version=$1 dir=$2 base zip sums line
+  base=https://github.com/$repo/releases/download/v$version
+  zip=MacMax-$version.zip
+  fetch -o "$dir/$zip" "$base/$zip" || fail "could not download $zip"
+  fetch -o "$dir/SHA256SUMS" "$base/SHA256SUMS" || fail "could not download SHA256SUMS"
+  line=$(awk -v zip="$zip" 'NF == 2 && $2 == zip && $1 ~ /^[0-9a-f]{64}$/' "$dir/SHA256SUMS" || true)
+  [[ $(printf '%s\n' "$line" | grep -c .) -eq 1 ]] || fail "SHA256SUMS has no single line for $zip"
+  [[ $(shasum -a 256 "$dir/$zip" | cut -d' ' -f1) == "${line%% *}" ]] || fail "$zip does not match its checksum: not installing"
+  ditto -x -k "$dir/$zip" "$dir/unpacked" || fail "could not unpack $zip"
+  app=$dir/unpacked/MacMax.app
 }
 
 # Pids of the processes running exactly $1 (a fixed-string match on the command, not a regex).
@@ -94,15 +131,50 @@ take_lock() {
 
 # Removes the lock only while it is this install's, and the staged CLI.
 cleanup() {
+  if [[ -n $work ]]; then rm -rf "$work"; fi
   if [[ $(readlink "${lock:-}" 2>/dev/null) == "$$" ]]; then rm -f "$lock"; fi
   rm -f "$cli_link.new"
+}
+
+# Removes MacMax.app from both places it can live and the macmax command (only when it is ours).
+# The history in ~/.macmax stays unless --purge.
+uninstall() {
+  local purge=$1 root
+  check_cli_slot
+  for root in /Applications "$HOME/Applications"; do
+    [[ -d $root/MacMax.app ]] || continue
+    # Only our bundle is removed: another app that happens to be named MacMax.app is somebody's file.
+    [[ $(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$root/MacMax.app/Contents/Info.plist" 2>/dev/null) == ro.danieltamas.macmax ]] \
+      || fail "$root/MacMax.app is not the MacMax app: not removing it"
+    stop_running "$root/MacMax.app" || fail "could not quit the running MacMax: quit it and run this again"
+    rm -rf "$root/MacMax.app" || fail "could not remove $root/MacMax.app"
+  done
+  rm -f "$cli_link"
+  if ((purge)); then rm -rf "$HOME/.macmax"; fi
+  echo "Removed MacMax."
+  ((purge)) || echo "Your history is kept in ~/.macmax; remove it with: rm -rf ~/.macmax"
+  echo "If you connected an agent, also run: claude mcp remove macmax"
 }
 
 main() {
   [[ $(uname -s) == Darwin ]] || fail "MacMax runs on macOS only"
   (($(sw_vers -productVersion | cut -d. -f1) >= 14)) || fail "MacMax needs macOS 14 or newer"
-  [[ ${1:-} == --app && -d ${2:-} ]] || fail "usage: install.sh --app <path to MacMax.app>"
-  local app=$2
+  local app
+  if [[ ${1:-} == --uninstall && ( $# -eq 1 || ( $# -eq 2 && ${2:-} == --purge ) ) ]]; then
+    take_lock
+    trap cleanup EXIT
+    uninstall $(($# == 2))
+    return
+  fi
+  if [[ ${1:-} == --app && -d ${2:-} ]]; then
+    app=$2
+  elif [[ $# -eq 0 ]]; then
+    work=$(mktemp -d)
+    trap cleanup EXIT
+    download_release "$(release_version)" "$work"
+  else
+    fail "usage: install.sh [--app <path to MacMax.app> | --uninstall [--purge]]"
+  fi
   [[ -x $app/Contents/MacOS/MacMax && -x $app/Contents/Resources/macmax ]] || fail "$app is not a MacMax.app"
 
   take_lock

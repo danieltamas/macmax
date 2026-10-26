@@ -8,6 +8,7 @@ struct OverviewTab: View {
         VStack(spacing: 12) {
             verdictCard
             vitalsGrid
+            ThisMacCard(model: model)
             IdentityCardView(model: model)
             if model.appsState == .ready { consumers }
         }

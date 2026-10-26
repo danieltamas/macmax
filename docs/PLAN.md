@@ -85,6 +85,10 @@ being committed found no P0, P1 or P2.
 | U10 | CLI and MCP server | U5, U6 | CLI target, Core API, tests |
 | U11 | Updater, About, login item, notifications | U0, U7 | App target, Core release |
 | U12 | Release: signing, installer, README media, first public release | all | scripts, README, docs, SECURITY |
+| U13 | Login items and launch agents: see them, turn one off | U9 | Core, App target, README |
+| U14 | App uninstaller: an app and its leftovers, to the Trash | U9 | Core, App target, README |
+| U15 | Battery health, temperatures and fans | U1, U7 | Core collectors, App target, README |
+| U16 | More cleanup rules (Mail attachments, language files, browser caches) and an old-downloads finder | U9 | Core rules, App target, README |
 
 ## Units
 
@@ -353,6 +357,35 @@ Acceptance: `scripts/acceptance.sh` exits 0 (see Measured by).
 
 `/goal scripts/acceptance.sh exits 0 on tag v0.1.0 and the second-Mac install is recorded in the release notes, or stop after 40 turns`
 
+### U13..U16. The CleanMyMac-style tools (decided 2026-10-26)
+
+What a Mac cleaner offers that MacMax lacks, kept to what is safe and honest. Not built, not in
+v0.1.0: they land one unit at a time after the first release. Skipped on purpose: malware scan,
+file shredder, privacy cleaner, "boost" buttons.
+
+- **U13 Login items and launch agents.** List what starts at login or runs in the background (login
+  items, `~/Library/LaunchAgents`, `/Library/LaunchAgents`, `/Library/LaunchDaemons`), with the app
+  that owns each, its size on disk and whether it is running. Turning one off is a press in the app
+  and reversible (the plist is disabled, not deleted). Read-only over the CLI and MCP.
+- **U14 App uninstaller.** Pick an app, see it plus its leftovers (Application Support, Caches,
+  Preferences, Containers, Logs, launch agents) with sizes, move the lot to the Trash after one
+  confirmation. Never touches a running app, an Apple app, or anything outside the app's own
+  bundle id and name.
+- **U15 Battery, temperatures and fans.** Battery health (cycle count, maximum capacity), thermal
+  state and, where macOS exposes them without root, temperatures and fan speed. A reading that
+  fails is "unknown", never "fine".
+- **U16 More cleanup rules and old downloads.** Mail attachments, language files, browser caches as
+  rules with previews, and a list of old files in Downloads. Same cleanup rules as U9: Trash only,
+  protected paths, preview first.
+
+Every one of these units must, in the same commit that adds the feature: move its line from the
+README's "Coming next" into "What you get" with a screenshot rendered by `--render-screenshots`
+(`docs/SCREENSHOTS.md`), add its CLI command and MCP tool to the README and `docs/AGENT-API.md` when
+it has one, and keep the "no action over MCP or the CLI" rule (acting is a press in the app).
+Each follows the usual unit flow: Codex writes the acceptance tests, Codex reviews the diff.
+
+`/goal scripts/check.sh exits 0 with the unit's acceptance tests passing, the README and shots updated, grep -cE "^(P0|P1|P2)" $SCRATCH/review-out.md prints 0, or stop after 30 turns`
+
 ## Quality criteria
 
 **Code**
@@ -400,7 +433,7 @@ Acceptance: `scripts/acceptance.sh` exits 0 (see Measured by).
 
 | # | Decision | Options | Recommendation | Decided |
 |---|----------|---------|----------------|---------|
-| D1 | Signing | Ad hoc (like Bton) or Developer ID + notarization ($99/year) | Developer ID. MacMax asks for Full Disk Access; with ad hoc signing every update is a new app to TCC and the grant is lost, and the updater cannot check the Team ID. Keep publishing the reproducible ad hoc zip beside the signed one. | open (owner) |
+| D1 | Signing | Ad hoc (like Bton) or Developer ID + notarization ($99/year) | Developer ID. MacMax asks for Full Disk Access; with ad hoc signing every update is a new app to TCC and the grant is lost, and the updater cannot check the Team ID. Keep publishing the reproducible ad hoc zip beside the signed one. | decided 2026-10-26: ad hoc like Bton (path A). No automatic updates; the updater verifies SHA256SUMS only; users re-grant Full Disk Access after an update unless the build is signed with the same local identity. |
 | D2 | License | MIT, Apache-2.0, GPL-3.0 | MIT, like Bton. Mole (GPL-3.0) may be read for ideas, never copied. | MIT, owner 2026-10-25 |
 | D3 | IP endpoint | Cloudflare `https://1.1.1.1/cdn-cgi/trace`, a self-hosted echo, off | Cloudflare by default (no account, plain text, IPv4 and IPv6), endpoint editable, a switch to turn the check off. README says what it sends. | decided 2026-10-25: Cloudflare, editable, off switch |
 | D4 | Cleanup in v1 | Trash-only cache rules; or none | Trash-only with preview and protected list (U9). | open (owner) |

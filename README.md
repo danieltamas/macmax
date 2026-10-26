@@ -6,106 +6,185 @@
 
 <p align="center">
   <b>Why is my Mac slow? One answer, from the menu bar.</b><br>
-  MacMax watches CPU, memory, disk and network per app, audits your Mac on a schedule,<br>
-  and tells you what to close, what to clean and whether your VPN is really on.
+  MacMax shows what is using your Mac, checks it on a schedule, and tells you what to close,<br>
+  what to clean and whether your VPN is really on.
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/macOS-14%2B-111?logo=apple&logoColor=white" alt="macOS 14+">
+  <img src="https://img.shields.io/badge/Apple%20silicon%20%2B%20Intel-supported-444" alt="Apple silicon and Intel">
   <img src="https://img.shields.io/badge/agents-MCP%20read--only-3B82F6" alt="MCP read-only">
   <img src="https://img.shields.io/badge/license-MIT-22C55E" alt="MIT">
 </p>
 
+<p align="center">
+  <img src="docs/media/hero.png" alt="MacMax: the Overview and Network panels" width="860">
+</p>
+
 > **Status:** in development, nothing is released yet. The install line below works from v0.1.0.
+
+## Install
+
+Open **Terminal** (Spotlight, type "Terminal") and paste this:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/danieltamas/macmax/main/install.sh | bash
 ```
 
-To update, press Update in Settings, About when a newer release is out (an arrow in the menu's
-header says one is), or run the same line again.
+That is all. No admin password, no Homebrew, no developer tools. It needs macOS 14 or newer, on
+Apple silicon or Intel. MacMax appears in the menu bar a few seconds later.
 
-<p align="center">
-  <img src="docs/media/hero.png" alt="MacMax" width="860">
-</p>
-
-## A slow afternoon, explained
-
-Your fans spin, typing lags, Chrome takes a second to switch tabs. You click the menu bar icon:
-
-| | |
-|---|---|
-| **CRIT** | Docker's VM has 2.3 GB of its memory compressed by macOS: it spins waiting for its own RAM. **Stop idle containers** |
-| **WARN** | 3 agent sessions older than 7 days still hold 1.8 GB and 41 helper processes. **End them** |
-| **WARN** | 3.1 GB of swap in use: the working set does not fit in 16 GB. Atlas Browser holds 5.6 GB |
-| **OK** | Traffic goes through your VPN as 203.0.113.20 (DE); your ISP address stays hidden |
-
-Two presses later the swap is draining. Nothing was guessed: every finding names the numbers that
-fired it.
+- **What the line does:** downloads the latest release from GitHub, checks it against the published
+  checksum, and copies MacMax to `/Applications` (or `~/Applications` if you cannot write there).
+  [Read the script](install.sh) first if you like; it is short.
+- **Prefer a download?** Take `MacMax-X.Y.Z.zip` from the
+  [Releases page](https://github.com/danieltamas/macmax/releases), unzip it and drag MacMax to
+  Applications. macOS asks you to confirm the first time: right-click the app, then Open.
+- **Updating:** when a new version is out, an arrow appears in the panel header. Press it, then
+  Update in Settings, About. Or run the install line again.
 
 ## What you get
 
-**One verdict.** OK, WARN or CRIT in the menu bar, and in the panel the few things that matter,
-each with its evidence, why it slows the Mac, and the press that fixes it.
+### One answer: is this Mac healthy, and if not, why?
 
-**Every app's real cost.** CPU, memory (the number Activity Monitor shows), disk and network,
-grouped by app: Chrome's 38 helpers are one row, an agent session and its helper processes are one
-row, Docker's VM is one row. Expand a row to see its processes.
-
-**Traffic in and out, per app.** Who is uploading right now, who used the most in the last hour or
-day, and the interface totals. MacMax reads the counters macOS already keeps; it does not capture
-or inspect packets.
-
-**Your IP and your VPN, checked.** The address the internet sees, its country, and whether your VPN
-(Outline, Tailscale, WireGuard and others) is connected and actually carrying your traffic. If the
-VPN says connected but your ISP address still shows, MacMax says so in red.
-
-**A deterministic audit on a schedule.** The same checks every few hours, with fixed thresholds
-you can edit: uptime, load, swap, the memory compressor, memory pressure, stale sessions, Docker,
-runaway system daemons, disk space and IO, crash reports, launch items, thermal throttling, and
-tools running under Rosetta. Same machine state in, same findings out.
-
-**Cleanup that cannot hurt you.** Caches that rebuild themselves (app caches, Xcode DerivedData,
-npm, pip, Homebrew), previewed with sizes, moved to the Trash only after you confirm. Your
-documents, keychains, mail and anything with a `.git` folder are never touched.
-
-**History.** CPU, memory, swap, disk and network for the last hour to the last 90 days. Point at a
-spike to see which apps held the Mac then.
-
-**Ask your coding agent.** `macmax mcp` lets Claude Code (or any MCP client) read the same data:
-"what is slowing my Mac?" gets an answer from real numbers. Every tool is read-only; quitting or
-cleaning stays a press in the app.
+The menu bar icon turns **OK**, **WARN** or **CRIT**. Open it and you see the few things that
+matter, each with the numbers behind it, why it slows the Mac, and the button that fixes it.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/media/apps.png" alt="Apps"></td>
-    <td width="50%"><img src="docs/media/network.png" alt="Network"></td>
+    <td width="50%" valign="top"><img src="docs/media/overview.png" alt="Overview with a WARN verdict and three findings"></td>
+    <td width="50%" valign="top"><img src="docs/media/findings.png" alt="Findings with the evidence and the fix for each"></td>
   </tr>
   <tr>
-    <td align="center"><b>Apps</b>: every app's CPU, memory, disk and network</td>
-    <td align="center"><b>Network</b>: traffic per app, your IP and your VPN</td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/media/findings.png" alt="Findings"></td>
-    <td width="50%"><img src="docs/media/history.png" alt="History"></td>
-  </tr>
-  <tr>
+    <td align="center"><b>Overview</b>: the verdict and live numbers</td>
     <td align="center"><b>Findings</b>: what fired, why, and the fix</td>
-    <td align="center"><b>History</b>: who held the Mac at that spike</td>
   </tr>
 </table>
 
-## Get started
+A slow afternoon, explained:
 
-1. **Install** with the line above. You need macOS 14 or newer. Nothing else: no Homebrew, no
-   developer tools, no admin password.
-2. **Click the icon.** The first verdict appears within a minute; history fills in as MacMax runs.
-3. **Optional:** Settings, Permissions, Full Disk Access lets MacMax size folders macOS protects.
-   Everything else works without it.
-4. **Optional:** connect your agent: `claude mcp add macmax -- ~/.local/bin/macmax mcp`.
+| | |
+|---|---|
+| **CRIT** | Docker's VM has 2.3 GB of its memory squeezed by macOS, so it crawls. **Stop idle containers.** |
+| **WARN** | 3 Claude Code sessions older than 7 days still hold 1.8 GB and 41 helper processes. **End them.** |
+| **WARN** | 3.1 GB of swap is in use: what you run does not fit in 16 GB of memory. Atlas Browser holds 5.5 GB. |
+| **OK** | Your traffic goes through your VPN as 203.0.113.20 (DE). Your ISP address stays hidden. |
 
-What MacMax cannot do, by design: show memory per Chrome tab (only Chrome's own Task Manager can,
-under Window, Task Manager), block traffic, or run anything as root.
+Nothing is guessed: every finding names the numbers that fired it, and the checks are the same
+every time (fixed thresholds you can edit in Settings).
+
+### Know your Mac
+
+<table>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/media/this-mac.png" alt="The This Mac card: chip, cores busy, GPU, memory"></td>
+    <td width="50%" valign="top"><img src="docs/media/apps.png" alt="Apps, each with CPU, memory, disk and network"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>This Mac</b>: chip, cores in use, GPU and its memory, RAM</td>
+    <td align="center"><b>Apps</b>: the real cost of each app</td>
+  </tr>
+</table>
+
+Apps are grouped the way you think of them: Chrome's 38 helpers are one row, an agent session and
+its helper processes are one row. Expand a row to see its processes. Memory is the number Activity
+Monitor shows.
+
+### Network: who is using it, and is your VPN really on
+
+<table>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/media/network.png" alt="Traffic per app and the network identity card"></td>
+    <td width="50%" valign="top"><img src="docs/media/leak.png" alt="The identity card when the VPN is connected but traffic leaks"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Traffic per app</b>, now, 1 hour or 24 hours</td>
+    <td align="center"><b>A leak</b>, in red: the VPN says connected, your ISP address still shows</td>
+  </tr>
+</table>
+
+MacMax reads the counters macOS already keeps. It does not capture or look inside your traffic. It
+works with Outline, Tailscale, WireGuard and other VPNs.
+
+### Cleanup that cannot hurt you
+
+<table>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/media/cleanup.png" alt="Cleanup rules with sizes"></td>
+    <td width="50%" valign="top"><img src="docs/media/cleanup-results.png" alt="What was just moved to the Trash, and the history of cleanups"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Rules</b>: caches that rebuild themselves, sized and previewed</td>
+    <td align="center"><b>Results</b>: a summary, and the items one click away</td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/media/large-folders.png" alt="The biggest folders under your home folder"></td>
+    <td width="50%" valign="top"><img src="docs/media/access-prompt.png" alt="One prompt that lists the folders MacMax needs"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Large folders</b>: shown, never deleted</td>
+    <td align="center"><b>One permission prompt</b> instead of thirteen</td>
+  </tr>
+</table>
+
+Cleanup moves things to the **Trash**, so you can put them back, and only after you confirm. It
+covers app caches, Xcode build data, npm, pip and Homebrew downloads, and old logs. Your documents,
+keychains, mail and any folder with a `.git` inside are never touched. MacMax can also end leftover
+helper processes (stale agent servers, parents that never collected finished children), only when
+you press the button.
+
+### History
+
+<p align="center">
+  <img src="docs/media/history.png" alt="History with a memory spike and the apps that held it" width="360">
+</p>
+
+CPU, memory, swap, disk and network, from the last hour to the last 90 days. Point at a spike to
+see which apps held the Mac at that moment.
+
+### Ask your coding agent
+
+`macmax mcp` lets Claude Code, or any MCP client, read the same data: "what is slowing my Mac?"
+gets an answer from real numbers. **It is off until you turn it on** in Settings, Agent access, and
+every tool is read-only: quitting or cleaning is always a press in the app.
+
+<p align="center">
+  <img src="docs/media/settings-agent-access.png" alt="Settings, Agent access" width="620">
+</p>
+
+## Coming next
+
+Features of Mac cleaners that fit MacMax, built one at a time after the first release. They are
+not in the app yet.
+
+- **Login items and background agents:** see everything that starts with your Mac and turn it off
+  with a press, reversibly.
+- **App uninstaller:** remove an app together with its leftovers (preferences, caches, support
+  files), to the Trash, after one confirmation.
+- **Battery health, temperatures and fans.**
+- **More cleanup:** Mail attachments, language files, browser caches, and a list of old downloads.
+
+On purpose, MacMax will not have a malware scanner, a file shredder or "speed boost" buttons: they
+promise more than they can do.
+
+## Questions
+
+**Does it work on Intel Macs?** The download is universal: one app that runs on Apple silicon and
+Intel. A reading a Mac does not have (performance and efficiency cores exist only on Apple silicon)
+shows as unavailable, never as a made-up number.
+
+**It lost Full Disk Access after an update.** MacMax is not signed with a paid Apple developer
+certificate, so macOS treats each new version as a new app. Turn MacMax on again in System
+Settings, Privacy & Security, Full Disk Access. Everything else works without it.
+
+**Can I free my swap?** Not safely: swap is memory that macOS moved to disk and gives back by
+itself when the apps that need it close or restart. Close the apps MacMax names, or restart.
+
+**Can it show memory per Chrome tab?** No. Only Chrome's own Task Manager can (Window, Task
+Manager).
+
+**What will it never do?** Block traffic, run anything as root, or end or delete anything without
+your press.
 
 ## Privacy and security
 
@@ -117,7 +196,7 @@ never land in its history. The agent server listens on no port: it talks only to
 started it. The threat model is in [`SECURITY.md`](SECURITY.md).
 
 <details>
-<summary><b>CLI</b></summary>
+<summary><b>Command line</b></summary>
 
 ```bash
 macmax snapshot            # verdict, vitals, top apps, IP and VPN
@@ -130,6 +209,8 @@ macmax mcp                 # the read-only agent server on stdio
 ```
 
 Add `--json` to any command. Everything MacMax keeps lives in `~/.macmax` (or `$MACMAX_HOME`).
+To connect your agent: turn on Settings, Agent access, then
+`claude mcp add macmax -- ~/.local/bin/macmax mcp`.
 
 </details>
 
@@ -154,7 +235,7 @@ curl -fsSL https://raw.githubusercontent.com/danieltamas/macmax/main/install.sh 
 ```
 
 Removes the app and the `macmax` command, and keeps your history in `~/.macmax` unless you add
-`--purge`. If you connected an agent: `claude mcp remove macmax`.
+`--purge` after `--uninstall`. If you connected an agent: `claude mcp remove macmax`.
 
 </details>
 

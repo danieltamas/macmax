@@ -59,8 +59,25 @@ lint_ascii() {
   fi
 }
 
+# Every image the README shows exists, and every install.sh option it names is one the script has: a broken
+# picture or a command that fails is the first thing a new user meets.
+lint_readme() {
+  local readme=$root/README.md ref flag
+  [[ -f $readme ]] || return 0
+  while IFS= read -r ref; do
+    [[ -n $ref ]] || continue
+    [[ -f $root/$ref ]] || fail "README.md shows $ref, which does not exist"
+  done < <(grep -oE 'docs/media/[A-Za-z0-9._-]+\.png' "$readme" | sort -u)
+  [[ -f $root/install.sh ]] || return 0
+  while IFS= read -r flag; do
+    [[ -n $flag ]] || continue
+    grep -q -- "$flag" "$root/install.sh" || fail "README.md names install.sh option $flag, which the script does not have"
+  done < <(grep -E 'bash -s --|--uninstall|--purge' "$readme" | grep -oE -- '--[a-z-]+' | sort -u | grep -v -- '^--$')
+}
+
 lint_size
 lint_ascii
+lint_readme
 
 if ((!lint_only)); then
   cd "$repo"

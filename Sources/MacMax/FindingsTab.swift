@@ -53,6 +53,7 @@ struct FindingCard: View {
                     Text(finding.why).font(.meta).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
                 if TidyBlock.applies(to: finding.ruleID) { TidyBlock(model: model, ruleID: finding.ruleID) }
+                if SwapNote.applies(to: finding.ruleID) { SwapNote(model: model) }
                 HStack {
                     if let action = finding.action {
                         Text("Next: \(action)").font(.system(size: 11.5, weight: .medium))

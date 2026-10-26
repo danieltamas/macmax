@@ -73,6 +73,31 @@ enum IOKitReadings {
         return .ok(busiest, source: "IOAccelerator", at: at)
     }
 
+    /// Memory the GPU holds right now: on Apple silicon the system memory it uses (shared with RAM), on a discrete card
+    /// its video memory. nil when the Mac publishes neither, so it never reads as zero.
+    static func gpuMemory() -> (used: UInt64, allocated: UInt64?)? {
+        guard let accelerators = entries(matching: "IOAccelerator")?.map(\.properties) else { return nil }
+        var used: UInt64?
+        var allocated: UInt64?
+        for accelerator in accelerators {
+            guard let statistics = accelerator["PerformanceStatistics"] as? [String: Any] else { continue }
+            if let value = counter(statistics, "In use system memory") ?? counter(statistics, "vramUsedBytes") {
+                used = (used ?? 0) &+ value
+            }
+            if let value = counter(statistics, "Alloc system memory") { allocated = (allocated ?? 0) &+ value }
+        }
+        return used.map { ($0, allocated) }
+    }
+
+    /// The first accelerator's model name and core count, as the registry publishes them; either is nil when it does not.
+    static func gpuIdentity() -> (name: String?, cores: Int?)? {
+        guard let accelerators = entries(matching: "IOAccelerator")?.map(\.properties) else { return nil }
+        guard let first = accelerators.first else { return (nil, nil) }
+        let name = (first["model"] as? String) ?? (first["model"] as? Data).flatMap { String(data: $0, encoding: .utf8) }
+        let cores = (first["gpu-core-count"] as? NSNumber).map(\.intValue)
+        return (name?.trimmingCharacters(in: .controlCharacters.union(.whitespaces)), cores)
+    }
+
     static func battery(at: Date) -> Reading<BatteryStatus> {
         guard let blob = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
               let list = IOPSCopyPowerSourcesList(blob)?.takeRetainedValue() as? [CFTypeRef] else {

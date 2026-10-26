@@ -72,7 +72,7 @@ public actor Sampler {
                               name: $0.name, cpu: $0.cpu, footprint: $0.footprintBytes.map(Int64.init(clamping:)))
             },
             appInfo: apps.map { AppInfo(appKey: $0.app.id, name: $0.app.name, firstSeen: ts) },
-            interfaces: networkSnapshot.interfaces.value ?? [])
+            interfaces: networkSnapshot.interfaces.value ?? [], live: SystemLive(systemSnapshot))
         try Task.checkCancellation()
         try await database.write(rows)
         lastTimestamp = ts
