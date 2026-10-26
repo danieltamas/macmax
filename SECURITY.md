@@ -31,11 +31,12 @@ caches to the Trash, each only on your press.
    editable, can be turned off) and `api.github.com` for the update check. Both have timeouts. A
    failed check shows as unknown, never as OK. No telemetry or analytics.
 5. **Updates** are downloaded from this repository's GitHub releases and verified against the
-   release's `SHA256SUMS` before anything is replaced. [When releases are signed with a Developer
-   ID: the new app's signing team must equal the running app's.] Update runs only for the installed
-   copy in `/Applications` or `~/Applications`.
+   release's `SHA256SUMS` before anything is replaced. Releases are ad hoc signed, so the checksum is
+   the only check on the new app (see Residual risks). Update runs only for the installed copy in
+   `/Applications` or `~/Applications`, and replaces that copy.
 6. **The agent server** (`macmax mcp`) speaks only over the stdin and stdout of the program that
-   started it; MacMax opens no listening socket. Every tool is read-only: an agent can read what
+   started it; MacMax opens no listening socket. It answers nothing until you turn on Settings, Agent
+   access (off by default; a failed read of that setting counts as off). Every tool is read-only: an agent can read what
    MacMax sees, and can never quit, kill, delete or change settings. Its answers label process
    text as untrusted data.
 7. **Local data** lives in `~/.macmax`, mode 0700: history, audits, the action log, the config. It
@@ -49,6 +50,7 @@ caches to the Trash, each only on your press.
 - Redaction is pattern-based. A secret in an unusual format may pass; MacMax never stores full
   command lines in its history for that reason, only redacted short forms when shown.
 - With ad hoc signed releases, the update's integrity rests on GitHub and this repository's
-  release process (checksums come from the same release). [Removed if Developer ID is adopted.]
+  release process (checksums come from the same release). macOS also treats each new version as a
+  new app, so privacy grants such as Full Disk Access are given again after an update.
 - The IP check reveals your IP address to the endpoint you configure (Cloudflare by default), as
   any website you visit would see it.
