@@ -223,6 +223,20 @@ final class PanelModel {
     var startupInspecting: Set<String> = []
     var inspectStartup: (StartupItem) -> Void = { _ in }
 
+    // Apps: the installed ones, what each left behind (by app path), and the last uninstall
+    var installedApps: [InstalledApp]?
+    var installedAppsUnreadable = 0
+    var installedAppsState: SectionState = .ready
+    var appLeftovers: [String: [Leftover]] = [:]
+    var leftoversLoading: Set<String> = []
+    var uninstalling: String?
+    var uninstallProgress: (done: Int, total: Int, next: String?)?
+    var uninstallResults: [CleanupResult] = []
+    var uninstalledName: String?
+    var scanInstalledApps: () -> Void = {}
+    var loadLeftovers: (InstalledApp) -> Void = { _ in }
+    var uninstallApp: (InstalledApp, [Leftover]) -> Void = { _, _ in }
+
     // Permissions, as macOS answers now
     var fullDiskAccess: PermissionState = .unknown
     var notifications: NotificationAccess = .unknown

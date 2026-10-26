@@ -376,7 +376,8 @@ file shredder, privacy cleaner, "boost" buttons.
 - **U14 App uninstaller.** Pick an app, see it plus its leftovers (Application Support, Caches,
   Preferences, Containers, Logs, launch agents) with sizes, move the lot to the Trash after one
   confirmation. Never touches a running app, an Apple app, or anything outside the app's own
-  bundle id and name.
+  bundle id and name. Built: the leftovers are an allowlist of Library paths for the bundle id (and the name,
+  listed but unticked); /Library items are never touched; app first, and its leftovers stay if it does not move.
 - **U15 Battery, temperatures and fans.** Battery health (cycle count, maximum capacity), thermal
   state and, where macOS exposes them without root, temperatures and fan speed. A reading that
   fails is "unknown", never "fine".

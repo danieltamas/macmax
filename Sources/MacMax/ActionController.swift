@@ -22,6 +22,9 @@ final class ActionController {
         model.scanStartup = { [weak self] in self?.scanStartup() }
         model.setStartupEnabled = { [weak self] in self?.setStartup($0, enabled: $1) }
         model.inspectStartup = { [weak self] in self?.inspectStartup($0) }
+        model.scanInstalledApps = { [weak self] in self?.scanInstalledApps() }
+        model.loadLeftovers = { [weak self] in self?.loadLeftovers($0) }
+        model.uninstallApp = { [weak self] in self?.uninstall($0, leftovers: $1) }
         model.refreshPermissions = { [weak self] in self?.refreshPermissions() }
         model.requestNotifications = { [weak self] in self?.requestNotifications() }
     }
@@ -280,7 +283,7 @@ final class ActionController {
     // MARK: - Cleanup
 
     /// Read from the live process table and the running apps each time it is asked, never from a snapshot.
-    private nonisolated static func running() -> Running? {
+    nonisolated static func running() -> Running? {
         guard let programs = RunningPrograms.names() else { return nil }
         let apps = NSWorkspace.shared.runningApplications
         return Running(names: programs.union(apps.compactMap(\.localizedName)),

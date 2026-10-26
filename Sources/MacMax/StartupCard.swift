@@ -50,7 +50,7 @@ struct StartupCard: View {
                     Image(systemName: showOthers ? "chevron.down" : "chevron.right").font(.system(size: 9, weight: .semibold))
                     Text("Installed for everyone, view only (\(others.count))").font(.system(size: 12, weight: .medium))
                 }.foregroundStyle(Theme.teal).contentShape(Rectangle())
-            }.buttonStyle(.plain)
+            }.buttonStyle(.plain).pointingHandCursor()
             if showOthers {
                 Text("These belong to apps and macOS for all users of this Mac. Changing them needs an administrator, so MacMax only shows them.")
                     .font(.meta).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)

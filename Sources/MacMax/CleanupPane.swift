@@ -32,6 +32,7 @@ struct CleanupPane: View {
                 if !model.cleanupResults.isEmpty { JustMovedCard(model: model) }
                 LargeFoldersCard(model: model)
                 StartupCard(model: model)
+                AppUninstallCard(model: model)
                 shownOnly
                 LastCleanupsCard(model: model)
             } else {

@@ -138,6 +138,15 @@ works with Outline, Tailscale, WireGuard and other VPNs.
   </tr>
 </table>
 
+<table>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/media/uninstall-app.png" alt="Uninstall apps: an app with the files it left behind and their sizes"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Uninstall apps</b>: the app and what it left behind, to the Trash</td>
+  </tr>
+</table>
+
 Cleanup moves things to the **Trash**, so you can put them back, and only after you confirm. It
 covers app caches, Xcode build data, npm, pip and Homebrew downloads, and old logs. Your documents,
 keychains, mail and any folder with a `.git` inside are never touched. MacMax can also end leftover
@@ -147,7 +156,12 @@ Agents and the system's). You can turn off your own, and turn them on again; the
 are only listed, because changing them needs an administrator and MacMax never asks for that.
 Click any item to see who added it (the app it belongs to, or a clearly marked guess from its name),
 what it runs, when it starts, and, while it is running, the addresses it is connected to right now.
-MacMax shows where a program connects, not what it sends.
+MacMax shows where a program connects, not what it sends. **Uninstall apps** lists the apps in
+`/Applications` and `~/Applications`; pick one to see what it left in your Library (support files,
+caches, preferences, containers, logs, saved state, its launch agent) with sizes, untick anything you
+want to keep, and move the lot to the Trash after one confirmation. It never touches an app that is
+open, an Apple app, MacMax itself, or anything in `/Library`, which needs an administrator. Files
+matched only by the app's name are listed but start unticked.
 
 ### History
 
@@ -173,8 +187,6 @@ every tool is read-only: quitting or cleaning is always a press in the app.
 Features of Mac cleaners that fit MacMax, built one at a time after the first release. They are
 not in the app yet.
 
-- **App uninstaller:** remove an app together with its leftovers (preferences, caches, support
-  files), to the Trash, after one confirmation.
 - **Battery health, temperatures and fans.**
 - **More cleanup:** Mail attachments, language files, browser caches, and a list of old downloads.
 

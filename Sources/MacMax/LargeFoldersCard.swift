@@ -65,7 +65,7 @@ struct LargeFoldersCard: View {
     }
 }
 
-private extension SectionState {
+extension SectionState {
     var isLoading: Bool {
         if case .loading = self { return true }
         return false

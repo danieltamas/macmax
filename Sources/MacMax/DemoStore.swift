@@ -72,6 +72,20 @@ enum DemoStore {
             connections: [ProcessConnection(transport: .tcp, localAddress: "192.0.2.10", localPort: "50000", remoteAddress: "198.51.100.7", remotePort: "443", state: "ESTABLISHED"),
                           ProcessConnection(transport: .tcp, localAddress: "192.0.2.10", localPort: "50001", remoteAddress: "203.0.113.20", remotePort: "443", state: "ESTABLISHED"),
                           ProcessConnection(transport: .tcp, localAddress: "*", localPort: "8080", state: "LISTEN")])
+        let relay = InstalledApp(path: "/Applications/Relay Chat.app", name: "Relay Chat", bundleID: "ro.example.relay", version: "4.2.1", bytes: 412_000_000)
+        model.installedApps = [
+            InstalledApp(path: "/Applications/Pixel Studio.app", name: "Pixel Studio", bundleID: "ro.example.pixel", version: "2.9", bytes: 1_380_000_000),
+            relay,
+            InstalledApp(path: "/Applications/Tidal Notes.app", name: "Tidal Notes", bundleID: "ro.example.notes", version: "1.7.3", bytes: 96_000_000),
+            InstalledApp(path: "/Applications/Orbit Calendar.app", name: "Orbit Calendar", bundleID: "ro.example.orbit", version: "8.0", bytes: 71_000_000),
+        ]
+        model.appLeftovers[relay.path] = [
+            Leftover(path: "/Users/example/Library/Application Support/ro.example.relay", kind: .applicationSupport, match: .bundleID, bytes: 842_000_000),
+            Leftover(path: "/Users/example/Library/Caches/ro.example.relay", kind: .caches, match: .bundleID, bytes: 233_000_000),
+            Leftover(path: "/Users/example/Library/Containers/ro.example.relay", kind: .container, match: .bundleID, bytes: 18_000_000),
+            Leftover(path: "/Users/example/Library/Preferences/ro.example.relay.plist", kind: .preferences, match: .bundleID, bytes: 12_000),
+            Leftover(path: "/Users/example/Library/Logs/Relay Chat", kind: .logs, match: .name, bytes: 3_000_000),
+        ]
         model.notifications = .allowed
         model.largeItems = [
             LargeItem(path: "/Users/example/Library/Developer/Xcode/iOS DeviceSupport", bytes: 14_200_000_000, modified: now.addingTimeInterval(-86_400 * 40), isProtected: false),

@@ -98,7 +98,13 @@ struct TrafficRow: View {
         if model.connectionsLoading.contains(line.id) {
             Text("Reading connections...").font(.meta).foregroundStyle(Theme.textSecondary)
         } else if let lines = model.connections[line.id] {
-            if lines.isEmpty { Text("No open connections.").font(.meta).foregroundStyle(Theme.textTertiary) }
+            if lines.isEmpty {
+                // Traffic with no visible socket is a system program: macOS hides another user's connections, which is not "none".
+                Text(line.bytesIn + line.bytesOut > 0
+                     ? "None visible to MacMax. This program is moving data, but it runs as another user (the system), and macOS does not show their connections."
+                     : "No open connections.")
+                    .font(.meta).foregroundStyle(Theme.textTertiary).fixedSize(horizontal: false, vertical: true)
+            }
             ForEach(lines) { Text($0.text).font(.system(size: 10.5, design: .monospaced)).foregroundStyle(Theme.textSecondary).lineLimit(1) }
         }
     }
