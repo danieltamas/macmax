@@ -1,4 +1,5 @@
 import AppKit
+import MacMaxCore
 import SwiftUI
 
 /// The README's screenshots: the real views over synthetic data, drawn by an offscreen window
@@ -25,7 +26,15 @@ enum ScreenshotRender {
                 let model = DemoStore.model(stress: stress)
                 model.tab = tab
                 if tab == .network { model.window = .hour }
+                if tab == .history { DemoStore.history(for: model, range: .day, stress: stress) }
                 try write(PanelView(model: model).frame(height: 780), to: url(tab.rawValue.lowercased()))
+            }
+            for range in [HistoryRange.hour, .week] {
+                let model = DemoStore.model(stress: stress)
+                model.tab = .history
+                DemoStore.history(for: model, range: range, stress: stress)
+                DemoStore.selectSpike(model, metric: .cpu)
+                try write(PanelView(model: model).frame(height: 780), to: url(range == .hour ? "history-1h" : "history-7d"))
             }
             let leak = DemoStore.model(stress: stress, leak: true)
             try write(IdentityCardView(model: leak).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("leak"))

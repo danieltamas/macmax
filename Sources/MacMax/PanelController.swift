@@ -19,6 +19,7 @@ final class PanelController {
     private var lastIdentity: IdentityCard?
     private var nowTraffic: [TrafficLine] = []
     private var windowTask: Task<Void, Never>?
+    private var historyLoader: HistoryLoader?
     /// The audit reads its thresholds off the main actor; this carries them across.
     private let settings = SettingsBox()
 
@@ -58,7 +59,9 @@ final class PanelController {
             model.appsState = failure
             model.trafficState = failure
         }
-        tasks = [Task { await sampleLoop() }, Task { await auditLoop() }, Task { await identityLoop() }, Task { await maintenanceLoop() }]
+        let loader = HistoryLoader(model: model, database: database)
+        historyLoader = loader
+        tasks = [Task { await loader.refreshLoop() }, Task { await sampleLoop() }, Task { await auditLoop() }, Task { await identityLoop() }, Task { await maintenanceLoop() }]
     }
 
     // MARK: - Sampling
