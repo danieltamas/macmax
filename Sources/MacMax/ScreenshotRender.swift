@@ -35,6 +35,11 @@ enum ScreenshotRender {
             try write(VStack(spacing: 14) { JustMovedCard(model: cleaned); LastCleanupsCard(model: cleaned) }
                 .padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("cleanup-results"))
             try write(LargeFoldersCard(model: DemoStore.model(stress: stress)).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("large-folders"))
+            try write(StartupCard(model: DemoStore.model(stress: stress)).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("background-items"))
+            let moving = DemoStore.model(stress: stress)
+            moving.cleanupMoving = true
+            moving.cleanupProgress = (3, 12, "/Users/example/Library/Caches/ro.example.pixel")
+            try write(CleanupPane(model: moving, place: .tab).padding(14).frame(width: PanelView.width, height: 640, alignment: .top).background(Backdrop()), to: url("cleanup-moving"))
             let asking = DemoStore.model(stress: stress)
             asking.fullDiskAccess = .unknown
             try write(AccessPrompt(model: asking).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("access-prompt"))

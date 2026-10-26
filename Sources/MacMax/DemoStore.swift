@@ -55,6 +55,16 @@ enum DemoStore {
         model.lastCleanups += (0 ..< 4).map { ActionRow(ts: base - Int64($0), kind: "cleanup", target: "/Users/example/Library/Logs/run\($0).log", result: "trashed", detail: "old_logs, 3 MB") }
         model.config.protectedPaths = ["/Users/example/Projects"]
         model.fullDiskAccess = .granted
+        model.startupItems = [
+            StartupItem(label: "ro.example.relay.helper", path: "/Users/example/Library/LaunchAgents/ro.example.relay.helper.plist", scope: .userAgent,
+                        program: "/Applications/Relay Chat.app/Contents/MacOS/RelayHelper", runsAtLoad: true, isRunning: true),
+            StartupItem(label: "ro.example.pixel.updater", path: "/Users/example/Library/LaunchAgents/ro.example.pixel.updater.plist", scope: .userAgent,
+                        program: "/Users/example/Library/Application Support/Pixel Studio/updater", runsAtLoad: true),
+            StartupItem(label: "ro.example.sync", path: "/Library/LaunchAgents/ro.example.sync.plist", scope: .globalAgent,
+                        program: "/Library/PrivilegedHelperTools/ro.example.sync", runsAtLoad: true, isRunning: true),
+            StartupItem(label: "ro.example.notes.agent", path: "/Users/example/Library/LaunchAgents/ro.example.notes.agent.plist", scope: .userAgent,
+                        program: "/Applications/Tidal Notes.app/Contents/MacOS/agent", runsAtLoad: true, isDisabled: true),
+        ]
         model.notifications = .allowed
         model.largeItems = [
             LargeItem(path: "/Users/example/Library/Developer/Xcode/iOS DeviceSupport", bytes: 14_200_000_000, modified: now.addingTimeInterval(-86_400 * 40), isProtected: false),

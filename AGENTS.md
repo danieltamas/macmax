@@ -95,6 +95,8 @@ Check the test count grows when tests are added. Check the installed build is th
 - **Redact before storing, showing or returning** any command line or process text.
 - **The app must stay light**: no perpetual SwiftUI animation, pause when the panel is hidden,
   relative times redraw once a minute (LESSONS.md section 3). `scripts/perf.sh` budgets are hard.
+- **Anything MacMax does on this Mac shows progress** while it runs (`OperationProgress`: a bar that fills when the amount is
+  known, the system's moving bar when not), and a press never looks like nothing happened.
 - **Every setting lives in the app** (Settings window structure in LESSONS.md section 5).
 - **No real data in fixtures or screenshots**: no user names, hostnames, paths, tokens; IPs only
   from RFC 5737 ranges.

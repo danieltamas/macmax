@@ -31,6 +31,7 @@ struct CleanupPane: View {
                 rules
                 if !model.cleanupResults.isEmpty { JustMovedCard(model: model) }
                 LargeFoldersCard(model: model)
+                StartupCard(model: model)
                 shownOnly
                 LastCleanupsCard(model: model)
             } else {
@@ -60,7 +61,6 @@ struct CleanupPane: View {
                             .font(.system(size: 11.5, weight: .medium).monospacedDigit()).foregroundStyle(Theme.textSecondary)
                     }
                 }
-                if case let .loading(text) = model.cleanupState { Text(text).font(.meta).foregroundStyle(Theme.textTertiary) }
                 if case let .failed(_, reason) = model.cleanupState { Text(reason).font(.meta).foregroundStyle(Theme.warn) }
                 skipped
                 HStack(spacing: 10) {
@@ -80,9 +80,19 @@ struct CleanupPane: View {
                         .disabled(total <= 0 || model.cleanupMoving || model.cleanupState != .ready)
                     }
                 }
-                if model.cleanupMoving { Text("Moving to the Trash...").font(.meta).foregroundStyle(Theme.textSecondary) }
+                if model.cleanupMoving { movingProgress }
+                if case let .loading(text) = model.cleanupState { OperationProgress(text: text) }
             }
         }
+    }
+
+    private var movingProgress: some View {
+        let progress = model.cleanupProgress
+        let total = max(progress?.total ?? 0, 1)
+        let name = progress?.current.map { Redaction.sanitizeText(Redaction.redact([($0 as NSString).lastPathComponent]).joined(separator: " ")) }
+        let text = "Moving \(min((progress?.done ?? 0) + 1, total)) of \(total) to the Trash" + (name.map { ": \($0)" } ?? "")
+        return OperationProgress(text: progress?.current == nil && (progress?.done ?? 0) >= total ? "Finishing..." : text,
+                                 fraction: Double(progress?.done ?? 0) / Double(total))
     }
 
     private static func size(_ bytes: Int64?, items: [CleanupCandidate], partial: Bool) -> String {

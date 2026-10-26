@@ -5,7 +5,7 @@ import MacMaxCore
 /// where it got to, and writes the action log. Nothing here is reachable from the CLI or the MCP server.
 @MainActor
 final class ActionController {
-    private let model: PanelModel
+    let model: PanelModel
     private let database: () -> Database?
     private let processes = ProcessActions.system()
 
@@ -19,6 +19,8 @@ final class ActionController {
         model.loadLastCleanups = { [weak self] in self?.loadLastCleanups() }
         model.scanTidy = { [weak self] in self?.scanTidy() }
         model.scanLarge = { [weak self] in self?.scanLarge() }
+        model.scanStartup = { [weak self] in self?.scanStartup() }
+        model.setStartupEnabled = { [weak self] in self?.setStartup($0, enabled: $1) }
         model.refreshPermissions = { [weak self] in self?.refreshPermissions() }
         model.requestNotifications = { [weak self] in self?.requestNotifications() }
     }
@@ -29,7 +31,7 @@ final class ActionController {
     private var unlogged: Set<String> = []
     private static let unloggedNote = " (not recorded in the log)"
 
-    private func set(_ key: String, _ state: ActionState) {
+    func set(_ key: String, _ state: ActionState) {
         let state = unlogged.contains(key) && !state.text.hasSuffix(Self.unloggedNote) ? state.noted(Self.unloggedNote) : state
         model.actionStates[key] = state
         // A finished action is news for a few seconds, not a verdict on the row: the same app or container may be back.
@@ -45,7 +47,7 @@ final class ActionController {
     private var asked: Set<ProcessIdentity> = []
 
     /// Every outcome is logged, refusals too. When the log cannot be written the action's own line says so.
-    private func record(kind: String, target: String, result: String, detail: String? = nil, key: String? = nil) {
+    func record(kind: String, target: String, result: String, detail: String? = nil, key: String? = nil) {
         let now = Int64(Date().timeIntervalSince1970)
         let database = database()
         Task {
@@ -322,11 +324,15 @@ final class ActionController {
             return
         }
         model.cleanupMoving = true
+        model.cleanupProgress = (0, candidates.count, nil)
         model.cleanupLogProblem = nil
         Task {
-            let results = await Task.detached(priority: .utility) {
+            let results = await Task.detached(priority: .utility) { [model] in
                 CleanupMover(home: FileManager.default.homeDirectoryForCurrentUser, userProtected: protected,
-                             trasher: FileManagerTrasher(), running: { Self.running() }).move(candidates)
+                             trasher: FileManagerTrasher(), running: { Self.running() })
+                    .move(candidates) { done, total, next in
+                        Task { @MainActor in model.cleanupProgress = (done, total, next) }
+                    }
             }.value
             for (candidate, result) in zip(candidates, results) {
                 switch result.outcome {
@@ -338,6 +344,7 @@ final class ActionController {
             model.cleanupResults = results
             model.cleanupMovedFrom = candidates
             model.cleanupMoving = false
+            model.cleanupProgress = nil
             scanCleanup()
             try? await Task.sleep(for: .milliseconds(300))
             loadLastCleanups()

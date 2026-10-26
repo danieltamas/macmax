@@ -14,6 +14,7 @@ struct ActionControl: View {
 
     var body: some View {
         HStack(spacing: 8) {
+            if state?.isWorking == true { ProgressView().controlSize(.small).tint(Theme.teal) }
             if let state {
                 Text(state.text).foregroundStyle(color(state)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.trailing)

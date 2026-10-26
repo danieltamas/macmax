@@ -363,10 +363,13 @@ What a Mac cleaner offers that MacMax lacks, kept to what is safe and honest. No
 v0.1.0: they land one unit at a time after the first release. Skipped on purpose: malware scan,
 file shredder, privacy cleaner, "boost" buttons.
 
-- **U13 Login items and launch agents.** List what starts at login or runs in the background (login
-  items, `~/Library/LaunchAgents`, `/Library/LaunchAgents`, `/Library/LaunchDaemons`), with the app
-  that owns each, its size on disk and whether it is running. Turning one off is a press in the app
-  and reversible (the plist is disabled, not deleted). Read-only over the CLI and MCP.
+- **U13 Background items (launch agents and daemons).** List what launchd starts by itself
+  (`~/Library/LaunchAgents`, `/Library/LaunchAgents`, `/Library/LaunchDaemons`) with its program,
+  whether it is running and whether it is turned off. Turning one off (`launchctl disable` plus
+  `bootout`) or on again is a press in the app, only for the user's own agents (never `com.apple.*`
+  or MacMax itself); system-wide ones are listed with "Needs admin". The login items of System
+  Settings are not read: macOS offers no way to list them without `sfltool`. App only: no CLI or MCP
+  tool in this unit (the MCP tool list is fixed by the agent API tests).
 - **U14 App uninstaller.** Pick an app, see it plus its leftovers (Application Support, Caches,
   Preferences, Containers, Logs, launch agents) with sizes, move the lot to the Trash after one
   confirmation. Never touches a running app, an Apple app, or anything outside the app's own

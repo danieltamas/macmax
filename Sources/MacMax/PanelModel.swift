@@ -190,6 +190,8 @@ final class PanelModel {
     /// What was asked to move, in the order of `cleanupResults`, for the size and the rule of each.
     var cleanupMovedFrom: [CleanupCandidate] = []
     var cleanupMoving = false
+    /// How far a cleanup has got: items finished, items in all, and the path being moved.
+    var cleanupProgress: (done: Int, total: Int, current: String?)?
     var cleanupLogProblem: String?
     var lastCleanups: [ActionRow] = []
     var scanCleanup: () -> Void = {}
@@ -207,6 +209,15 @@ final class PanelModel {
     var largeSkippedPrivate = false
     var largeState: SectionState = .ready
     var scanLarge: () -> Void = {}
+
+    // Background items: launch agents and daemons
+    var startupItems: [StartupItem]?
+    var startupUnreadable = 0
+    var startupState: SectionState = .ready
+    /// Counts the scans: only the newest publishes, so a slow older one cannot overwrite what an action just changed.
+    var startupGeneration = 0
+    var scanStartup: () -> Void = {}
+    var setStartupEnabled: (StartupItem, Bool) -> Void = { _, _ in }
 
     // Permissions, as macOS answers now
     var fullDiskAccess: PermissionState = .unknown

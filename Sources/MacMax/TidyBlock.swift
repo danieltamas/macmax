@@ -12,7 +12,7 @@ struct TidyBlock: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             switch model.tidyState {
-            case let .loading(text): Text(text).font(.meta).foregroundStyle(Theme.textTertiary)
+            case let .loading(text): OperationProgress(text: text)
             case let .failed(collector, reason):
                 Text("\(collector): \(reason)").font(.meta).foregroundStyle(Theme.warn)
             case .ready:

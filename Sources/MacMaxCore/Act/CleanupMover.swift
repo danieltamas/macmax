@@ -40,8 +40,16 @@ public struct CleanupMover: Sendable {
         self.now = now
     }
 
-    public func move(_ candidates: [CleanupCandidate]) -> [CleanupResult] {
-        candidates.map { CleanupResult(path: $0.path, outcome: move($0)) }
+    /// `progress(done, total, next)` is called before each item (`next` is the path about to be moved) and once at the
+    /// end, so the caller can show how far along a long cleanup is.
+    public func move(_ candidates: [CleanupCandidate], progress: (@Sendable (_ done: Int, _ total: Int, _ next: String?) -> Void)? = nil) -> [CleanupResult] {
+        var results: [CleanupResult] = []
+        for (index, candidate) in candidates.enumerated() {
+            progress?(index, candidates.count, candidate.path)
+            results.append(CleanupResult(path: candidate.path, outcome: move(candidate)))
+        }
+        progress?(candidates.count, candidates.count, nil)
+        return results
     }
 
     /// At most 10 percent above the previewed size, without multiplying (a sparse file can report an enormous size).

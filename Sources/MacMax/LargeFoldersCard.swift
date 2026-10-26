@@ -11,7 +11,7 @@ struct LargeFoldersCard: View {
         SettingsCard(title: "Large folders", detail: "The biggest places under your home folder. MacMax only shows them; nothing here is deleted.") {
             VStack(alignment: .leading, spacing: 8) {
                 switch model.largeState {
-                case let .loading(text): Text(text).font(.meta).foregroundStyle(Theme.textSecondary)
+                case let .loading(text): OperationProgress(text: text)
                 case let .failed(collector, reason): Text("\(collector): \(reason)").font(.meta).foregroundStyle(Theme.warn)
                 case .ready: EmptyView()
                 }

@@ -127,11 +127,22 @@ works with Outline, Tailscale, WireGuard and other VPNs.
   </tr>
 </table>
 
+<table>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/media/background-items.png" alt="Background items: launch agents, running or off, with Turn off"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Background items</b>: what starts by itself, and a press to turn yours off</td>
+  </tr>
+</table>
+
 Cleanup moves things to the **Trash**, so you can put them back, and only after you confirm. It
 covers app caches, Xcode build data, npm, pip and Homebrew downloads, and old logs. Your documents,
 keychains, mail and any folder with a `.git` inside are never touched. MacMax can also end leftover
 helper processes (stale agent servers, parents that never collected finished children), only when
-you press the button.
+you press the button. **Background items** lists the programs macOS starts by itself (your Launch
+Agents and the system's). You can turn off your own, and turn them on again; the system-wide ones
+are only listed, because changing them needs an administrator and MacMax never asks for that.
 
 ### History
 
@@ -157,8 +168,6 @@ every tool is read-only: quitting or cleaning is always a press in the app.
 Features of Mac cleaners that fit MacMax, built one at a time after the first release. They are
 not in the app yet.
 
-- **Login items and background agents:** see everything that starts with your Mac and turn it off
-  with a press, reversibly.
 - **App uninstaller:** remove an app together with its leftovers (preferences, caches, support
   files), to the Trash, after one confirmation.
 - **Battery health, temperatures and fans.**
