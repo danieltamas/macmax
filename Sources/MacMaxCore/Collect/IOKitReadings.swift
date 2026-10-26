@@ -11,7 +11,7 @@ struct DiskCounters: Sendable, Equatable {
 enum IOKitReadings {
     /// Each matching registry entry with its properties and a lookup that also searches its parents.
     /// nil when any entry cannot be read: a partial list would pass for a complete one.
-    private static func entries(matching className: String) -> [(properties: [String: Any], inherited: (String) -> Any?)]? {
+    static func entries(matching className: String) -> [(properties: [String: Any], inherited: (String) -> Any?)]? {
         var iterator: io_iterator_t = 0
         guard IOServiceGetMatchingServices(kIOMainPortDefault, IOServiceMatching(className), &iterator) == KERN_SUCCESS
         else { return nil }

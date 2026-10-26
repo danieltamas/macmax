@@ -9,6 +9,7 @@ struct OverviewTab: View {
             verdictCard
             vitalsGrid
             ThisMacCard(model: model)
+            PowerHealthCard(model: model)
             IdentityCardView(model: model)
             if model.appsState == .ready { consumers }
         }

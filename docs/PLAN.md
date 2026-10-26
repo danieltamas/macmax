@@ -380,7 +380,10 @@ file shredder, privacy cleaner, "boost" buttons.
   listed but unticked); /Library items are never touched; app first, and its leftovers stay if it does not move.
 - **U15 Battery, temperatures and fans.** Battery health (cycle count, maximum capacity), thermal
   state and, where macOS exposes them without root, temperatures and fan speed. A reading that
-  fails is "unknown", never "fine".
+  fails is "unknown", never "fine". Built: battery wear from the AppleSmartBattery registry entry (Apple's own
+  capacity figure first), fans and temperatures from the SMC user client (no root; a nested-struct padding trap is
+  checked at runtime and the read is refused if the layout is wrong). Read while the panel is visible, every 10 s.
+  No CLI command or MCP tool yet: nothing agents need from it.
 - **U16 More cleanup rules and old downloads.** Mail attachments, language files, browser caches as
   rules with previews, and a list of old files in Downloads. Same cleanup rules as U9: Trash only,
   protected paths, preview first.

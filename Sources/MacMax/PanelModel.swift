@@ -244,6 +244,10 @@ final class PanelModel {
     /// By app path. Absent while it is being read; `.unavailable` is "no record", never "not opened".
     var appLastOpened: [String: Reading<Date>] = [:]
     var scanInstalledApps: () -> Void = {}
+    var batteryHealth: Reading<BatteryHealth>?
+    var thermalSensors: Reading<ThermalSensors>?
+    var readPower: () -> Void = {}
+    var readingPower = false
     var loadLeftovers: (InstalledApp) -> Void = { _ in }
     var uninstallApp: (InstalledApp, [Leftover]) -> Void = { _, _ in }
 

@@ -23,6 +23,7 @@ final class ActionController {
         model.setStartupEnabled = { [weak self] in self?.setStartup($0, enabled: $1) }
         model.inspectStartup = { [weak self] in self?.inspectStartup($0) }
         model.scanInstalledApps = { [weak self] in self?.scanInstalledApps() }
+        model.readPower = { [weak self] in self?.readPower() }
         model.loadLeftovers = { [weak self] in self?.loadLeftovers($0) }
         model.uninstallApp = { [weak self] in self?.uninstall($0, leftovers: $1) }
         model.refreshPermissions = { [weak self] in self?.refreshPermissions() }

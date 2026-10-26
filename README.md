@@ -141,9 +141,11 @@ works with Outline, Tailscale, WireGuard and other VPNs.
 <table>
   <tr>
     <td width="50%" valign="top"><img src="docs/media/uninstall-app.png" alt="Uninstall apps: an app with the files it left behind and their sizes"></td>
+    <td width="50%" valign="top"><img src="docs/media/battery-and-heat.png" alt="Battery and heat: battery health, charge cycles, fan speeds and the hottest sensor"></td>
   </tr>
   <tr>
     <td align="center"><b>Uninstall apps</b>: the app and what it left behind, to the Trash</td>
+    <td align="center"><b>Battery and heat</b>: wear, cycles, fans and temperature</td>
   </tr>
 </table>
 
@@ -164,6 +166,12 @@ opened (from Spotlight's record; "no record" is not "never"), and the list sorts
 opened. A closed app often leaves an updater or helper running; the same press ends those first. It
 never touches an app that is open, an Apple app, MacMax itself, or anything in `/Library`, which needs
 an administrator. Files matched only by the app's name are listed but start unticked.
+
+**Battery and heat** (on the Overview tab) shows how worn the battery is (its maximum capacity against
+the original, and the charge cycles used against the rated number), its temperature, the speed of each
+fan and the hottest temperature sensor. The numbers come from the battery's own registry entry and the
+System Management Controller, with no administrator needed. A Mac without a battery or fans says so;
+a reading that fails says "unknown", never "fine"."
 
 ### History
 
@@ -189,7 +197,6 @@ every tool is read-only: quitting or cleaning is always a press in the app.
 Features of Mac cleaners that fit MacMax, built one at a time after the first release. They are
 not in the app yet.
 
-- **Battery health, temperatures and fans.**
 - **More cleanup:** Mail attachments, language files, browser caches, and a list of old downloads.
 
 On purpose, MacMax will not have a malware scanner, a file shredder or "speed boost" buttons: they

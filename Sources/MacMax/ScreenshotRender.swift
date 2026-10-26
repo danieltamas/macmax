@@ -31,6 +31,7 @@ enum ScreenshotRender {
             }
             let mac = DemoStore.model(stress: stress)
             try write(ThisMacCard(model: mac).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("this-mac"))
+            try write(PowerHealthCard(model: mac).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("battery-and-heat"))
             let cleaned = DemoStore.model(stress: stress)
             try write(VStack(spacing: 14) { JustMovedCard(model: cleaned); LastCleanupsCard(model: cleaned) }
                 .padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("cleanup-results"))
