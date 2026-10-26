@@ -400,7 +400,7 @@ Acceptance: `scripts/acceptance.sh` exits 0 (see Measured by).
 
 | # | Decision | Options | Recommendation | Decided |
 |---|----------|---------|----------------|---------|
-| D1 | Signing | Ad hoc (like Bton) or Developer ID + notarization ($99/year) | Developer ID. MacMax asks for Full Disk Access; with ad hoc signing every update is a new app to TCC and the grant is lost, and the updater cannot check the Team ID. Keep publishing the reproducible ad hoc zip beside the signed one. | open (owner) |
+| D1 | Signing | Ad hoc (like Bton) or Developer ID + notarization ($99/year) | Developer ID. MacMax asks for Full Disk Access; with ad hoc signing every update is a new app to TCC and the grant is lost, and the updater cannot check the Team ID. Keep publishing the reproducible ad hoc zip beside the signed one. | decided 2026-10-26: ad hoc like Bton (path A). No automatic updates; the updater verifies SHA256SUMS only; users re-grant Full Disk Access after an update unless the build is signed with the same local identity. |
 | D2 | License | MIT, Apache-2.0, GPL-3.0 | MIT, like Bton. Mole (GPL-3.0) may be read for ideas, never copied. | MIT, owner 2026-10-25 |
 | D3 | IP endpoint | Cloudflare `https://1.1.1.1/cdn-cgi/trace`, a self-hosted echo, off | Cloudflare by default (no account, plain text, IPv4 and IPv6), endpoint editable, a switch to turn the check off. README says what it sends. | decided 2026-10-25: Cloudflare, editable, off switch |
 | D4 | Cleanup in v1 | Trash-only cache rules; or none | Trash-only with preview and protected list (U9). | open (owner) |
