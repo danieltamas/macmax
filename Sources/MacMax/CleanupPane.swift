@@ -3,7 +3,7 @@ import MacMaxCore
 import SwiftUI
 
 /// What each cleanup rule removes, in the words the pane shows.
-private enum RuleText {
+enum RuleText {
     static let rows: [(id: String, title: String, detail: String)] = [
         ("app_caches", "App caches", "Caches of apps that are not running."),
         ("xcode_derived", "Xcode build data", "DerivedData, when Xcode is not running."),
@@ -29,10 +29,10 @@ struct CleanupPane: View {
             if place == .tab {
                 AccessPrompt(model: model)
                 rules
-                if !model.cleanupResults.isEmpty { results }
+                if !model.cleanupResults.isEmpty { JustMovedCard(model: model) }
                 LargeFoldersCard(model: model)
                 shownOnly
-                history
+                LastCleanupsCard(model: model)
             } else {
                 PaneHeader(pane: .cleanup, title: "Cleanup", detail: "What cleanup never touches. The cleanup itself is in the Cleanup tab of the panel.")
                 ProtectedPathsCard(model: model)
@@ -105,27 +105,6 @@ struct CleanupPane: View {
         }
     }
 
-    private var results: some View {
-        SettingsCard(title: "Just moved", detail: "The result of the last press, item by item.") {
-            VStack(alignment: .leading, spacing: 4) {
-                if let problem = model.cleanupLogProblem { Text(problem).font(.meta).foregroundStyle(Theme.warn) }
-                ForEach(Array(model.cleanupResults.enumerated()), id: \.offset) { _, result in
-                    let (text, color) = Self.describe(result.outcome)
-                    Text("\((result.path as NSString).lastPathComponent): \(text)").font(.meta).foregroundStyle(color)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-        }
-    }
-
-    private static func describe(_ outcome: ActionOutcome) -> (String, Color) {
-        switch outcome {
-        case .done: ("moved to the Trash", Theme.textSecondary)
-        case let .refused(reason): ("skipped, \(reason)", Theme.warn)
-        case let .failed(reason): ("failed, \(reason)", Theme.crit)
-        }
-    }
-
     private var shownOnly: some View {
         SettingsCard(title: "Docker and Time Machine", detail: "MacMax shows these commands and never runs them. Copy one into a terminal if you want it.") {
             VStack(alignment: .leading, spacing: 8) {
@@ -133,22 +112,6 @@ struct CleanupPane: View {
                 CommandLine(command: "docker system prune")
                 CommandLine(command: "tmutil listlocalsnapshots /")
                 Text("Never add --volumes to a prune: it removes data volumes.").font(.meta).foregroundStyle(Theme.textTertiary)
-            }
-        }
-    }
-
-    private var history: some View {
-        SettingsCard(title: "Last cleanups", detail: "What went to the Trash, and when.") {
-            VStack(alignment: .leading, spacing: 4) {
-                if model.lastCleanups.isEmpty { Text("Nothing has been cleaned yet.").font(.meta).foregroundStyle(Theme.textTertiary) }
-                ForEach(Array(model.lastCleanups.enumerated()), id: \.offset) { _, row in
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(Date(timeIntervalSince1970: TimeInterval(row.ts)).formatted(date: .abbreviated, time: .shortened))
-                            .font(.meta.monospacedDigit()).foregroundStyle(Theme.textTertiary).fixedSize()
-                        Text("\((row.target as NSString).lastPathComponent): \(row.result)").font(.meta).foregroundStyle(Theme.textSecondary)
-                            .lineLimit(2)
-                    }
-                }
             }
         }
     }

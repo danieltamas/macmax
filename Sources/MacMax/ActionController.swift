@@ -336,6 +336,7 @@ final class ActionController {
                 }
             }
             model.cleanupResults = results
+            model.cleanupMovedFrom = candidates
             model.cleanupMoving = false
             scanCleanup()
             try? await Task.sleep(for: .milliseconds(300))

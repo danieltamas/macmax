@@ -184,6 +184,8 @@ final class PanelModel {
     var cleanupPreview: CleanupPreview?
     var cleanupState: SectionState = .ready
     var cleanupResults: [CleanupResult] = []
+    /// What was asked to move, in the order of `cleanupResults`, for the size and the rule of each.
+    var cleanupMovedFrom: [CleanupCandidate] = []
     var cleanupMoving = false
     var cleanupLogProblem: String?
     var lastCleanups: [ActionRow] = []
