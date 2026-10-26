@@ -37,7 +37,7 @@ enum ThresholdRules {
                     thresholds: [t("T_SWAP_CRIT_GB", 6, "GB", 0.5...512), t("T_SWAP_WARN_GB", 2, "GB", 0.1...512)],
                     levels: [Level(severity: .crit, comparison: .above, line: .key("T_SWAP_CRIT_GB")),
                              Level(severity: .warn, comparison: .above, line: .key("T_SWAP_WARN_GB"))],
-                    style: .oneDecimal, why: "The working set does not fit in RAM, so memory is paged to disk.",
+                    style: .oneDecimal, why: "Memory the Mac moved to disk because RAM ran short.",
                     action: "Open Apps sorted by memory", scriptPattern: #"^Swap [\d.]+ GB in use.*$"#,
                     read: { $0.swapUsedGB }, headline: { _, text in "Swap \(text) GB in use" }),
         numericRule(id: "swap_in_rate", title: "Swapping in",

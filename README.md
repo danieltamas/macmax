@@ -67,7 +67,7 @@ A slow afternoon, explained:
 |---|---|
 | **CRIT** | Docker's VM has 2.3 GB of its memory squeezed by macOS, so it crawls. **Stop idle containers.** |
 | **WARN** | 3 Claude Code sessions older than 7 days still hold 1.8 GB and 41 helper processes. **End them.** |
-| **WARN** | 3.1 GB of swap is in use: what you run does not fit in 16 GB of memory. Atlas Browser holds 5.6 GB. |
+| **WARN** | 3.1 GB of swap is in use: what you run does not fit in 16 GB of memory. Atlas Browser holds 5.5 GB. |
 | **OK** | Your traffic goes through your VPN as 203.0.113.20 (DE). Your ISP address stays hidden. |
 
 Nothing is guessed: every finding names the numbers that fired it, and the checks are the same
