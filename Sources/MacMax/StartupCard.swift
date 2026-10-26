@@ -1,33 +1,23 @@
 import MacMaxCore
 import SwiftUI
 
-/// What starts by itself on this Mac. The user's own agents can be turned off and on again; the system-wide ones are
-/// only listed, because changing them needs an administrator and MacMax never asks for that.
+/// What starts by itself on this Mac, in two groups: the user's own agents, which can be turned off and on again, and
+/// everything else, which is only listed (changing it needs an administrator and MacMax never asks for that).
 struct StartupCard: View {
     let model: PanelModel
-    @State private var showAll = false
-    private static let preview = 8
+    @State private var showOthers = false
+    private static let statusWidth: CGFloat = 64
+    private static let actionWidth: CGFloat = 72
 
     var body: some View {
-        SettingsCard(title: "Background items", detail: "Programs macOS starts by itself, from your Launch Agents and the system's. Turning one off is undone with one press.") {
-            VStack(alignment: .leading, spacing: 8) {
+        SettingsCard(title: "Background items", detail: "Programs that start by themselves when you log in or when the Mac starts. You can turn off your own; one press undoes it.") {
+            VStack(alignment: .leading, spacing: 10) {
                 switch model.startupState {
                 case let .loading(text): OperationProgress(text: text)
                 case let .failed(collector, reason): Text("\(collector): \(reason)").font(.meta).foregroundStyle(Theme.warn)
                 case .ready: EmptyView()
                 }
-                if let items = model.startupItems {
-                    if model.startupUnreadable > 0 {
-                        Text("\(model.startupUnreadable) item\(model.startupUnreadable == 1 ? "" : "s") could not be read, so this list may be incomplete.")
-                            .font(.meta).foregroundStyle(Theme.warn).fixedSize(horizontal: false, vertical: true)
-                    }
-                    if items.isEmpty { Text("Nothing starts in the background from these folders.").font(.meta).foregroundStyle(Theme.textSecondary) }
-                    ForEach(showAll ? items : Array(items.prefix(Self.preview))) { row($0) }
-                    if items.count > Self.preview {
-                        Button(showAll ? "Show fewer" : "Show all \(items.count)") { showAll.toggle() }
-                            .buttonStyle(.plain).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.teal)
-                    }
-                }
+                if let items = model.startupItems { list(items) }
                 if !model.startupState.isReading {
                     PillButton(title: model.startupItems == nil ? "Look at background items" : "Read again", symbol: "magnifyingglass",
                                prominent: false) { model.scanStartup() }
@@ -37,36 +27,71 @@ struct StartupCard: View {
         .onAppear { if model.startupItems == nil { model.scanStartup() } }
     }
 
-    private func row(_ item: StartupItem) -> some View {
+    @ViewBuilder private func list(_ items: [StartupItem]) -> some View {
+        let yours = items.filter { isControllable($0, in: items) }
+        let others = items.filter { item in !yours.contains { $0.id == item.id } }
+        if model.startupUnreadable > 0 {
+            Text("\(model.startupUnreadable) file\(model.startupUnreadable == 1 ? "" : "s") in the launch folders could not be read, so this list may miss some.")
+                .font(.meta).foregroundStyle(Theme.warn).fixedSize(horizontal: false, vertical: true)
+        }
+        if items.isEmpty { Text("Nothing starts in the background from these folders.").font(.meta).foregroundStyle(Theme.textSecondary) }
+        if !yours.isEmpty {
+            groupTitle("Yours: you can turn these off", count: yours.count)
+            ForEach(yours) { row($0, action: true) }
+        }
+        if !others.isEmpty {
+            Button { showOthers.toggle() } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: showOthers ? "chevron.down" : "chevron.right").font(.system(size: 9, weight: .semibold))
+                    Text("Installed for everyone, view only (\(others.count))").font(.system(size: 12, weight: .medium))
+                }.foregroundStyle(Theme.teal).contentShape(Rectangle())
+            }.buttonStyle(.plain)
+            if showOthers {
+                Text("These belong to apps and macOS for all users of this Mac. Changing them needs an administrator, so MacMax only shows them.")
+                    .font(.meta).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                ForEach(others) { row($0, action: false) }
+            }
+        }
+    }
+
+    private func groupTitle(_ text: String, count: Int) -> some View {
+        Text("\(text) (\(count))").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.textPrimary)
+    }
+
+    private func row(_ item: StartupItem, action: Bool) -> some View {
         let state = model.actionStates["startup-\(item.path)"]
         return VStack(alignment: .leading, spacing: 3) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+            HStack(alignment: .center, spacing: 8) {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(Redaction.sanitizeText(Redaction.redact([item.label]).joined(separator: " "))).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textPrimary).lineLimit(1).truncationMode(.middle)
-                    if let program = item.program {
-                        Text(Self.shortened(Redaction.sanitizeText(Redaction.redact([program]).joined(separator: " ")))).font(.system(size: 11, design: .monospaced)).foregroundStyle(Theme.textTertiary)
-                            .lineLimit(1).truncationMode(.middle)
-                    }
+                    Text(Self.title(item)).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textPrimary).lineLimit(1).truncationMode(.tail)
+                    Text(Redaction.sanitizeText(item.label)).font(.system(size: 11)).foregroundStyle(Theme.textTertiary)
+                        .lineLimit(1).truncationMode(.middle)
                 }
-                Spacer(minLength: 8)
-                if item.isRunning { Chip(text: "Running", color: Theme.success, style: .tinted) }
-                if item.isDisabled { Chip(text: "Off", color: Theme.textTertiary, style: .outline) }
-                control(item, busy: state?.isWorking == true)
+                .help(Self.location(item))
+                Spacer(minLength: 4)
+                status(item).frame(width: Self.statusWidth, alignment: .leading)
+                if action {
+                    ChipButton(title: item.isDisabled ? "Turn on" : "Turn off") { model.setStartupEnabled(item, item.isDisabled) }
+                        .fixedSize().disabled(state?.isWorking == true || !isReady)
+                        .frame(width: Self.actionWidth, alignment: .trailing)
+                }
             }
             if let state, state.isWorking { OperationProgress(text: state.text) }
             else if let state { Text(state.text).font(.meta).foregroundStyle(state.isProblem ? Theme.warn : Theme.textSecondary) }
         }
     }
 
-    @ViewBuilder private func control(_ item: StartupItem, busy: Bool) -> some View {
-        if (model.startupItems ?? []).filter({ $0.label == item.label }).count > 1 {
-            Chip(text: "Same name twice", color: Theme.textTertiary, style: .outline)
-        } else if StartupControl.disableCommands(for: item, uid: getuid()) == nil {
-            Chip(text: item.scope == .userAgent ? "Protected" : "Needs admin", color: Theme.textTertiary, style: .outline)
-        } else {
-            ChipButton(title: item.isDisabled ? "Turn on" : "Turn off") { model.setStartupEnabled(item, item.isDisabled) }
-                .fixedSize().disabled(busy || !isReady)
+    private func status(_ item: StartupItem) -> some View {
+        let (text, color) = item.isRunning ? ("Running", Theme.success) : item.isDisabled ? ("Off", Theme.textTertiary) : ("Idle", Theme.textSecondary)
+        return HStack(spacing: 5) {
+            Circle().fill(color).frame(width: 6, height: 6)
+            Text(text).font(.system(size: 11, weight: .medium)).foregroundStyle(color)
         }
+    }
+
+    /// Only the user's own agents that MacMax may touch, and whose name is unique, get a button.
+    private func isControllable(_ item: StartupItem, in items: [StartupItem]) -> Bool {
+        StartupControl.disableCommands(for: item, uid: getuid()) != nil && items.filter { $0.label == item.label }.count == 1
     }
 
     /// Only a list that was just read in full may be acted on: while it reloads, or after a failed read, it is stale.
@@ -75,9 +100,21 @@ struct StartupCard: View {
         return false
     }
 
-    private static func shortened(_ path: String) -> String {
+    /// A readable name: the app the program lives in, else the label without its domain prefix ("com.adobe.GC.AGM" -> "Adobe GC AGM").
+    static func title(_ item: StartupItem) -> String {
+        if let app = item.program?.split(separator: "/").first(where: { $0.hasSuffix(".app") }) {
+            return Redaction.sanitizeText(String(app.dropLast(4)))
+        }
+        var parts = item.label.split(separator: ".").map(String.init)
+        if parts.count > 2, ["com", "org", "net", "io", "ro", "eu", "app", "co"].contains(parts[0].lowercased()) { parts.removeFirst() }
+        let name = parts.joined(separator: " ")
+        return Redaction.sanitizeText(name.prefix(1).uppercased() + name.dropFirst())
+    }
+
+    private static func location(_ item: StartupItem) -> String {
+        let program = item.program.map { Redaction.sanitizeText(Redaction.redact([$0]).joined(separator: " ")) } ?? "unknown program"
         let home = NSHomeDirectory()
-        return path.hasPrefix(home) ? "~" + path.dropFirst(home.count) : path
+        return program.hasPrefix(home) ? "~" + program.dropFirst(home.count) : program
     }
 }
 
