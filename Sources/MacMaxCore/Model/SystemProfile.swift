@@ -38,12 +38,18 @@ public struct SystemLive: Sendable, Equatable {
     /// Busy share of each logical core, 0 to 100.
     public let coreBusyPercent: [Double]
     public let gpuPercent: Double?
+    /// What the GPU holds: shared system memory on Apple silicon, video memory on a discrete card.
+    public let gpuMemoryUsedBytes: UInt64?
+    public let gpuMemoryAllocatedBytes: UInt64?
     public let memoryUsedBytes: UInt64?
     public let memoryTotalBytes: UInt64?
 
-    public init(coreBusyPercent: [Double], gpuPercent: Double?, memoryUsedBytes: UInt64?, memoryTotalBytes: UInt64?) {
+    public init(coreBusyPercent: [Double], gpuPercent: Double?, gpuMemoryUsedBytes: UInt64? = nil,
+                gpuMemoryAllocatedBytes: UInt64? = nil, memoryUsedBytes: UInt64?, memoryTotalBytes: UInt64?) {
         self.coreBusyPercent = coreBusyPercent
         self.gpuPercent = gpuPercent
+        self.gpuMemoryUsedBytes = gpuMemoryUsedBytes
+        self.gpuMemoryAllocatedBytes = gpuMemoryAllocatedBytes
         self.memoryUsedBytes = memoryUsedBytes
         self.memoryTotalBytes = memoryTotalBytes
     }
@@ -51,8 +57,10 @@ public struct SystemLive: Sendable, Equatable {
     /// nil when the CPU read failed: no core list is better than an empty one that reads as an idle Mac.
     init?(_ snapshot: SystemSnapshot) {
         guard let cpu = snapshot.cpu.value, !cpu.perCore.isEmpty else { return nil }
+        let gpuMemory = IOKitReadings.gpuMemory()
         self.init(coreBusyPercent: cpu.perCore.map { min(100, max(0, $0.userPercent + $0.systemPercent)) },
                   gpuPercent: snapshot.gpuUtilizationPercent.value,
+                  gpuMemoryUsedBytes: gpuMemory?.used, gpuMemoryAllocatedBytes: gpuMemory?.allocated,
                   memoryUsedBytes: snapshot.memory.value?.usedBytes, memoryTotalBytes: snapshot.memory.value?.physicalBytes)
     }
 

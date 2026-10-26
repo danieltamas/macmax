@@ -48,7 +48,14 @@ struct ThisMacCard: View {
     @ViewBuilder private var gpu: some View {
         let hardware = model.hardware
         let detail = [hardware?.gpuName, hardware?.gpuCores.map { "\($0) cores" }].compactMap { $0 }.joined(separator: ", ")
-        line("GPU", model.live?.gpuPercent.map { "\(Int($0.rounded()))% busy" } ?? "usage not reported", detail.isEmpty ? nil : detail)
+        VStack(alignment: .leading, spacing: 6) {
+            line("GPU", model.live?.gpuPercent.map { "\(Int($0.rounded()))% busy" } ?? "usage not reported", detail.isEmpty ? nil : detail)
+            if let used = model.live?.gpuMemoryUsedBytes {
+                let shared = hardware?.chip?.hasPrefix("Apple") == true ? " (shared with RAM)" : ""
+                line("GPU memory", CompactFormat.bytes(used) + " in use",
+                     model.live?.gpuMemoryAllocatedBytes.map { "\(CompactFormat.bytes($0)) allocated" + shared })
+            }
+        }
     }
 
     @ViewBuilder private var memory: some View {
