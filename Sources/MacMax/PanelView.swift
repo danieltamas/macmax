@@ -79,7 +79,8 @@ struct PanelView: View {
         }
         .padding(3)
         .background(Capsule().fill(Theme.core))
-        .overlay(CapsuleRing(width: 0.5).fill(Theme.hairline))
+        // A filled shape hit-tests as a solid capsule: without this the ring lay over the tabs and took every click.
+        .overlay(CapsuleRing(width: 0.5).fill(Theme.hairline).allowsHitTesting(false))
         .padding(.horizontal, 14)
         .padding(.bottom, 10)
     }
