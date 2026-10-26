@@ -3,7 +3,7 @@ import Observation
 import SwiftUI
 
 enum PanelTab: String, CaseIterable, Identifiable {
-    case overview = "Overview", apps = "Apps", network = "Network", findings = "Findings", history = "History"
+    case overview = "Overview", apps = "Apps", network = "Network", findings = "Findings", cleanup = "Cleanup", history = "History"
     var id: String { rawValue }
 
     var symbol: String {
@@ -12,6 +12,7 @@ enum PanelTab: String, CaseIterable, Identifiable {
         case .apps: "square.grid.2x2"
         case .network: "arrow.up.arrow.down"
         case .findings: "exclamationmark.bubble"
+        case .cleanup: "trash"
         case .history: "chart.xyaxis.line"
         }
     }

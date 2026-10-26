@@ -86,7 +86,7 @@ struct FindingPill {
                 $0.loadContainers()
             }
         case "disk_free":
-            FindingPill(title: "Review cache cleanup", symbol: "trash") { $0.openSettings(.cleanup) }
+            FindingPill(title: "Review cache cleanup", symbol: "trash") { $0.tab = .cleanup }
         default: nil
         }
     }

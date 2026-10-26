@@ -92,6 +92,7 @@ struct PanelView: View {
         case .apps: AppsTab(model: model)
         case .network: NetworkTab(model: model)
         case .findings: FindingsTab(model: model)
+        case .cleanup: CleanupPane(model: model, place: .tab)
         case .history: HistoryTab(model: model)
         }
     }

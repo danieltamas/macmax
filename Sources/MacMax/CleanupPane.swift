@@ -16,21 +16,28 @@ private enum RuleText {
     ]
 }
 
+/// The Cleanup tab in the panel, and the Settings pane that keeps what cleanup never touches.
 struct CleanupPane: View {
+    enum Place { case tab, settings }
+
     let model: PanelModel
+    var place: Place = .settings
     @State private var confirming = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            PaneHeader(pane: .cleanup, title: "Cleanup", detail: "Reclaim space from caches. Everything goes to the Trash, so you can put it back.")
-            rules
-            if !model.cleanupResults.isEmpty { results }
-            LargeFoldersCard(model: model)
-            ProtectedPathsCard(model: model)
-            shownOnly
-            history
+        VStack(alignment: .leading, spacing: place == .tab ? 14 : 22) {
+            if place == .tab {
+                rules
+                if !model.cleanupResults.isEmpty { results }
+                LargeFoldersCard(model: model)
+                shownOnly
+                history
+            } else {
+                PaneHeader(pane: .cleanup, title: "Cleanup", detail: "What cleanup never touches. The cleanup itself is in the Cleanup tab of the panel.")
+                ProtectedPathsCard(model: model)
+            }
         }
-        .task { if model.cleanupPreview == nil { model.scanCleanup() } }
+        .task { if place == .tab, model.cleanupPreview == nil { model.scanCleanup() } }
     }
 
     private var total: Int64 { model.cleanupPreview?.bytes() ?? 0 }

@@ -84,7 +84,7 @@ A verdict color is never used for a resource, and a resource color never signals
 ### Findings
 - Each finding: severity chip, title in plain words, the evidence (the numbers that fired it), why
   it matters (one line), and its action: a pill that acts in the app (Quit, End session, Stop
-  container, Review cache cleanup) or, when nothing can be done from the app, the exact next step
+  container, Review cache cleanup, which opens the Cleanup tab) or, when nothing can be done from the app, the exact next step
   ("Reboot to reset the swap file"). Snooze for 24 hours. Resolved findings from today, greyed.
 
 ### History
@@ -107,7 +107,7 @@ Structure per LESSONS.md section 5 (sidebar 196, window minimum 760 x 540, `Pane
 | General | brand | Sampling interval (5, 10, 30, 60 s); Menu bar text (none, CPU, memory, network, country); Theme (three looks); Open at login; Install updates automatically (off; shown only with Developer ID signing, `docs/RELEASE.md`); Data folder (Show in Finder, size, "Clear history" with confirm) |
 | Audit | warn | Schedule (off, 1, 4, 12, 24 hours; on critical memory pressure); Notify on (CRIT only, WARN and CRIT, never); Rules: each rule with its threshold editable in place, its default shown, and a reset; a rule can be turned off |
 | Network | netIn | Public IP check (on or off, with what it sends); Endpoint (default Cloudflare trace, editable, validated); Physical interface for the ISP IP (Automatic or a list); VPN services found, each with its state |
-| Cleanup | disk | Cleanup rules (each with what it removes and its current size); Protected paths (add by choosing a folder, remove); Last cleanups (what went to the Trash, when) |
+| Cleanup | disk | Protected paths (add by choosing a folder, remove). The cleanup itself (rules with sizes, Move to Trash, Large folders, Docker and Time Machine commands, Last cleanups) is the Cleanup tab of the panel |
 | Agent access | brand | The MCP command with a copy button (`claude mcp add macmax -- ~/.local/bin/macmax mcp`); the tool list and that every tool is read-only; recent MCP calls (tool, time, size) |
 | Permissions | unknown | Full Disk Access (state, what it unlocks, Open System Settings, a re-check button); Notifications (state, Open System Settings) |
 | About | neutral | Per LESSONS.md section 6 |
