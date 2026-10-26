@@ -31,7 +31,7 @@ public enum InterfaceCounters {
                     return .failed(reason: "an interface vanished while its name was read")
                 }
                 // Loopback is traffic between apps on this Mac, not the network's load.
-                let interfaceName = String(cString: name)
+                let interfaceName = String(nulTerminated: name)
                 if interfaceName != "lo0" {
                     result[interfaceName] = NetworkCounters(bytesIn: message.ifm_data.ifi_ibytes,
                                                             bytesOut: message.ifm_data.ifi_obytes)

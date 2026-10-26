@@ -20,9 +20,9 @@ public actor NetworkCollector {
         let earlier = inFlight
         let queuedAt = epoch
         let task = Task { () -> NetworkSnapshot in
-            await earlier?.value
+            _ = await earlier?.value
             // A call queued before `stop()` must not start a new child after it.
-            guard await self.epoch == queuedAt else { return NetworkSnapshot.stopped }
+            guard self.epoch == queuedAt else { return NetworkSnapshot.stopped }
             return await self.collectOne(processes: processes)
         }
         inFlight = task

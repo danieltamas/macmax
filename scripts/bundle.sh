@@ -39,7 +39,9 @@ slices=()
 for arch in "${archs[@]}"; do
   flags=(-c release --scratch-path "$scratch" --triple "$arch-apple-macosx14.0"
          -Xswiftc -file-prefix-map -Xswiftc "$src=/macmax"
-         -Xswiftc -file-prefix-map -Xswiftc "$scratch=/macmax/.build")
+         -Xswiftc -file-prefix-map -Xswiftc "$scratch=/macmax/.build"
+         # Without module breadcrumbs the remapped build path is not looked up as a module cache (a wall of warnings).
+         -Xswiftc -no-clang-module-breadcrumbs)
   swift build "${flags[@]}" >&2
   slices+=("$(swift build "${flags[@]}" --show-bin-path)")
 done

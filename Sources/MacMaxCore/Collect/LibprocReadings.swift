@@ -72,7 +72,7 @@ enum Libproc {
     static func path(_ pid: Int32, at: Date) -> Reading<String> {
         read("path", source: "proc_pidpath", at: at) {
             var buffer = [CChar](repeating: 0, count: 4096)
-            return proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0 ? String(cString: buffer) : nil
+            return proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0 ? String(nulTerminated: buffer) : nil
         }
     }
 

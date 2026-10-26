@@ -20,6 +20,11 @@ public struct InstalledApp: Sendable, Equatable, Identifiable {
         self.identity = identity
     }
 
+    /// The same app with its size filled in.
+    public func withBytes(_ bytes: Int64?) -> InstalledApp {
+        InstalledApp(path: path, name: name, bundleID: bundleID, version: version, bytes: bytes, identity: identity)
+    }
+
     public static func == (left: InstalledApp, right: InstalledApp) -> Bool {
         left.path == right.path && left.name == right.name && left.bundleID == right.bundleID && left.version == right.version && left.bytes == right.bytes
     }
@@ -63,6 +68,11 @@ public struct Leftover: Sendable, Equatable, Identifiable {
         self.identity = identity
     }
 
+    /// The same leftover with its size filled in.
+    public func withBytes(_ bytes: Int64?) -> Leftover {
+        Leftover(path: path, kind: kind, match: match, bytes: bytes, identity: identity)
+    }
+
     public static func == (left: Leftover, right: Leftover) -> Bool {
         left.path == right.path && left.kind == right.kind && left.match == right.match && left.bytes == right.bytes
     }
@@ -74,7 +84,8 @@ public enum AppLister {
 
     /// `unreadable` counts the apps that could not be used (no usable Info.plist, a link), so a short list is not
     /// taken for a complete one.
-    public static func list(folders: [String]) -> (apps: [InstalledApp], unreadable: Int) {
+    /// `measure: false` leaves `bytes` nil so a long list comes back at once; `measuredBytes(of:)` fills the sizes in.
+    public static func list(folders: [String], measure: Bool = true) -> (apps: [InstalledApp], unreadable: Int) {
         var apps: [InstalledApp] = []
         var unreadable = 0
         for folder in folders {
@@ -89,7 +100,7 @@ public enum AppLister {
             }
             for name in names.sorted() where name.hasSuffix(".app") {
                 let path = folder + "/" + name
-                if let app = read(path: path, folderName: String(name.dropLast(4))) { apps.append(app) } else { unreadable += 1 }
+                if let app = read(path: path, folderName: String(name.dropLast(4)), measure: measure) { apps.append(app) } else { unreadable += 1 }
             }
         }
         apps.sort { left, right in
@@ -99,7 +110,12 @@ public enum AppLister {
         return (apps, unreadable)
     }
 
-    private static func read(path: String, folderName: String) -> InstalledApp? {
+    /// The size of a folder, nil when it could not be fully measured in the time allowed.
+    public static func measuredBytes(of path: String) -> Int64? {
+        Measurement.of(path, deadline: Date().addingTimeInterval(measureBudget)).flatMap { $0.complete ? $0.bytes : nil }
+    }
+
+    private static func read(path: String, folderName: String, measure: Bool) -> InstalledApp? {
         var info = stat()
         // A link is not followed: it could lead anywhere, and what would be moved is the link's target.
         guard lstat(path, &info) == 0, info.st_mode & S_IFMT == S_IFDIR, let canonical = CleanupPolicy.canonical(path),
@@ -111,11 +127,10 @@ public enum AppLister {
         func text(_ key: String) -> String? { (plist[key] as? String).flatMap { $0.isEmpty ? nil : $0 } }
         // Without the folder's identity the move could not tell it from a replacement: not listed.
         guard let identity = FileIdentity.of(canonical) else { return nil }
-        let measured = Measurement.of(canonical, deadline: Date().addingTimeInterval(measureBudget))
+        let bytes = measure ? measuredBytes(of: canonical) : nil
         // Shown in the UI: invisible or control characters in a name must not reach it.
         return InstalledApp(path: canonical, name: Redaction.sanitizeText(text("CFBundleDisplayName") ?? text("CFBundleName") ?? folderName), bundleID: bundleID,
-                            version: text("CFBundleShortVersionString").map(Redaction.sanitizeText), bytes: measured.flatMap { $0.complete ? $0.bytes : nil },
-                            identity: identity)
+                            version: text("CFBundleShortVersionString").map(Redaction.sanitizeText), bytes: bytes, identity: identity)
     }
 }
 
@@ -146,19 +161,24 @@ public enum LeftoverFinder {
         return found.filter { seen.insert($0.path).inserted }
     }
 
-    public static func find(for app: InstalledApp, home: String) -> [Leftover] {
+    /// `measure: false` leaves every `bytes` nil so the list comes back at once; `measured(_:)` fills one in.
+    public static func find(for app: InstalledApp, home: String, measure: Bool = true) -> [Leftover] {
         let root = CleanupPolicy.canonical(home) ?? home
         var leftovers: [Leftover] = []
         for candidate in candidates(for: app, home: root) {
             // Not followed: a link in the Library is someone's pointer, not this app's data.
             var info = stat()
             guard lstat(candidate.path, &info) == 0, info.st_mode & S_IFMT != S_IFLNK else { continue }
-            let measured = Measurement.of(candidate.path, deadline: Date().addingTimeInterval(5))
             leftovers.append(Leftover(path: candidate.path, kind: candidate.kind, match: candidate.match,
-                                      bytes: measured.flatMap { $0.complete ? $0.bytes : nil },
+                                      bytes: measure ? AppLister.measuredBytes(of: candidate.path) : nil,
                                       identity: FileIdentity(device: Int64(info.st_dev), inode: UInt64(info.st_ino))))
         }
-        return leftovers.sorted { left, right in
+        return measure ? sorted(leftovers) : leftovers
+    }
+
+    /// Biggest first, unmeasured last, ties by path.
+    public static func sorted(_ leftovers: [Leftover]) -> [Leftover] {
+        leftovers.sorted { left, right in
             switch (left.bytes, right.bytes) {
             case let (a?, b?): a == b ? left.path < right.path : a > b
             case (_?, nil): true

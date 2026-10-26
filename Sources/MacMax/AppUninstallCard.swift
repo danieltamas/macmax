@@ -37,8 +37,8 @@ struct AppUninstallCard: View {
 
     @ViewBuilder private func list(_ apps: [InstalledApp]) -> some View {
         if model.installedAppsUnreadable > 0 {
-            Text("\(model.installedAppsUnreadable) app\(model.installedAppsUnreadable == 1 ? "" : "s") could not be read, so this list may miss some.")
-                .font(.meta).foregroundStyle(Theme.warn).fixedSize(horizontal: false, vertical: true)
+            Text("\(model.installedAppsUnreadable) item\(model.installedAppsUnreadable == 1 ? "" : "s") in the Applications folders (links, or apps without a readable Info.plist) not listed.")
+                .font(.meta).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
         }
         GlassField(placeholder: "Search apps", text: $search)
         let matches = apps.filter { search.isEmpty || $0.name.localizedCaseInsensitiveContains(search) }
@@ -64,7 +64,7 @@ struct AppUninstallCard: View {
                     if let version = app.version { Text("Version \(Redaction.sanitizeText(version))").font(.system(size: 11)).foregroundStyle(Theme.textTertiary).lineLimit(1) }
                 }
                 Spacer(minLength: 4)
-                Text(app.bytes.map { CompactFormat.bytes(UInt64(max(0, $0))) } ?? "unknown").font(.system(size: 11, weight: .medium)).monospacedDigit()
+                Text(app.bytes.map { CompactFormat.bytes(UInt64(max(0, $0))) } ?? (model.measuringApps.contains(app.path) ? "Measuring..." : "unknown")).font(.system(size: 11, weight: .medium)).monospacedDigit()
                     .foregroundStyle(Theme.textSecondary).frame(width: Self.sizeWidth, alignment: .trailing)
             }.contentShape(Rectangle())
         }
@@ -104,7 +104,7 @@ struct AppUninstallCard: View {
                     if leftover.match == .name { Text("Matched by the app's name only: check it is really this app's").font(.meta).foregroundStyle(Theme.warn) }
                 }
                 Spacer(minLength: 4)
-                Text(leftover.bytes.map { CompactFormat.bytes(UInt64(max(0, $0))) } ?? "unknown").font(.system(size: 11)).monospacedDigit()
+                Text(leftover.bytes.map { CompactFormat.bytes(UInt64(max(0, $0))) } ?? (model.measuringLeftovers.contains("\(selected ?? "")\n\(leftover.path)") ? "Measuring..." : "unknown")).font(.system(size: 11)).monospacedDigit()
                     .foregroundStyle(Theme.textSecondary).frame(width: Self.sizeWidth, alignment: .trailing)
             }.contentShape(Rectangle())
         }
@@ -113,10 +113,12 @@ struct AppUninstallCard: View {
 
     @ViewBuilder private func actions(_ app: InstalledApp, chosen: [Leftover]) -> some View {
         let bytes = chosen.reduce(app.bytes ?? 0) { saturatingSum($0, $1.bytes ?? 0) }
+        // A size that is still being measured, or could not be, is left out of the total rather than counted as zero.
+        let complete = app.bytes != nil && chosen.allSatisfy { $0.bytes != nil }
         if model.uninstalling != nil {
             EmptyView()
         } else if confirming {
-            Text("Move \(app.name) and \(chosen.count) leftover\(chosen.count == 1 ? "" : "s") (\(CompactFormat.bytes(UInt64(max(0, bytes))))) to the Trash? Quit the app first if it is open.")
+            Text("Move \(app.name) and \(chosen.count) leftover\(chosen.count == 1 ? "" : "s")\(complete ? " (\(CompactFormat.bytes(UInt64(max(0, bytes)))))" : "") to the Trash? Quit the app first if it is open.")
                 .font(.meta).foregroundStyle(Theme.textPrimary).fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 8) {
                 PillButton(title: "Yes, move to Trash", symbol: "trash") { confirming = false; model.uninstallApp(app, chosen) }
@@ -130,9 +132,12 @@ struct AppUninstallCard: View {
     private var results: some View {
         VStack(alignment: .leading, spacing: 3) {
             let moved = model.uninstallResults.filter { $0.outcome == .done }.count
-            Text("\(model.uninstalledName ?? "The app"): moved \(moved) of \(model.uninstallResults.count) to the Trash.")
+            let appMoved = model.uninstallResults.first?.outcome == .done
+            Text(appMoved ? "\(model.uninstalledName ?? "The app"): moved \(moved) of \(model.uninstallResults.count) to the Trash."
+                 : "\(model.uninstalledName ?? "The app") was not moved. Nothing else was moved either.")
                 .font(.system(size: 12, weight: .semibold)).foregroundStyle(moved == model.uninstallResults.count ? Theme.success : Theme.warn)
-            ForEach(Array(model.uninstallResults.enumerated()), id: \.offset) { _, result in
+            // When the app stayed, its leftovers stayed for the same reason: one line, not one per file.
+            ForEach(Array(model.uninstallResults.prefix(appMoved ? model.uninstallResults.count : 1).enumerated()), id: \.offset) { _, result in
                 switch result.outcome {
                 case .done: EmptyView()
                 case let .refused(reason), let .failed(reason):
@@ -145,6 +150,7 @@ struct AppUninstallCard: View {
 
     private func toggle(_ app: InstalledApp) {
         confirming = false
+        model.uninstallResults = []
         if selected == app.path { selected = nil; return }
         selected = app.path
         excluded = []

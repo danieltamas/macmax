@@ -229,6 +229,13 @@ final class PanelModel {
     var installedAppsState: SectionState = .ready
     var appLeftovers: [String: [Leftover]] = [:]
     var leftoversLoading: Set<String> = []
+    /// Paths whose size is still being measured: "Measuring..." rather than "unknown".
+    var measuringApps: Set<String> = []
+    /// Count the scans: only the newest may publish sizes, so an older one cannot overwrite a newer list.
+    var installedAppsGeneration = 0
+    var leftoversGeneration: [String: Int] = [:]
+    /// "app path, newline, leftover path": two apps may share a leftover.
+    var measuringLeftovers: Set<String> = []
     var uninstalling: String?
     var uninstallProgress: (done: Int, total: Int, next: String?)?
     var uninstallResults: [CleanupResult] = []

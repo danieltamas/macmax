@@ -7,23 +7,50 @@ extension ActionController {
     func scanInstalledApps() {
         if case .loading = model.installedAppsState { return }
         model.installedAppsState = .loading("Reading the apps...")
+        model.installedAppsGeneration += 1
+        let generation = model.installedAppsGeneration
         Task {
             let home = NSHomeDirectory()
-            let found = await Task.detached(priority: .utility) { AppLister.list(folders: ["/Applications", home + "/Applications"]) }.value
+            // The list comes back at once; sizes follow one by one, so a big app does not hold up the others.
+            let found = await Task.detached(priority: .utility) { AppLister.list(folders: ["/Applications", home + "/Applications"], measure: false) }.value
             model.installedApps = found.apps
             model.installedAppsUnreadable = found.unreadable
             model.installedAppsState = .ready
+            model.measuringApps = Set(found.apps.map(\.path))
+            await withTaskGroup(of: (String, Int64?).self) { group in
+                var pending = found.apps.makeIterator()
+                func next() { if let app = pending.next() { group.addTask(priority: .utility) { (app.path, AppLister.measuredBytes(of: app.path)) } } }
+                for _ in 0 ..< 4 { next() }
+                for await (path, bytes) in group {
+                    guard generation == model.installedAppsGeneration else { group.cancelAll(); break }
+                    model.installedApps = model.installedApps?.map { $0.path == path ? $0.withBytes(bytes) : $0 }
+                    model.measuringApps.remove(path)
+                    next()
+                }
+            }
         }
     }
 
     func loadLeftovers(_ app: InstalledApp) {
         guard !model.leftoversLoading.contains(app.path) else { return }
         model.leftoversLoading.insert(app.path)
+        model.leftoversGeneration[app.path, default: 0] += 1
+        let generation = model.leftoversGeneration[app.path]
         Task {
             let home = NSHomeDirectory()
-            let found = await Task.detached(priority: .utility) { LeftoverFinder.find(for: app, home: home) }.value
+            let found = await Task.detached(priority: .utility) { LeftoverFinder.find(for: app, home: home, measure: false) }.value
             model.appLeftovers[app.path] = found
             model.leftoversLoading.remove(app.path)
+            model.measuringLeftovers.formUnion(found.map { "\(app.path)\n\($0.path)" })
+            await withTaskGroup(of: (String, Int64?).self) { group in
+                for leftover in found { group.addTask(priority: .utility) { (leftover.path, AppLister.measuredBytes(of: leftover.path)) } }
+                for await (path, bytes) in group {
+                    guard generation == model.leftoversGeneration[app.path] else { group.cancelAll(); break }
+                    model.appLeftovers[app.path] = model.appLeftovers[app.path]?.map { $0.path == path ? $0.withBytes(bytes) : $0 }
+                    model.measuringLeftovers.remove("\(app.path)\n\(path)")
+                }
+            }
+            if generation == model.leftoversGeneration[app.path] { model.appLeftovers[app.path] = model.appLeftovers[app.path].map(LeftoverFinder.sorted) }
         }
     }
 
