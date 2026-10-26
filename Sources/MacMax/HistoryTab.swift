@@ -162,14 +162,20 @@ struct HistoryCard: View {
             }
         }
         .chartXScale(range: .plotDimension(startPadding: 6, endPadding: 30))
-        .chartXSelection(value: Binding<Date?>(
-            get: { selection.map { Date(timeIntervalSince1970: TimeInterval($0.ts)) } },
-            set: { date in
-                guard let date else { return }
-                let step = model.historyRange.stepSeconds
-                let ts = Int64(date.timeIntervalSince1970) / step * step
-                model.selectHistory(HistorySelection(metric: style.metric, ts: ts))
-            }))
+        // A press, not a hover: chartXSelection follows the pointer, and the readout it opens changes the card's height, so
+        // every card under a scrolling pointer jumped.
+        .chartOverlay { proxy in
+            GeometryReader { geometry in
+                Rectangle().fill(.clear).contentShape(Rectangle())
+                    .gesture(SpatialTapGesture().onEnded { tap in
+                        guard let frame = proxy.plotFrame,
+                              let date: Date = proxy.value(atX: tap.location.x - geometry[frame].origin.x) else { return }
+                        let step = model.historyRange.stepSeconds
+                        let ts = Int64(date.timeIntervalSince1970) / step * step
+                        model.selectHistory(HistorySelection(metric: style.metric, ts: ts))
+                    })
+            }
+        }
     }
 
     @ViewBuilder
