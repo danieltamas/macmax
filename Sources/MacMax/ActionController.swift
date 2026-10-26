@@ -23,6 +23,8 @@ final class ActionController {
         model.setStartupEnabled = { [weak self] in self?.setStartup($0, enabled: $1) }
         model.inspectStartup = { [weak self] in self?.inspectStartup($0) }
         model.scanInstalledApps = { [weak self] in self?.scanInstalledApps() }
+        model.scanOldDownloads = { [weak self] in self?.scanOldDownloads() }
+        model.moveOldDownloads = { [weak self] in self?.moveOldDownloads($0) }
         model.readPower = { [weak self] in self?.readPower() }
         // Read once at launch, so the first time the panel opens it already has the fans and the battery.
         readPower()
@@ -32,7 +34,7 @@ final class ActionController {
         model.requestNotifications = { [weak self] in self?.requestNotifications() }
     }
 
-    private static let cleanupKey = "cleanup"
+    static let cleanupKey = "cleanup"
 
     /// Actions whose log write failed: their line keeps saying so, whatever it shows next.
     private var unlogged: Set<String> = []
@@ -295,7 +297,7 @@ final class ActionController {
 
     /// The user's protected folders as the file says now: a hand edit since launch counts. Nil when the file cannot be
     /// read, because then nothing is known about what is protected.
-    private func protectedPaths() -> [String]? {
+    func protectedPaths() -> [String]? {
         guard case let .ok(config) = ConfigStore(home: MacMaxHome()).load() else { return nil }
         model.config.protectedPaths = config.protectedPaths
         return config.protectedPaths

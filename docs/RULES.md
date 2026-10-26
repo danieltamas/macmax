@@ -214,6 +214,22 @@ sizes that the user confirms. Nothing is ever deleted permanently by MacMax.
 | `pip_cache` | `~/Library/Caches/pip` | No `pip` process running |
 | `homebrew_cache` | `~/Library/Caches/Homebrew` | No `brew` process running |
 | `old_logs` | files in `~/Library/Logs` older than 30 days | not under `DiagnosticReports` |
+| `chrome_cache` | `~/Library/Caches/Google/Chrome` | Google Chrome is not running |
+| `firefox_cache` | `~/Library/Caches/Firefox` | Firefox is not running |
+| `edge_cache` | `~/Library/Caches/Microsoft Edge` | Microsoft Edge is not running |
+| `brave_cache` | `~/Library/Caches/BraveSoftware` | Brave Browser is not running |
+| `mail_downloads` | each item directly in `~/Library/Containers/com.apple.mail/Data/Library/Mail Downloads` | Mail is not running; the only rule allowed inside the protected Containers folder (a Containers entry the owner added to the protected list still applies); `~/Library/Mail` is never touched |
+
+Language files (the `.lproj` folders inside apps) are not a rule and never will be: removing them breaks
+the app's code signature and needs an administrator password.
+
+**Old downloads (U16)** is not a rule: nothing is previewed as one block. The card scans on a press only
+(macOS may ask to let MacMax into Downloads), lists direct children of `~/Downloads` not modified for 30,
+90, 180 or 365 days (a folder only when everything inside is that old), biggest first, and moves only what the
+owner ticks, to the Trash. Never offered: hidden items (dot-name or Finder hidden flag), unfinished downloads
+(`.download`, `.crdownload`, `.part`, `.partial`, `.opdownload`), symlinks, folders with a `.git`, the owner's
+protected paths. Right before each move the item is walked again: same inode, still old, still a direct child
+of the real `~/Downloads`.
 
 **Shown, never run** (the app gives the size and the exact command with a copy button, because
 they are not Trash operations): `docker system df` with `docker system prune` (never `--volumes`),

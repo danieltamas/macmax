@@ -23,6 +23,11 @@ struct CleanupPolicy: Sendable {
         CleanupRule(id: "pip_cache", root: "Library/Caches/pip", children: false, blockedBy: "pip"),
         CleanupRule(id: "homebrew_cache", root: "Library/Caches/Homebrew", children: false, blockedBy: "brew"),
         CleanupRule(id: "old_logs", root: "Library/Logs", children: false, blockedBy: nil),
+        CleanupRule(id: "chrome_cache", root: "Library/Caches/Google/Chrome", children: false, blockedBy: "Google Chrome"),
+        CleanupRule(id: "firefox_cache", root: "Library/Caches/Firefox", children: false, blockedBy: "firefox"),
+        CleanupRule(id: "edge_cache", root: "Library/Caches/Microsoft Edge", children: false, blockedBy: "Microsoft Edge"),
+        CleanupRule(id: "brave_cache", root: "Library/Caches/BraveSoftware", children: false, blockedBy: "Brave Browser"),
+        CleanupRule(id: "mail_downloads", root: "Library/Containers/com.apple.mail/Data/Library/Mail Downloads", children: true, blockedBy: "Mail"),
     ]
     /// Caches with a rule of their own are not also listed as app caches.
     static let dedicatedCacheNames: Set<String> = ["Yarn", "pip", "Homebrew"]
@@ -36,12 +41,16 @@ struct CleanupPolicy: Sendable {
 
     let home: String
     let protected: [String]
+    /// The same list without the built-in Containers entry, for the one rule that works inside it. An entry the owner added
+    /// for Containers (or anything in it) stays here and still applies.
+    private let protectedForMail: [String]
 
     init(home: URL, userProtected: [String]) {
         let resolved = Self.canonical(home.path) ?? home.standardizedFileURL.path
         self.home = resolved
         let fixed = Self.homeProtected.map { resolved + "/" + $0 } + Self.systemProtected
         protected = (fixed + userProtected).compactMap { Self.canonical($0) ?? Self.lexical($0) }
+        protectedForMail = (fixed.filter { $0 != resolved + "/Library/Containers" } + userProtected).compactMap { Self.canonical($0) ?? Self.lexical($0) }
     }
 
     func rule(_ id: String) -> CleanupRule? { Self.rules.first { $0.id == id } }
@@ -63,7 +72,9 @@ struct CleanupPolicy: Sendable {
             guard Self.isInside(path, root) else { return "it is outside the allowed folder" }
         }
         if rule.id == "old_logs", Self.isInside(path, root + "/DiagnosticReports") { return "crash reports are never removed" }
-        for entry in protected where Self.isInside(path, entry) || Self.isInside(entry, path) {
+        // Mail's attachment cache sits inside the protected Containers folder; only that one rule may look in, and the
+        // root and children checks above already confine it to that folder's direct children.
+        for entry in rule.id == "mail_downloads" ? protectedForMail : protected where Self.isInside(path, entry) || Self.isInside(entry, path) {
             return "it is, or contains, a protected path"
         }
         // A git work tree between the path and the rule root is the user's code.

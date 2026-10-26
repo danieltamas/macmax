@@ -387,6 +387,10 @@ file shredder, privacy cleaner, "boost" buttons.
 - **U16 More cleanup rules and old downloads.** Mail attachments, language files, browser caches as
   rules with previews, and a list of old files in Downloads. Same cleanup rules as U9: Trash only,
   protected paths, preview first.
+  Built: browser caches (Chrome, Firefox, Edge, Brave) and Mail's opened-attachment copies as rules (Mail Downloads is the
+  one narrow exemption inside the protected Containers folder), and an Old downloads card (scan on a press, owner ticks
+  what goes, every item re-walked right before it moves). Language files are not built, on purpose: removing `.lproj`
+  folders breaks an app's code signature and needs an administrator password.
 
 Every one of these units must, in the same commit that adds the feature: move its line from the
 README's "Coming next" into "What you get" with a screenshot rendered by `--render-screenshots`

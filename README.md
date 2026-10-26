@@ -149,8 +149,12 @@ works with Outline, Tailscale, WireGuard and other VPNs.
   </tr>
 </table>
 
+<p align="center">
+  <img src="docs/media/old-downloads.png" alt="Old downloads: pick what to move to the Trash" width="420">
+</p>
+
 Cleanup moves things to the **Trash**, so you can put them back, and only after you confirm. It
-covers app caches, Xcode build data, npm, pip and Homebrew downloads, and old logs. Your documents,
+covers app caches, Xcode build data, npm, pip and Homebrew downloads, browser caches, the copies Mail made of opened attachments, and old logs. A separate list shows what has sat in Downloads for months and moves only what you tick. Language files are left alone: removing them breaks an app's signature. Your documents,
 keychains, mail and any folder with a `.git` inside are never touched. MacMax can also end leftover
 helper processes (stale agent servers, parents that never collected finished children), only when
 you press the button. **Background items** lists the programs macOS starts by itself (your Launch
@@ -192,12 +196,7 @@ every tool is read-only: quitting or cleaning is always a press in the app.
   <img src="docs/media/settings-agent-access.png" alt="Settings, Agent access" width="620">
 </p>
 
-## Coming next
-
-Features of Mac cleaners that fit MacMax, built one at a time after the first release. They are
-not in the app yet.
-
-- **More cleanup:** Mail attachments, language files, browser caches, and a list of old downloads.
+## What MacMax will not do
 
 On purpose, MacMax will not have a malware scanner, a file shredder or "speed boost" buttons: they
 promise more than they can do.

@@ -73,6 +73,13 @@ enum DemoStore {
                           ProcessConnection(transport: .tcp, localAddress: "192.0.2.10", localPort: "50001", remoteAddress: "203.0.113.20", remotePort: "443", state: "ESTABLISHED"),
                           ProcessConnection(transport: .tcp, localAddress: "*", localPort: "8080", state: "LISTEN")])
         let relay = InstalledApp(path: "/Applications/Relay Chat.app", name: "Relay Chat", bundleID: "ro.example.relay", version: "4.2.1", bytes: 412_000_000)
+        let day = 86_400.0
+        func download(_ name: String, _ megabytes: Int64, _ daysAgo: Double, folder: Bool = false) -> OldDownload {
+            OldDownload(path: "/Users/example/Downloads/" + name, name: name, bytes: megabytes * 1_048_576, modified: Date(timeIntervalSinceNow: -daysAgo * day),
+                        isDirectory: folder, device: 1, inode: UInt64(megabytes))
+        }
+        model.oldDownloads = [download("Northwind-IDE-2.4.dmg", 1_420, 212), download("holiday-raw", 960, 140, folder: true),
+                              download("Relay-Chat-5.1.zip", 310, 118), download("invoice-scan.pdf", 12, 97), download("notes-export.csv", 2, 91)]
         model.installedApps = [
             InstalledApp(path: "/Applications/Pixel Studio.app", name: "Pixel Studio", bundleID: "ro.example.pixel", version: "2.9", bytes: 1_380_000_000),
             relay,
@@ -177,7 +184,8 @@ enum DemoStore {
         return CleanupPreview(candidates: [
             item("app_caches", "Library/Caches/ro.example.pixel", 1_229), item("xcode_derived", "Library/Developer/Xcode/DerivedData/Northwind-abc", 2_480),
             item("npm_cache", ".npm/_cacache", 640), item("homebrew_cache", "Library/Caches/Homebrew", 310),
-            item("old_logs", "Library/Logs/example.log", 24),
+            item("old_logs", "Library/Logs/example.log", 24), item("chrome_cache", "Library/Caches/Google/Chrome", 880),
+            item("mail_downloads", "Library/Containers/com.apple.mail/Data/Library/Mail Downloads/Q3-report.pdf", 18),
         ], skipped: [CleanupSkip(path: "/Users/example/Library/Caches/Yarn", reason: "yarn is running")])
     }
 

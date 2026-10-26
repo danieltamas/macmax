@@ -253,6 +253,16 @@ final class PanelModel {
     var loadLeftovers: (InstalledApp) -> Void = { _ in }
     var uninstallApp: (InstalledApp, [Leftover]) -> Void = { _, _ in }
 
+    // Old downloads: what sits in Downloads past the chosen age, and the last move
+    var oldDownloads: [OldDownload]?
+    var oldDownloadsState: SectionState = .ready
+    var oldDownloadsDays = OldDownloads.defaultDays
+    var oldDownloadsMoving = false
+    var oldDownloadsProgress: (done: Int, total: Int, next: String?)?
+    var oldDownloadsResults: [CleanupResult] = []
+    var scanOldDownloads: () -> Void = {}
+    var moveOldDownloads: ([OldDownload]) -> Void = { _ in }
+
     // Permissions, as macOS answers now
     var fullDiskAccess: PermissionState = .unknown
     var notifications: NotificationAccess = .unknown

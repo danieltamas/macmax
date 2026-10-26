@@ -13,6 +13,11 @@ enum RuleText {
         ("pip_cache", "pip cache", "The package download cache."),
         ("homebrew_cache", "Homebrew downloads", "Downloaded bottles and sources."),
         ("old_logs", "Old logs", "Log files older than 30 days."),
+        ("chrome_cache", "Chrome cache", "Saved pages and images, while Chrome is closed."),
+        ("firefox_cache", "Firefox cache", "Saved pages and images, while Firefox is closed."),
+        ("edge_cache", "Edge cache", "Saved pages and images, while Edge is closed."),
+        ("brave_cache", "Brave cache", "Saved pages and images, while Brave is closed."),
+        ("mail_downloads", "Mail attachments opened", "Copies Mail made when you opened an attachment; the messages keep the originals."),
     ]
 }
 
@@ -30,6 +35,7 @@ struct CleanupPane: View {
                 AccessPrompt(model: model)
                 rules
                 if !model.cleanupResults.isEmpty { JustMovedCard(model: model) }
+                OldDownloadsCard(model: model)
                 LargeFoldersCard(model: model)
                 StartupCard(model: model)
                 AppUninstallCard(model: model)
