@@ -39,7 +39,7 @@ Annotations on every tool: `readOnlyHint: true`, `destructiveHint: false`, `open
 |------|-----------|---------|
 | `snapshot` | none | Verdict, vitals (CPU, memory, swap, pressure, disk, network rates, thermal, uptime), top 5 apps by CPU, memory and network, identity summary |
 | `top_apps` | `by`: cpu, memory, disk, network (default cpu); `limit` 1-50 (default 10); `include_processes` bool | Apps with their metrics; processes with pid, name, CPU, footprint, Rosetta, redacted command line when asked |
-| `process` | `pid` (int) | One process: identity (pid, start time), app, user, path, metrics, parent chain, redacted command line, open connections count |
+| `process` | `pid` (int) | One process: identity (pid, start time), app, user, path, metrics, parent chain, redacted command line; open connections are `{"status": "unavailable"}` until a collector reads them per process |
 | `network_usage` | `window`: now, 1h, 24h (default now); `limit` 1-50 | Per-app bytes in and out, interface totals |
 | `network_identity` | none | Public IP and country, ISP IP and country, VPN services and states, route via tunnel, leak verdict, last change |
 | `run_audit` | none | A fresh audit: verdict, findings (id, severity, title, evidence, why, suggested next step) |
@@ -65,7 +65,10 @@ Request:
 ```json
 {"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"top_apps","arguments":{"by":"memory","limit":2}}}
 ```
-Result `structuredContent` (synthetic values):
+Result `structuredContent` (synthetic values). An app whose processes could not all be read (another user's, or gone mid-read) carries `unread_processes`: its totals leave them out. Per-app traffic is bytes during the last collection window; a
+reading that could not be taken is `{"status": "unavailable" | "failed", "reason": ...}`, never a zero. A
+`findings` or `who_held` answer with no history database (the app never ran here) is `{"available": false, "reason": "MacMax is not running"}`
+plus an empty `findings` or `apps` list:
 ```json
 {
   "source": "macmax",
@@ -74,9 +77,11 @@ Result `structuredContent` (synthetic values):
   "by": "memory",
   "apps": [
     {"app_key": "com.google.Chrome", "name": "Google Chrome", "processes": 38, "cpu_pct": 14.2,
-     "footprint_bytes": 6012954214, "net_in_bps": 81234, "net_out_bps": 9120},
+     "footprint_bytes": 6012954214, "disk_read_bytes": 0, "disk_write_bytes": 4096,
+     "net_in_bytes": 81234, "net_out_bytes": 9120},
     {"app_key": "com.docker.docker", "name": "Docker", "processes": 9, "cpu_pct": 31.0,
-     "footprint_bytes": 4294967296, "compressed_bytes": 2469606195, "net_in_bps": 120, "net_out_bps": 88}
+     "footprint_bytes": 4294967296, "disk_read_bytes": 0, "disk_write_bytes": 0,
+     "net_in_bytes": {"status": "unavailable", "reason": "no process network reading"}, "net_out_bytes": {"status": "unavailable", "reason": "no process network reading"}}
   ]
 }
 ```
@@ -88,7 +93,7 @@ Result `structuredContent` (synthetic values):
 | Command | Tool equivalent |
 |---------|-----------------|
 | `macmax snapshot` | `snapshot` |
-| `macmax apps [--by cpu\|memory\|disk\|network] [--limit N]` | `top_apps` |
+| `macmax apps [--by cpu\|memory\|disk\|network] [--limit N] [--processes]` | `top_apps` |
 | `macmax network [--window now\|1h\|24h]` | `network_usage` |
 | `macmax ip` | `network_identity` |
 | `macmax audit [--json] [--ip-check]` | `run_audit`; exit 0 OK, 1 WARN, 2 CRIT (like `mac-audit.sh`), 3 unknown (no rule could be evaluated). `--json` adds `rules` (id, title, script pattern of every rule) and `summary` (headline numbers) to the findings; `--ip-check` allows the public IP lookup, off by default. Read-only: it never writes the history database |
@@ -98,7 +103,9 @@ Result `structuredContent` (synthetic values):
 | `macmax version` | version line, same as About |
 
 Exit codes: 0 success, 1, 2 and 3 for `audit` as above, 64 usage, 70 the output could not be encoded (a sentence on stderr).
-The CLI is read-only like the server; it never writes the database or the config.
+The CLI is read-only like the server; it never writes the database or the config. A command that needs rates
+(`snapshot`, `apps`, `network`) takes a second sample, so it answers after about 2 seconds. `scripts/acceptance.sh mcp`
+drives `macmax mcp` over stdio and checks the transcript.
 
 ## Acceptance (U10, for Codex)
 

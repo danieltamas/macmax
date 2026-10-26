@@ -37,8 +37,12 @@ func audit(_ arguments: [String]) async -> Never {
     exit(AuditExit.code(for: result.report.verdict))
 }
 
+let usage = "usage: macmax <\(AgentCommands.names.joined(separator: "|"))|audit|mcp|version> [--json]"
 let arguments = Array(CommandLine.arguments.dropFirst())
 switch arguments.first {
 case "audit": await audit(Array(arguments.dropFirst()))
-default: fail("usage: macmax audit [--json] [--ip-check]")
+case "mcp" where arguments.count == 1: await MCPCommand.run()
+case "version" where arguments.count == 1, "--version" where arguments.count == 1: print("macmax \(AgentVersion.current)"); exit(0)
+case let command? where AgentCommands.names.contains(command): await AgentCommands.run(command, Array(arguments.dropFirst()))
+default: fail(usage)
 }
