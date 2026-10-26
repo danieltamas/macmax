@@ -43,6 +43,10 @@ enum DemoStore {
                       result: "trashed", detail: "npm_cache, 640 MB"),
         ]
         let demoPaths = ["ro.example.pixel", "ro.example.relay", "ro.example.atlas"].map { "/Users/example/Library/Caches/\($0)" }
+        model.hardware = HardwareProfile(chip: "Apple M2 Pro", performanceCores: 6, efficiencyCores: 4, totalCores: 10,
+                                         gpuName: "Apple M2 Pro", gpuCores: 19, memoryBytes: 34_359_738_368)
+        model.live = SystemLive(coreBusyPercent: [92, 71, 64, 38, 12, 8, 55, 41, 6, 3], gpuPercent: 14,
+                                memoryUsedBytes: 27_917_287_424, memoryTotalBytes: 34_359_738_368)
         model.cleanupMovedFrom = demoPaths.enumerated().map { CleanupCandidate(ruleID: "app_caches", path: $1, bytes: 400_000_000 + Int64($0) * 90_000_000, device: 1, inode: UInt64($0)) }
             + [CleanupCandidate(ruleID: "old_logs", path: "/Users/example/Library/Logs/old.log", bytes: 12_000_000, device: 1, inode: 9)]
         model.cleanupResults = model.cleanupMovedFrom.map { CleanupResult(path: $0.path, outcome: .done) }

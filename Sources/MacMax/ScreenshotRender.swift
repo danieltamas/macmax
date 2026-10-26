@@ -29,6 +29,8 @@ enum ScreenshotRender {
                 if tab == .history { DemoStore.history(for: model, range: .day, stress: stress) }
                 try write(PanelView(model: model).frame(height: 780), to: url(tab.rawValue.lowercased()))
             }
+            let mac = DemoStore.model(stress: stress)
+            try write(ThisMacCard(model: mac).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("this-mac"))
             let cleaned = DemoStore.model(stress: stress)
             try write(VStack(spacing: 14) { JustMovedCard(model: cleaned); LastCleanupsCard(model: cleaned) }
                 .padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("cleanup-results"))

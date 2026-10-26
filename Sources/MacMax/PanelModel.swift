@@ -138,6 +138,9 @@ final class PanelModel {
     /// Set by the live controller: the rows shown must match the chosen window at once, not at the next tick.
     var windowChanged: () -> Void = {}
     var interfaces: [InterfaceLine] = []
+    /// What this Mac is made of (read once) and how hard its cores, GPU and memory work this tick.
+    var hardware: HardwareProfile?
+    var live: SystemLive?
     var traffic: [TrafficLine] = []
     var trafficState: SectionState = .loading("Reading network usage...")
     var connections: [String: [ConnectionLine]] = [:]

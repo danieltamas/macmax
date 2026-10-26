@@ -132,6 +132,8 @@ final class PanelController {
         model.processes = PanelData.processes(rows.processes)
         model.topConsumers = PanelData.topConsumers(model.apps)
         model.interfaces = PanelData.interfaces(rows.system, each: rows.interfaces)
+        model.live = rows.live
+        if model.hardware == nil { model.hardware = HardwareProfile.read() }
         nowTraffic = PanelData.nowTraffic(rows.apps, names: names, interval: Double(interval))
         if model.window == .now {
             model.traffic = nowTraffic

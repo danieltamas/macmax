@@ -109,10 +109,13 @@ public struct TickRows: Sendable, Equatable {
     public var appInfo: [AppInfo]
     /// Per-interface rates of this tick for the panel; they are not stored (the system row holds their sum).
     public var interfaces: [InterfaceRate]
+    /// Cores, GPU and memory of this tick for the panel; not stored.
+    public var live: SystemLive?
 
     public init(system: SystemSampleRow, apps: [AppSampleRow] = [], processes: [ProcSampleRow] = [], appInfo: [AppInfo] = [],
-                interfaces: [InterfaceRate] = []) {
+                interfaces: [InterfaceRate] = [], live: SystemLive? = nil) {
         self.interfaces = interfaces
+        self.live = live
         self.system = system
         self.apps = apps
         self.processes = processes
