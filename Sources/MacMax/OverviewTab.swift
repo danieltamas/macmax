@@ -159,13 +159,13 @@ struct IdentityCardView: View {
                 Text("The public IP check is off. Turn it on in Settings to see your address and detect leaks.")
                     .font(.meta).foregroundStyle(Theme.textSecondary)
                 Spacer(minLength: 6)
-                Button("Turn on") { model.openSettings(.network) }.buttonStyle(PressStyle()).font(.meta).foregroundStyle(Theme.teal)
+                LinkButton(title: "Turn on") { model.openSettings(.network) }
             }
         }
         if let ip = card.publicIP { addressRow("Public IP", ip, card.publicCountry) }
-        if let ip = card.ispIP, card.vpnName != nil { addressRow("ISP IP", ip, card.ispCountry) }
-        if let name = card.vpnName {
-            Text("\(name): \(card.vpnState ?? "unknown")").font(.meta).foregroundStyle(Theme.textSecondary).lineLimit(1)
+        if let ip = card.ispIP, !card.vpnLines.isEmpty { addressRow("ISP IP", ip, card.ispCountry) }
+        ForEach(Array(card.vpnLines.enumerated()), id: \.offset) { _, line in
+            Text(line).font(.meta).foregroundStyle(Theme.textSecondary).lineLimit(1)
         }
         if let reason = card.reason { Text(reason).font(.meta).foregroundStyle(Theme.textTertiary) }
         if let note = card.changeNote { Text(note).font(.meta).foregroundStyle(Theme.textTertiary) }
@@ -196,7 +196,7 @@ struct IdentityCardView: View {
 
     private func chipText(_ card: IdentityCard) -> String {
         switch card.verdict {
-        case .tunnelOK: "Traffic goes through \(card.vpnName ?? "the VPN")"
+        case .tunnelOK: card.vpnName.map { "Traffic goes through \($0)" } ?? "Traffic goes through a VPN"
         case .leak: "Traffic is leaving outside the VPN"
         case .splitTunnel: "Only some traffic uses the VPN"
         case .noVPN: "No VPN"

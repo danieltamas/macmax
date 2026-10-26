@@ -85,9 +85,12 @@ enum PanelData {
         return result
     }
 
-    static func interfaces(_ row: SystemSampleRow) -> [InterfaceLine] {
+    /// The total first, then every interface the kernel counts, busiest first.
+    static func interfaces(_ row: SystemSampleRow, each: [InterfaceRate]) -> [InterfaceLine] {
         guard let down = row.netInBps, let up = row.netOutBps else { return [] }
-        return [InterfaceLine(name: "All interfaces", inPerSecond: down, outPerSecond: up)]
+        let lines = each.sorted { ($1.bytesInPerSecond + $1.bytesOutPerSecond, $0.name) < ($0.bytesInPerSecond + $0.bytesOutPerSecond, $1.name) }
+            .map { InterfaceLine(name: $0.name, inPerSecond: $0.bytesInPerSecond, outPerSecond: $0.bytesOutPerSecond) }
+        return [InterfaceLine(name: "All interfaces", inPerSecond: down, outPerSecond: up)] + lines
     }
 
     static func nowTraffic(_ rows: [AppSampleRow], names: [String: String], interval: Double) -> [TrafficLine] {
@@ -100,11 +103,15 @@ enum PanelData {
     }
 
     static func identityCard(_ identity: NetworkIdentity, checkEnabled: Bool, previous: IdentityCard?) -> IdentityCard {
-        let vpn = identity.vpnServices.value?.first { $0.state == .connected } ?? identity.vpnServices.value?.first
+        let services = identity.vpnServices.value ?? []
+        let connected = services.filter { $0.state == .connected }
+        let listed = connected.isEmpty ? Array(services.prefix(1)) : connected
+        let vpn = connected.count == 1 ? connected.first : nil
         var card = IdentityCard(verdict: identity.verdict, publicIP: identity.publicIP.value?.address,
                                 publicCountry: identity.publicIP.value?.country, ispIP: identity.ispIP.value?.address,
                                 ispCountry: identity.ispIP.value?.country, vpnName: vpn?.label, vpnState: vpn?.state.rawValue,
-                                checkEnabled: checkEnabled, reason: identity.publicIP.problem ?? identity.vpnServices.problem ?? identity.physicalInterface.problem, changeNote: nil)
+                                checkEnabled: checkEnabled, reason: identity.publicIP.problem ?? identity.vpnServices.problem ?? identity.physicalInterface.problem, changeNote: nil,
+                                vpnLines: listed.map { "\($0.label): \($0.state.rawValue)" })
         if let before = previous?.publicIP, let now = card.publicIP, before != now {
             card.changeNote = "Your public IP changed from \(before) to \(now)."
         } else {

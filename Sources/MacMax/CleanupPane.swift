@@ -36,16 +36,12 @@ struct CleanupPane: View {
 
     private var rules: some View {
         SettingsCard(title: "Cleanup rules", detail: "What each rule removes and how big it is now.") {
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(RuleText.rows, id: \.id) { rule in
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(RuleText.rows.enumerated()), id: \.element.id) { index, rule in
                     let items = model.cleanupPreview?.candidates.filter { $0.ruleID == rule.id } ?? []
                     let partial = model.cleanupPreview?.skipped.contains { $0.ruleID == rule.id } ?? false
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(rule.title).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textPrimary)
-                            Text(rule.detail).font(.meta).foregroundStyle(Theme.textTertiary)
-                        }
-                        Spacer(minLength: 6)
+                    if index > 0 { RowDivider() }
+                    SettingsRow(title: rule.title, detail: rule.detail) {
                         // A rule that skipped something has no complete size: unknown if nothing was measured, a floor otherwise.
                         Text(Self.size(model.cleanupPreview?.bytes(ofRule: rule.id), items: items, partial: partial))
                             .font(.system(size: 11.5, weight: .medium).monospacedDigit()).foregroundStyle(Theme.textSecondary)
@@ -61,7 +57,7 @@ struct CleanupPane: View {
                             confirming = false
                             model.moveToTrash(model.cleanupPreview?.candidates ?? [])
                         }
-                        Button("Cancel") { confirming = false }.buttonStyle(PressStyle()).font(.meta).foregroundStyle(Theme.textTertiary)
+                        LinkButton(title: "Cancel", tint: Theme.textTertiary) { confirming = false }
                     } else {
                         PillButton(title: total > 0 ? "Move \(CompactFormat.bytes(UInt64(total))) to Trash" : "Nothing to move", symbol: "trash") {
                             confirming = true
@@ -167,7 +163,7 @@ private struct ProtectedPathsCard: View {
                     HStack {
                         Text(path).font(.system(size: 11.5, design: .monospaced)).foregroundStyle(Theme.textSecondary)
                             .lineLimit(1).truncationMode(.middle)
-                        Spacer(minLength: 6)
+                        Spacer(minLength: 12)
                         IconButton(symbol: "minus.circle", help: "Stop protecting this folder", size: 22) {
                             model.change { $0.protectedPaths.removeAll { $0 == path } }
                             model.scanCleanup()

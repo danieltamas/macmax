@@ -13,9 +13,8 @@ struct NetworkPane: View {
             if let problem = model.configProblem { ProblemText(text: problem) }
             SettingsCard(title: "Public IP check",
                          detail: "When on, MacMax asks the endpoint below for your public address, about once a minute. It sends no data about you beyond the request itself.") {
-                Toggle("Check my public IP", isOn: Binding(get: { model.config.ipCheckEnabled },
-                                                          set: { value in model.change { $0.ipCheckEnabled = value } }))
-                    .toggleStyle(.switch).tint(Theme.teal).font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
+                SwitchRow(title: "Check my public IP", isOn: Binding(get: { model.config.ipCheckEnabled },
+                                                                     set: { value in model.change { $0.ipCheckEnabled = value } }))
             }
             SettingsCard(title: "Endpoint", detail: "Any https address that answers with your IP. Default: Cloudflare's trace.") {
                 GlassField(placeholder: IPEndpointClient.defaultEndpoint, text: $endpoint, monospaced: true).onSubmit(commit)
@@ -23,25 +22,23 @@ struct NetworkPane: View {
                     if let problem { ProblemText(text: problem) }
                     Spacer()
                     if model.config.ipEndpoint != nil {
-                        Button("Use the default") { model.change { $0.ipEndpoint = nil }; endpoint = ""; problem = nil }
-                            .buttonStyle(PressStyle()).font(.meta).foregroundStyle(Theme.teal)
+                        LinkButton(title: "Use the default") { model.change { $0.ipEndpoint = nil }; endpoint = ""; problem = nil }
                     }
                 }
             }
             SettingsCard(title: "Interface for the ISP IP", detail: "The interface used to see your address outside the VPN.") {
-                Text(model.physicalInterface.map { "Automatic (\($0))" } ?? "Automatic")
-                    .font(.system(size: 12.5)).foregroundStyle(Theme.textPrimary)
+                SettingsRow(title: "Interface") {
+                    Text(model.physicalInterface.map { "Automatic (\($0))" } ?? "Automatic")
+                        .font(.system(size: 12.5)).foregroundStyle(Theme.textSecondary)
+                }
             }
             SettingsCard(title: "VPN services found", detail: "Network Extension VPNs macOS knows about.") {
                 if model.vpnServices.isEmpty {
                     Text("None found.").font(.meta).foregroundStyle(Theme.textTertiary)
                 }
-                ForEach(Array(model.vpnServices.enumerated()), id: \.offset) { _, service in
-                    HStack {
-                        Text(service.name).font(.system(size: 12.5)).foregroundStyle(Theme.textPrimary).lineLimit(1)
-                        Spacer()
-                        Chip(text: service.state, style: .outline)
-                    }
+                ForEach(Array(model.vpnServices.enumerated()), id: \.offset) { index, service in
+                    if index > 0 { RowDivider() }
+                    SettingsRow(title: service.name) { Chip(text: service.state, style: .outline) }
                 }
             }
         }
@@ -113,10 +110,9 @@ struct AboutPane: View {
             PaneHeader(pane: .about, title: "About", detail: "Why your Mac is slow, and what to do about it.")
             SettingsCard(title: "MacMax", detail: "Open source, MIT licensed. Made by Daniel Tamas.") {
                 Text(version).font(.system(size: 11.5, design: .monospaced)).foregroundStyle(Theme.textSecondary).textSelection(.enabled)
-                Button("github.com/danieltamas/macmax") {
+                LinkButton(title: "github.com/danieltamas/macmax") {
                     NSWorkspace.shared.open(URL(string: "https://github.com/danieltamas/macmax")!)
-                }
-                .buttonStyle(PressStyle()).font(.meta).foregroundStyle(Theme.teal)
+                }.padding(.leading, -6)
             }
         }
     }

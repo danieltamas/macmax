@@ -61,8 +61,7 @@ struct FindingCard: View {
                     if let pill = FindingPill.of(finding.ruleID) {
                         PillButton(title: pill.title, symbol: pill.symbol, prominent: false) { pill.run(model) }
                     }
-                    Button("Snooze 24 h") { model.snooze(finding.ruleID) }
-                        .buttonStyle(PressStyle()).font(.meta).foregroundStyle(Theme.textTertiary).fixedSize()
+                    LinkButton(title: "Snooze 24 h", tint: Theme.textTertiary) { model.snooze(finding.ruleID) }.fixedSize()
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

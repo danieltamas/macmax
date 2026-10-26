@@ -26,7 +26,8 @@ struct NetworkTab: View {
                     Eyebrow(text: "Interfaces")
                     ForEach(model.interfaces) { line in
                         HStack(spacing: 8) {
-                            Text(line.name).font(.rowTitle).foregroundStyle(Theme.textPrimary).lineLimit(2)
+                            Text(line.name).font(.rowTitle).lineLimit(2)
+                                .foregroundStyle(line.inPerSecond + line.outPerSecond > 0 ? Theme.textPrimary : Theme.textTertiary)
                             Spacer(minLength: 6)
                             Label(CompactFormat.rate(line.inPerSecond), systemImage: "arrow.down")
                                 .foregroundStyle(Theme.netIn)

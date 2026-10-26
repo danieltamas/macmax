@@ -63,8 +63,7 @@ struct AppsTab: View {
                 AppRowView(model: model, row: row).riseIn(index)
             }
             if page.remaining > 0 {
-                Button("Show \(min(page.remaining, AppListing.pageSize)) more") { model.shown += AppListing.pageSize }
-                    .buttonStyle(PressStyle()).font(.meta).foregroundStyle(Theme.teal)
+                LinkButton(title: "Show \(min(page.remaining, AppListing.pageSize)) more") { model.shown += AppListing.pageSize }
             }
         }
     }

@@ -72,7 +72,7 @@ struct PanelView: View {
                     }
                     .contentShape(Capsule())
                 }
-                .buttonStyle(PressStyle(scale: 0.97))
+                .buttonStyle(PressStyle(scale: 0.97, hit: AnyShape(Capsule()), lift: 0.08))
                 .help(tab.rawValue)
                 .accessibilityLabel(tab.rawValue)
             }

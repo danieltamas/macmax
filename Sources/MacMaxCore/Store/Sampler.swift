@@ -70,7 +70,8 @@ public actor Sampler {
                 ProcSampleRow(ts: ts, pid: $0.identity.pid, startUs: $0.identity.startTimeMicroseconds, appKey: $0.app.id,
                               name: $0.name, cpu: $0.cpu, footprint: $0.footprintBytes.map(Int64.init(clamping:)))
             },
-            appInfo: apps.map { AppInfo(appKey: $0.app.id, name: $0.app.name, firstSeen: ts) })
+            appInfo: apps.map { AppInfo(appKey: $0.app.id, name: $0.app.name, firstSeen: ts) },
+            interfaces: networkSnapshot.interfaces.value ?? [])
         try Task.checkCancellation()
         try await database.write(rows)
         lastTimestamp = ts

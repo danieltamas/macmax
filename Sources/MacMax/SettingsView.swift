@@ -99,7 +99,7 @@ struct SettingsView: View {
                     }
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(PressStyle(scale: 0.98))
+                .buttonStyle(PressStyle(scale: 0.98, lift: 0.08))
             }
             Spacer()
             AppControls().padding(.horizontal, 10)

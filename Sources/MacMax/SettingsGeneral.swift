@@ -43,25 +43,18 @@ struct GeneralPane: View {
                 }
             }
             SettingsCard(title: "Open at login", detail: "MacMax only measures while it runs.") {
-                Toggle("Open MacMax when you log in", isOn: Binding(get: { opensAtLogin }, set: { setOpensAtLogin($0) }))
-                    .toggleStyle(.switch).tint(Theme.teal)
-                    .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
+                SwitchRow(title: "Open MacMax when you log in", isOn: Binding(get: { opensAtLogin }, set: { setOpensAtLogin($0) }))
                 if let loginProblem { ProblemText(text: loginProblem) }
             }
             SettingsCard(title: "Data folder", detail: "History and logs on this Mac. Nothing leaves it.") {
-                HStack {
-                    Text(home.url.path).font(.system(size: 11.5, design: .monospaced)).foregroundStyle(Theme.textSecondary)
-                        .lineLimit(1).truncationMode(.middle)
-                    Spacer()
+                SettingsRow(title: home.url.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")) {
                     PillButton(title: "Show in Finder", symbol: "arrow.up.right", prominent: false) {
                         try? home.prepare()
                         NSWorkspace.shared.activateFileViewerSelecting([home.url])
                     }
                 }
-                HStack {
-                    Text(model.historyBytes.map { "History uses \(CompactFormat.bytes(UInt64(max($0, 0))))" } ?? "History size not read yet")
-                        .font(.meta).foregroundStyle(Theme.textTertiary)
-                    Spacer()
+                RowDivider()
+                SettingsRow(title: model.historyBytes.map { "History uses \(CompactFormat.bytes(UInt64(max($0, 0))))" } ?? "History size not read yet") {
                     PillButton(title: model.clearing ? "Clearing..." : confirmClear ? "Press again to clear" : "Clear history",
                                symbol: "trash", prominent: false) {
                         guard !model.clearing else { return }

@@ -64,11 +64,13 @@ enum DemoStore {
     private static func identity(leak: Bool) -> IdentityCard {
         if leak {
             return IdentityCard(verdict: .leak, publicIP: "198.51.100.7", publicCountry: "RO", ispIP: "198.51.100.7", ispCountry: "RO",
-                                vpnName: "Outline", vpnState: "connected", checkEnabled: true, reason: nil, changeNote: nil)
+                                vpnName: "Outline", vpnState: "connected", checkEnabled: true, reason: nil, changeNote: nil,
+                                vpnLines: ["Outline: connected"])
         }
         return IdentityCard(verdict: .tunnelOK, publicIP: "203.0.113.20", publicCountry: "DE", ispIP: "198.51.100.7", ispCountry: "RO",
                             vpnName: "Outline", vpnState: "connected", checkEnabled: true, reason: nil,
-                            changeNote: "IP changed at 14:02 from 198.51.100.7 (RO) to 203.0.113.20 (DE)")
+                            changeNote: "IP changed at 14:02 from 198.51.100.7 (RO) to 203.0.113.20 (DE)",
+                            vpnLines: ["Outline: connected"])
     }
 
     private static func findings() -> [Finding] {

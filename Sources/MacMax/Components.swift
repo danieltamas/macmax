@@ -264,43 +264,6 @@ struct GlyphDisc: View {
     }
 }
 
-/// The physical press: everything clickable sinks a little under the pointer.
-struct PressStyle: ButtonStyle {
-    var scale: CGFloat = 0.96
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? scale : 1)
-            .animation(Motion.snappy, value: configuration.isPressed)
-            .pointingHandCursor()
-    }
-}
-
-extension View {
-    /// The hand over anything clickable. On macOS 15 SwiftUI owns the cursor, so a nested or
-    /// neighbouring region and AppKit's own cursor updates never put the arrow back mid-hover.
-    /// Before that it is set on every move, which a tooltip or a layout pass can still undo
-    /// until the mouse moves again.
-    @ViewBuilder
-    func pointingHandCursor(_ enabled: Bool = true) -> some View {
-        if #available(macOS 15, *) {
-            pointerStyle(enabled ? .link : nil)
-        } else {
-            setsHandOnMove(enabled)
-        }
-    }
-
-    private func setsHandOnMove(_ enabled: Bool) -> some View {
-        onContinuousHover { phase in
-            guard enabled else { return }
-            switch phase {
-            case .active: NSCursor.pointingHand.set()
-            case .ended: NSCursor.arrow.set()
-            }
-        }
-    }
-}
-
 /// A round, light-weight icon button for toolbars and rows.
 struct IconButton: View {
     let symbol: String
@@ -320,7 +283,7 @@ struct IconButton: View {
                 .overlay(Circle().strokeBorder(Theme.hairline, lineWidth: 0.5))
                 .contentShape(Circle())
         }
-        .buttonStyle(PressStyle(scale: 0.9))
+        .buttonStyle(PressStyle(scale: 0.9, hit: AnyShape(Circle()), lift: 0))
         .onHover { hovering in withAnimation(Motion.snappy) { self.hovering = hovering } }
         .help(help)
     }
@@ -359,7 +322,7 @@ struct PillButton: View {
             .contentShape(Capsule())
             .fixedSize()
         }
-        .buttonStyle(PressStyle(scale: 0.97))
+        .buttonStyle(PressStyle(scale: 0.97, hit: AnyShape(Capsule()), lift: 0))
         .opacity(disabled || !isEnabled ? 0.4 : 1)
         .disabled(disabled)
         .onHover { hovering in withAnimation(Motion.snappy) { self.hovering = hovering && isEnabled && !disabled } }
@@ -414,15 +377,16 @@ extension View {
     func riseIn(_ index: Int) -> some View { modifier(RiseIn(index: index)) }
 }
 
-/// A card that lifts its core on hover and opens something on click.
+/// A card that lifts its core on hover and opens something on click: idle, hover, pressed.
 struct HoverCard<Content: View>: View {
     var accent: Color?
     let action: (() -> Void)?
     @ViewBuilder let content: Content
     @State private var hovering = false
+    @State private var pressed = false
 
     var body: some View {
-        Bezel(fill: hovering ? Theme.coreHover : Theme.core) {
+        Bezel(fill: hovering && action != nil ? Theme.coreHover : Theme.core) {
             HStack(spacing: 0) {
                 if let accent {
                     Capsule().fill(accent.gradient).frame(width: 3).padding(.vertical, 10).padding(.leading, 6)
@@ -431,9 +395,12 @@ struct HoverCard<Content: View>: View {
                 content.padding(.horizontal, 12).padding(.vertical, 10)
             }
         }
-        .scaleEffect(hovering && action != nil ? 1.006 : 1)
+        .scaleEffect(pressed ? 0.99 : hovering && action != nil ? 1.006 : 1)
+        .opacity(pressed ? 0.85 : 1)
+        .animation(Motion.snappy, value: pressed)
         .contentShape(Rectangle())
-        .onTapGesture { action?() }
+        // A button gesture, not a tap: it reports the press, and a button inside the card still gets its own click.
+        ._onButtonGesture(pressing: { pressed = $0 && action != nil }, perform: { action?() })
         .pointingHandCursor(action != nil)
         .onHover { hovering in withAnimation(Motion.snappy) { self.hovering = hovering } }
     }

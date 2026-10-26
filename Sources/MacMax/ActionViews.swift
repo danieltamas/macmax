@@ -16,11 +16,11 @@ struct ActionControl: View {
         HStack(spacing: 8) {
             switch state {
             case .asked:
-                Button(forceTitle) { model.perform(forced) }.buttonStyle(PressStyle()).foregroundStyle(Theme.crit)
+                LinkButton(title: forceTitle, tint: Theme.crit) { model.perform(forced) }
             case .working, .done:
                 EmptyView()
             default:
-                Button(title) { model.perform(action) }.buttonStyle(PressStyle()).foregroundStyle(Theme.teal)
+                LinkButton(title: title) { model.perform(action) }
             }
             if let state {
                 Text(state.text).foregroundStyle(color(state)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
@@ -47,7 +47,7 @@ struct ContainersList: View {
             HStack {
                 Eyebrow(text: "Containers")
                 Spacer(minLength: 6)
-                Button("Refresh") { model.loadContainers() }.buttonStyle(PressStyle()).font(.meta).foregroundStyle(Theme.teal)
+                LinkButton(title: "Refresh") { model.loadContainers() }
             }
             switch model.containersState {
             case let .loading(text): Text(text).font(.meta).foregroundStyle(Theme.textTertiary)

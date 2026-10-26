@@ -65,6 +65,9 @@ struct IdentityCard: Equatable {
     var checkEnabled: Bool
     var reason: String?
     var changeNote: String?
+    /// Every connected VPN as "Name: state" (the first one found when none is connected). More than one means MacMax
+    /// cannot tell which carries the traffic, so it names none of them in the headline.
+    var vpnLines: [String] = []
 }
 
 struct InterfaceLine: Equatable, Identifiable {
