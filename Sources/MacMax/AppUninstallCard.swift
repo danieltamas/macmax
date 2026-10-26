@@ -121,6 +121,7 @@ struct AppUninstallCard: View {
             if let reason = Self.unavailable(app) {
                 Text("MacMax will not uninstall \(app.name): \(reason).").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.warn)
                     .fixedSize(horizontal: false, vertical: true)
+                ChipButton(title: "Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: app.path)]) }.fixedSize()
             } else if model.uninstallResults.first?.path == app.path, !model.uninstallResults.isEmpty {
                 results
             }
