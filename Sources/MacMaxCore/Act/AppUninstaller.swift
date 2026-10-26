@@ -5,8 +5,10 @@ public enum AppUninstallPolicy {
     public static func refusal(for app: InstalledApp, home: String, running: Running?) -> String? {
         guard let running else { return "it could not be checked what is running" }
         let folderName = ((app.path as NSString).lastPathComponent as NSString).deletingPathExtension
-        if running.bundleIDs.contains(app.bundleID) || running.names.contains(folderName) || running.names.contains(app.name) {
-            return "\(app.name) is running: quit it first"
+        if running.bundleIDs.contains(app.bundleID) { return "\(app.name) is open: quit it first" }
+        // Closing the window often leaves helpers behind (updaters, daemons): they are in the process list by the app's name.
+        if running.names.contains(folderName) || running.names.contains(app.name) {
+            return "\(app.name) is closed but still has programs running in the background. Stop them in the Apps tab, then try again"
         }
         if app.bundleID.hasPrefix("com.apple.") { return "it is an Apple app" }
         if app.bundleID.hasPrefix("ro.danieltamas.macmax") { return "it is MacMax itself" }
