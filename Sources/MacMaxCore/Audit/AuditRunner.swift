@@ -10,16 +10,17 @@ public actor AuditRunner {
     private let vpnShouldBeOn: @Sendable () -> Bool
     private let system = SystemCollector()
     private let processes = ProcessCollector()
-    private let network = NetworkIdentityCollector()
+    private let network: NetworkIdentityCollector
     private let probes = AuditProbes()
     /// Process samples to take, one second apart; the last three CPU values feed `translated_hot`.
     private let rounds = 3
 
-    public init(database: Database?, databaseProblem: String? = nil, ipCheckEnabled: Bool,
+    public init(database: Database?, databaseProblem: String? = nil, ipCheckEnabled: Bool, ipEndpoint: String? = nil,
                 vpnShouldBeOn: @escaping @Sendable () -> Bool = { false }) {
         self.database = database
         self.databaseProblem = databaseProblem
         self.ipCheckEnabled = ipCheckEnabled
+        network = NetworkIdentityCollector(client: ipEndpoint.map { IPEndpointClient(endpoint: $0) } ?? IPEndpointClient())
         self.vpnShouldBeOn = vpnShouldBeOn
     }
 

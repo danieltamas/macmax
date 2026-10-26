@@ -4,30 +4,35 @@ import SwiftUI
 @main
 struct MacMaxApp: App {
     /// Handled before anything else starts: the screenshot render needs no sampler, database or network.
+    @State private var controller = PanelController()
+
     init() {
         let arguments = CommandLine.arguments
         if let index = arguments.firstIndex(of: ScreenshotRender.flag), index + 1 < arguments.count {
             let look = arguments.firstIndex(of: ScreenshotRender.lookFlag)
                 .flatMap { $0 + 1 < arguments.count ? Look(rawValue: arguments[$0 + 1]) : nil }
-            do { try ScreenshotRender.render(to: URL(fileURLWithPath: arguments[index + 1]), look: look ?? .macmax) } catch {
+            do { try ScreenshotRender.render(to: URL(fileURLWithPath: arguments[index + 1]), look: look ?? .macmax,
+                                            allLooks: arguments.contains(ScreenshotRender.allLooksFlag),
+                                            stress: arguments.contains(ScreenshotRender.stressFlag)) } catch {
                 FileHandle.standardError.write(Data("\(error.localizedDescription)\n".utf8))
                 exit(1)
             }
             exit(0)
         }
         LoginItem.registerOnce()
+        controller.start()
     }
 
     var body: some Scene {
         MenuBarExtra {
-            EmptyPanel()
+            PanelView(model: controller.model)
         } label: {
-            Image(nsImage: .macMaxTemplate)
+            MenuBarLabel(model: controller.model)
         }
         .menuBarExtraStyle(.window)
 
         // A Settings scene, not a Window: it never opens by itself at launch, and gets Cmd-, for free.
-        Settings { SettingsView() }
+        Settings { SettingsView(model: controller.model) }
     }
 }
 
@@ -59,5 +64,59 @@ extension NSApplication {
                             String(ProcessInfo.processInfo.processIdentifier), bundle.path]
         guard (try? reopen.run()) != nil else { return NSSound.beep() }
         terminate(nil)
+    }
+}
+
+/// The menu bar item: the icon at rest, tinted by a verdict that needs attention, plus the optional live text.
+/// It reads only the model, so it redraws when the verdict or the chosen text changes, not on every tick.
+struct MenuBarLabel: View {
+    let model: PanelModel
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(nsImage: NSImage.menuBarIcon(tint: tint))
+            if let text { Text(text).monospacedDigit() }
+        }
+    }
+
+    private var tint: NSColor? {
+        switch model.verdict {
+        case .warn: .systemOrange
+        case .crit: .systemRed
+        case .unknown: .systemGray
+        case .ok, nil: nil
+        }
+    }
+
+    private var text: String? {
+        func vital(_ kind: Vital.Kind) -> String? { model.vitals.first { $0.kind == kind }?.value }
+        switch model.config.menuBarText {
+        case .none: return nil
+        case .cpu: return vital(.cpu)
+        case .memory: return vital(.memory)
+        case .network: return vital(.netIn)
+        case .country: return model.identity?.publicCountry
+        }
+    }
+}
+
+extension NSImage {
+    @MainActor private static var tinted: [String: NSImage] = [:]
+
+    /// The template icon, or a colored copy of it: tinted images are cached because the menu bar redraws often.
+    @MainActor static func menuBarIcon(tint: NSColor?) -> NSImage {
+        guard let tint else { return macMaxTemplate }
+        let key = tint.description
+        if let cached = tinted[key] { return cached }
+        let base = macMaxTemplate
+        let image = NSImage(size: base.size, flipped: false) { rect in
+            base.draw(in: rect)
+            tint.set()
+            rect.fill(using: .sourceIn)
+            return true
+        }
+        image.isTemplate = false
+        tinted[key] = image
+        return image
     }
 }
