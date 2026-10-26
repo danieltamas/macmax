@@ -22,6 +22,10 @@ struct LargeFoldersCard: View {
                     } else if items.isEmpty {
                         Text("Nothing over 500 MB was found.").font(.meta).foregroundStyle(Theme.textSecondary)
                     }
+                    if model.largeSkippedPrivate {
+                        Text("Desktop, Documents, Downloads, iCloud Drive and other apps' data were left out: MacMax has no access to them yet.")
+                            .font(.meta).foregroundStyle(Theme.textTertiary).fixedSize(horizontal: false, vertical: true)
+                    }
                     ForEach(items, id: \.path) { row($0) }
                 }
                 if !model.largeState.isLoading {

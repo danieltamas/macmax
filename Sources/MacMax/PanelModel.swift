@@ -199,6 +199,7 @@ final class PanelModel {
     // Large folders
     var largeItems: [LargeItem]?
     var largeIncomplete = false
+    var largeSkippedPrivate = false
     var largeState: SectionState = .ready
     var scanLarge: () -> Void = {}
 

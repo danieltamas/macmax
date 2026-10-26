@@ -198,11 +198,14 @@ final class ActionController {
             return
         }
         model.largeState = .loading("Measuring your home folder. This takes a few minutes...")
+        // Only a confirmed grant walks the protected places: unknown or denied leaves them alone, so macOS asks nothing.
+        let skipPrivate = model.fullDiskAccess != .granted
         Task {
-            switch await LargeItemScanner(userProtected: protected).scan() {
+            switch await LargeItemScanner(userProtected: protected).scan(skipPrivate: skipPrivate) {
             case let .ok(scan, _, _):
                 model.largeItems = scan.items
                 model.largeIncomplete = scan.incomplete
+                model.largeSkippedPrivate = scan.skippedPrivate
                 model.largeState = .ready
             case let .unavailable(reason), let .failed(reason):
                 model.largeState = .failed(collector: "The disk", reason: reason)

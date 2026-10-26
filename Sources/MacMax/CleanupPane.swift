@@ -27,6 +27,7 @@ struct CleanupPane: View {
     var body: some View {
         VStack(alignment: .leading, spacing: place == .tab ? 14 : 22) {
             if place == .tab {
+                AccessPrompt(model: model)
                 rules
                 if !model.cleanupResults.isEmpty { results }
                 LargeFoldersCard(model: model)
@@ -38,6 +39,10 @@ struct CleanupPane: View {
             }
         }
         .task { if place == .tab, model.cleanupPreview == nil { model.scanCleanup() } }
+        .onAppear { if place == .tab { model.refreshPermissions() } }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            if place == .tab { model.refreshPermissions() }
+        }
     }
 
     private var total: Int64 { model.cleanupPreview?.bytes() ?? 0 }
