@@ -31,10 +31,20 @@ public actor UpdateCoordinator {
         }
         return current
     }
+
+    /// The installer ended while this app was still running, so it did not replace it: a later press may try again.
+    public func installerStopped(reason: String) -> UpdateState {
+        current = .failed(Redaction.sanitizeText(reason))
+        return current
+    }
 }
 
 public enum UpdateLog {
-    public struct Failure: Error { public let reason: String }
+    public struct Failure: LocalizedError {
+        public var errorDescription: String? { reason }
+        public let reason: String
+        public init(reason: String) { self.reason = reason }
+    }
 
     /// The installer's log: created 0600, never through a symlink, and only ever a regular file.
     public static func open(at url: URL) throws -> Int32 {

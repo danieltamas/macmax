@@ -89,6 +89,7 @@ struct PermissionsPane: View {
 
 /// Who made MacMax and why, its repo, and which build this is.
 struct AboutPane: View {
+    let model: PanelModel
     private static let repo = URL(string: "https://github.com/danieltamas/macmax")!
 
     var body: some View {
@@ -101,9 +102,20 @@ struct AboutPane: View {
                         Text("MacMax").font(.system(size: 18, weight: .semibold)).foregroundStyle(Theme.textPrimary)
                         Text(Self.versionLine).font(.system(size: 12, design: .monospaced)).foregroundStyle(Theme.textSecondary)
                             .textSelection(.enabled)
+                        Text(standingText).font(.system(size: 11.5)).foregroundStyle(standingColor)
                     }
                     Spacer()
                 }
+                if let note = updateNote { Text(note).font(.meta).foregroundStyle(Theme.warn).padding(.horizontal, 16).padding(.bottom, 12) }
+                HStack(spacing: 8) {
+                    if let version = model.updateVersion {
+                        PillButton(title: model.updateState.isUpdating ? "Updating..." : "Update to \(version)", symbol: "arrow.down.circle",
+                                   prominent: true, disabled: model.updateState.isUpdating) { model.installUpdate() }
+                    }
+                    PillButton(title: "Check again", symbol: "arrow.clockwise", prominent: false,
+                               disabled: model.releaseCheck.isChecking) { model.checkForUpdate() }
+                }
+                .padding(.horizontal, 16).padding(.bottom, 16)
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -152,7 +164,47 @@ struct AboutPane: View {
         return line
     }
 
+    private var standingText: String {
+        if case .loading = model.releaseCheck { return "Checking for updates..." }
+        if case let .failed(_, reason) = model.releaseCheck { return reason }
+        guard let latest = model.latestRelease else { return "No release has been published yet." }
+        switch model.standing {
+        case .behind: return "MacMax \(latest.version) is available."
+        case .latest: return "This is the latest release."
+        case .ahead: return "Newer than the latest release (\(latest.version))."
+        case .unknown: return "Could not compare this build with \(latest.version)."
+        }
+    }
+
+    private var standingColor: Color {
+        if case .failed = model.releaseCheck { return Theme.warn }
+        return model.standing == .behind ? Theme.teal : Theme.textTertiary
+    }
+
+    /// Why Update is not offered, or why the last one did not finish.
+    private var updateNote: String? {
+        if case let .failed(message) = model.updateState { return "The update did not start: \(message)" }
+        if model.newerRelease, model.updateVersion == nil {
+            return "This copy is not in Applications, so it cannot update itself. Install the new version from the release page."
+        }
+        return nil
+    }
+
     private func link(_ title: String, _ url: URL) -> some View {
         PillButton(title: title, symbol: "arrow.up.right", prominent: false) { NSWorkspace.shared.open(url) }
+    }
+}
+
+private extension UpdateState {
+    var isUpdating: Bool {
+        if case .updating = self { return true }
+        return false
+    }
+}
+
+private extension SectionState {
+    var isChecking: Bool {
+        if case .loading = self { return true }
+        return false
     }
 }

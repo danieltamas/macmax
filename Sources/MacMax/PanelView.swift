@@ -38,6 +38,9 @@ struct PanelView: View {
                 RelativeTime(date: date) { "Audited \($0) ago" }
                     .font(.meta).foregroundStyle(Theme.textTertiary).lineLimit(1).fixedSize()
             }
+            if model.newerRelease, let latest = model.latestRelease {
+                IconButton(symbol: "arrow.up.circle.fill", help: "MacMax \(latest.version) is available") { model.openSettings(.about) }
+            }
             IconButton(symbol: "gearshape", help: "Open Settings") { model.openSettings(model.settingsPane) }
         }
         .padding(.horizontal, 14).padding(.top, 14).padding(.bottom, 10)

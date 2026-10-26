@@ -214,6 +214,23 @@ final class PanelModel {
     var refreshPermissions: () -> Void = {}
     var requestNotifications: () -> Void = {}
 
+    // Updates: the newest release, where this build stands, and the installer's progress
+    var latestRelease: ReleaseInfo?
+    var releaseCheck: SectionState = .ready
+    var updateState: UpdateState = .idle
+    var checkForUpdate: () -> Void = {}
+    var installUpdate: () -> Void = {}
+    var runningVersion: String { (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "0.0.0" }
+    var buildSource: String? { Bundle.main.infoDictionary?["MacMaxSource"] as? String }
+    var standing: Standing { MacMaxRelease.standing(version: runningVersion, source: buildSource, latestTag: latestRelease?.tag) }
+    /// The version Update would install; nil unless this is the installed app and it is behind a valid release.
+    var updateVersion: String? {
+        UpdateOffer.version(standing: standing, installed: UpdateOffer.isInstalledLocation(bundlePath: Bundle.main.bundleURL.path,
+                            home: FileManager.default.homeDirectoryForCurrentUser.path), latestTag: latestRelease?.tag)
+    }
+    /// A newer release exists, even when this copy cannot update itself (a build folder): the header arrow follows it.
+    var newerRelease: Bool { standing == .behind }
+
     // Settings
     var settingsPane: SettingsPane = .general
     /// Nil in the screenshots: edits then change only this model.
