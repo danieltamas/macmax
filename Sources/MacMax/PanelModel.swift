@@ -3,7 +3,7 @@ import Observation
 import SwiftUI
 
 enum PanelTab: String, CaseIterable, Identifiable {
-    case overview = "Overview", apps = "Apps", network = "Network", findings = "Findings", history = "History"
+    case overview = "Overview", apps = "Apps", network = "Network", findings = "Findings", cleanup = "Cleanup", history = "History"
     var id: String { rawValue }
 
     var symbol: String {
@@ -12,6 +12,7 @@ enum PanelTab: String, CaseIterable, Identifiable {
         case .apps: "square.grid.2x2"
         case .network: "arrow.up.arrow.down"
         case .findings: "exclamationmark.bubble"
+        case .cleanup: "trash"
         case .history: "chart.xyaxis.line"
         }
     }
@@ -189,6 +190,24 @@ final class PanelModel {
     var scanCleanup: () -> Void = {}
     var moveToTrash: ([CleanupCandidate]) -> Void = { _ in }
     var loadLastCleanups: () -> Void = {}
+
+    // Tidy: leftovers a finding can offer to end
+    var tidy: TidyScan?
+    var tidyState: SectionState = .ready
+    var scanTidy: () -> Void = {}
+
+    // Large folders
+    var largeItems: [LargeItem]?
+    var largeIncomplete = false
+    var largeSkippedPrivate = false
+    var largeState: SectionState = .ready
+    var scanLarge: () -> Void = {}
+
+    // Permissions, as macOS answers now
+    var fullDiskAccess: PermissionState = .unknown
+    var notifications: NotificationAccess = .unknown
+    var refreshPermissions: () -> Void = {}
+    var requestNotifications: () -> Void = {}
 
     // Settings
     var settingsPane: SettingsPane = .general

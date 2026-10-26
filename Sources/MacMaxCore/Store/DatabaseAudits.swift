@@ -75,6 +75,22 @@ extension Database {
                            snapshot: snapshot, findings: findings)
     }
 
+    /// Findings of the audits at or after `since`, newest audit first. Why and action come from the rule with the same id.
+    public func findings(since: Int64, limit: Int = 200) throws -> [(timestamp: Int64, finding: Finding)] {
+        try query("""
+            SELECT a.ts, f.rule_id, f.severity, f.title, f.evidence_json FROM findings f JOIN audits a ON a.id = f.audit_id
+            WHERE a.ts >= ? ORDER BY a.ts DESC, f.rowid LIMIT ?
+            """, [.int(since), .int(Int64(max(limit, 0)))]).textRows().map { columns in
+            guard let ts = columns[0].flatMap({ Int64($0) }), let ruleID = columns[1],
+                  let severity = columns[2].flatMap(Severity.init(rawValue:)), let title = columns[3], let evidenceJSON = columns[4]
+            else { throw StoreError.invalid("a stored finding is incomplete") }
+            let rule = RuleSet.all.first { $0.id == ruleID }
+            return (ts, Finding(ruleID: ruleID, severity: severity, title: title,
+                                evidence: try Self.decoder.decode([EvidenceItem].self, from: Data(evidenceJSON.utf8)),
+                                why: rule?.why ?? "", action: rule?.action, scriptPattern: rule?.scriptPattern))
+        }
+    }
+
     /// Footprint per app key in the newest tick at or before `timestamp`, if that tick is within
     /// `toleranceSeconds` of it; nil when there is no such tick. Apps without a footprint are left out.
     public func appFootprints(near timestamp: Int64, toleranceSeconds: Int64) throws -> [String: UInt64]? {

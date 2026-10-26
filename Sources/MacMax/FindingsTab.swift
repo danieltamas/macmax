@@ -52,6 +52,7 @@ struct FindingCard: View {
                 if !finding.why.isEmpty {
                     Text(finding.why).font(.meta).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
+                if TidyBlock.applies(to: finding.ruleID) { TidyBlock(model: model, ruleID: finding.ruleID) }
                 HStack {
                     if let action = finding.action {
                         Text("Next: \(action)").font(.system(size: 11.5, weight: .medium))
@@ -85,7 +86,7 @@ struct FindingPill {
                 $0.loadContainers()
             }
         case "disk_free":
-            FindingPill(title: "Review cache cleanup", symbol: "trash") { $0.openSettings(.cleanup) }
+            FindingPill(title: "Review cache cleanup", symbol: "trash") { $0.tab = .cleanup }
         default: nil
         }
     }

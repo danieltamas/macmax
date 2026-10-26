@@ -60,7 +60,11 @@ extension NSApplication {
         else { return NSSound.beep() }
         let reopen = Process()
         reopen.executableURL = URL(fileURLWithPath: "/bin/sh")
-        reopen.arguments = ["-c", "while kill -0 \"$0\" 2>/dev/null; do sleep 0.2; done; /usr/bin/open \"$1\"",
+        // Own streams, so nothing hangs on a pipe that closes with this process.
+        reopen.standardInput = FileHandle.nullDevice
+        reopen.standardOutput = FileHandle.nullDevice
+        reopen.standardError = FileHandle.nullDevice
+        reopen.arguments = ["-c", "while kill -0 \"$0\" 2>/dev/null; do sleep 0.2; done; for try in 1 2 3 4 5 6; do /usr/bin/open \"$1\" && exit 0; sleep 1; done",
                             String(ProcessInfo.processInfo.processIdentifier), bundle.path]
         guard (try? reopen.run()) != nil else { return NSSound.beep() }
         terminate(nil)

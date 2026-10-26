@@ -17,6 +17,8 @@ public struct PanelConfig: Codable, Equatable, Sendable {
     public var lookName: String?
     /// Folders the user keeps out of cleanup, on top of the built-in protected list.
     public var protectedPaths: [String] = []
+    /// Whether `macmax mcp` may answer tool calls. Off until the user turns it on in Settings > Agent access.
+    public var agentAccess: Bool = false
 
     public static let `default` = PanelConfig(
         samplingSeconds: 10, menuBarText: .none, auditEveryHours: 4, auditOnCriticalPressure: true,
@@ -53,11 +55,12 @@ public struct PanelConfig: Codable, Equatable, Sendable {
         disabledRules = try values.decodeIfPresent([String].self, forKey: .disabledRules) ?? []
         lookName = try values.decodeIfPresent(String.self, forKey: .lookName)
         protectedPaths = try values.decodeIfPresent([String].self, forKey: .protectedPaths) ?? []
+        agentAccess = try values.decodeIfPresent(Bool.self, forKey: .agentAccess) ?? false
     }
 
     private enum Key: String, CodingKey {
         case samplingSeconds, menuBarText, auditEveryHours, auditOnCriticalPressure, notifyOn, ipCheckEnabled
-        case ipEndpoint, thresholds, disabledRules, lookName, protectedPaths
+        case ipEndpoint, thresholds, disabledRules, lookName, protectedPaths, agentAccess
     }
 
     /// Replaces every out-of-range value by something the app can run with.
