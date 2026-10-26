@@ -64,7 +64,9 @@ struct CleanupPane: View {
                 if case let .failed(_, reason) = model.cleanupState { Text(reason).font(.meta).foregroundStyle(Theme.warn) }
                 skipped
                 HStack(spacing: 10) {
-                    PillButton(title: "Scan again", symbol: "arrow.clockwise", prominent: false) { confirming = false; model.scanCleanup() }
+                    if !confirming {
+                        PillButton(title: "Scan again", symbol: "arrow.clockwise", prominent: false) { model.scanCleanup() }
+                    }
                     if confirming {
                         PillButton(title: "Confirm: move to Trash", symbol: "trash") {
                             confirming = false
@@ -94,10 +96,11 @@ struct CleanupPane: View {
         if !skips.isEmpty {
             VStack(alignment: .leading, spacing: 2) {
                 Eyebrow(text: "Left alone")
-                ForEach(Array(skips.enumerated()), id: \.offset) { _, skip in
+                ForEach(Array(skips.prefix(5).enumerated()), id: \.offset) { _, skip in
                     Text("\((skip.path as NSString).lastPathComponent): \(skip.reason)").font(.meta)
                         .foregroundStyle(Theme.textTertiary).fixedSize(horizontal: false, vertical: true)
                 }
+                if skips.count > 5 { Text("and \(skips.count - 5) more").font(.meta).foregroundStyle(Theme.textTertiary) }
             }
         }
     }
