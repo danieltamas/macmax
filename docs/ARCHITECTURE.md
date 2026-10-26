@@ -84,7 +84,7 @@ source fails its proof, pick the fallback, update this table and PLAN.md, and te
 | Rosetta | `kinfo_proc.kp_proc.p_flag & P_TRANSLATED` (0x20000) | verified in U2 | `unavailable` |
 | Compressed memory per process (Docker VM) | `top -l 1 -stats pid,cmprs` (what mac-audit uses) | verified (mac-audit) | `unavailable` |
 | Bytes in and out per process, one-shot | `/usr/bin/nettop -P -L 1 -x -J bytes_in,bytes_out` | verified: loses totals of closed sockets, so not used per tick | none: `failed` |
-| Same, streaming | `nettop -P -L 0 -s <interval> -x -J bytes_in,bytes_out` (one long-lived child on a pty, behind an `sh` guard) | verified in U3 | none: `failed` for the tick, restart on the next |
+| Same, once per tick | `nettop -P -L 1 -x -J bytes_in,bytes_out` (a long-lived child cost 120 percent of a core) | verified in U3 | none: `failed` for the tick, restart on the next |
 | Connections of one process | `nettop -m tcp -L 1 -x -n -p <pid>` | verified in U3 | `failed` |
 | VPN services and state | `/usr/sbin/scutil --nc list` | verified (Outline, Tailscale, Pangolin listed) | `unknown` |
 | Default route interface | `route -n get default` (interface `utun*`, `ipsec*`, `ppp*` = tunnel); the path-change trigger (`NWPathMonitor`) arrives with the sampler in U5 | verified in U4 | `failed` |

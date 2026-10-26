@@ -28,12 +28,21 @@ enum DemoStore {
         model.expandedApp = "ro.example.atlas"
         model.processes = ["ro.example.atlas": processes(stress: stress)]
         model.topConsumers = PanelData.topConsumers(model.apps)
-        model.interfaces = [InterfaceLine(name: "Wi-Fi (en0)", inPerSecond: stress ? 9_437_184 : 1_258_291, outPerSecond: 213_000),
-                            InterfaceLine(name: "Outline (utun4)", inPerSecond: 1_100_000, outPerSecond: 190_000)]
+        model.interfaces = [InterfaceLine(name: "Wi-Fi", bsd: "en0", inPerSecond: stress ? 9_437_184 : 1_258_291, outPerSecond: 213_000),
+                            InterfaceLine(name: "VPN or system tunnel", bsd: "utun4", inPerSecond: 1_100_000, outPerSecond: 190_000)]
         model.window = .hour
         model.traffic = traffic(stress: stress, longName: long)
         model.trafficState = .ready
         model.samplerFailed = false
+        model.actionStates["end-302-2"] = .asked("Asked to end. Press again to force.")
+        model.cleanupPreview = cleanup()
+        model.lastCleanups = [
+            ActionRow(ts: Int64(now.timeIntervalSince1970) - 3_600, kind: "cleanup", target: "/Users/example/Library/Caches/ro.example.pixel",
+                      result: "trashed", detail: "app_caches, 1.2 GB"),
+            ActionRow(ts: Int64(now.timeIntervalSince1970) - 86_400, kind: "cleanup", target: "/Users/example/.npm/_cacache",
+                      result: "trashed", detail: "npm_cache, 640 MB"),
+        ]
+        model.config.protectedPaths = ["/Users/example/Projects"]
         return model
     }
 
@@ -55,11 +64,13 @@ enum DemoStore {
     private static func identity(leak: Bool) -> IdentityCard {
         if leak {
             return IdentityCard(verdict: .leak, publicIP: "198.51.100.7", publicCountry: "RO", ispIP: "198.51.100.7", ispCountry: "RO",
-                                vpnName: "Outline", vpnState: "connected", checkEnabled: true, reason: nil, changeNote: nil)
+                                vpnName: "Outline", vpnState: "connected", checkEnabled: true, reason: nil, changeNote: nil,
+                                vpnLines: ["Outline: connected"])
         }
         return IdentityCard(verdict: .tunnelOK, publicIP: "203.0.113.20", publicCountry: "DE", ispIP: "198.51.100.7", ispCountry: "RO",
                             vpnName: "Outline", vpnState: "connected", checkEnabled: true, reason: nil,
-                            changeNote: "IP changed at 14:02 from 198.51.100.7 (RO) to 203.0.113.20 (DE)")
+                            changeNote: "IP changed at 14:02 from 198.51.100.7 (RO) to 203.0.113.20 (DE)",
+                            vpnLines: ["Outline: connected"])
     }
 
     private static func findings() -> [Finding] {
@@ -83,7 +94,7 @@ enum DemoStore {
             AppRow(id: "ro.example.northwind", name: stress ? longName : "Northwind IDE", bundleID: "ro.example.northwind", pids: [410],
                    processCount: 9, cpuPercent: stress ? 1_234 : 61, footprintBytes: 2_100 * 1_048_576, diskBytesPerSecond: 40_000,
                    networkBytesPerSecond: 12_000),
-            AppRow(id: "claude", name: "Claude Code", kind: .claudeCode, pids: [520], processCount: 6, cpuPercent: 4,
+            AppRow(id: "claude", name: "Claude Code - atlas", kind: .claudeCode, pids: [520], processCount: 6, cpuPercent: 4,
                    footprintBytes: 1_300 * 1_048_576, diskBytesPerSecond: 2_000, networkBytesPerSecond: 90_000),
             AppRow(id: "ro.example.docker", name: "Docker", kind: .docker, pids: [600], processCount: 3, cpuPercent: 9,
                    footprintBytes: 4_000 * 1_048_576, diskBytesPerSecond: 800_000, networkBytesPerSecond: 20_000),
@@ -98,11 +109,22 @@ enum DemoStore {
         ]
     }
 
+    private static func cleanup() -> CleanupPreview {
+        func item(_ rule: String, _ path: String, _ megabytes: Int64) -> CleanupCandidate {
+            CleanupCandidate(ruleID: rule, path: "/Users/example/" + path, bytes: megabytes * 1_048_576, device: 1, inode: UInt64(megabytes))
+        }
+        return CleanupPreview(candidates: [
+            item("app_caches", "Library/Caches/ro.example.pixel", 1_229), item("xcode_derived", "Library/Developer/Xcode/DerivedData/Northwind-abc", 2_480),
+            item("npm_cache", ".npm/_cacache", 640), item("homebrew_cache", "Library/Caches/Homebrew", 310),
+            item("old_logs", "Library/Logs/example.log", 24),
+        ], skipped: [CleanupSkip(path: "/Users/example/Library/Caches/Yarn", reason: "yarn is running")])
+    }
+
     private static func processes(stress: Bool) -> [ProcessLine] {
         [
-            ProcessLine(pid: 301, name: "Atlas Browser", cpuPercent: 8, footprintBytes: 640 * 1_048_576, isTranslated: false, commandLine: nil),
+            ProcessLine(pid: 301, name: "Atlas Browser", cpuPercent: 8, footprintBytes: 640 * 1_048_576, isTranslated: false, commandLine: nil, startUs: 1),
             ProcessLine(pid: 302, name: "Atlas Browser Helper (Renderer)", cpuPercent: 11, footprintBytes: 910 * 1_048_576, isTranslated: true,
-                        commandLine: "/Applications/Atlas Browser.app/Contents/MacOS/Helper --type=renderer --token [redacted]"),
+                        commandLine: "/Applications/Atlas Browser.app/Contents/MacOS/Helper --type=renderer --token [redacted]", startUs: 2),
         ]
     }
 

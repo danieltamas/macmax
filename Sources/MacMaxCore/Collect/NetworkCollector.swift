@@ -2,20 +2,17 @@ import Foundation
 
 /// Per-process and per-interface traffic. Process rows are matched to identities through the process
 /// samples of the same tick. Rates need two readings, so the first `collect` reports them as `unavailable`.
-/// One long-lived nettop child is supervised: if it dies, that tick is `failed` and the next tick restarts it.
+/// Each tick runs one short `nettop -L 1`: a long-lived nettop child cost about 120 percent of a core on a busy Mac.
 public actor NetworkCollector {
     private static let nettop = "/usr/bin/nettop"
     private static let timeout = Duration.seconds(5)
 
-    private let stream = NettopStream()
-    private let sampleSeconds: Int
     private var tracker = NetworkDeltaTracker()
     private var epoch = 0
     private var inFlight: Task<NetworkSnapshot, Never>?
     private var previousInterfaces: (counters: [String: NetworkCounters], uptime: UInt64)?
 
-    /// `sampleSeconds` is clamped to 1...60: nettop needs a whole positive interval.
-    public init(sampleSeconds: Int = 2) { self.sampleSeconds = min(max(sampleSeconds, 1), 60) }
+    public init() {}
 
     /// Calls queue behind each other: a collection waits on the stream and updates the delta state, and
     /// two interleaved collections would consume the same block and apply their deltas out of order.
@@ -51,11 +48,15 @@ public actor NetworkCollector {
     private func processReadings(_ processes: [ProcessSample], at: Date)
         async -> (Reading<[ProcessIdentity: Reading<NetworkCounters>]>, Int) {
         let text: String
-        switch await freshBlock() {
+        switch await run(["-P", "-L", "1", "-x", "-J", "bytes_in,bytes_out"]) {
         case let .success(output): text = output
-        case let .failure(reason): return (.failed(reason: reason), 0)
+        case let .failure(reason):
+            // The next reading must not report the gap as one interval.
+            tracker = NetworkDeltaTracker()
+            return (.failed(reason: reason), 0)
         }
         guard case let .ok(snapshot, _, _) = NettopParser.parse(text, at: at) else {
+            tracker = NetworkDeltaTracker()
             return (.failed(reason: NettopParser.parse(text).problem ?? "nettop output not understood"), 0)
         }
         let identities = Dictionary(processes.map { ($0.identity.pid, $0.identity) }, uniquingKeysWith: { first, _ in first })
@@ -83,32 +84,11 @@ public actor NetworkCollector {
                                        to: current, currentUptimeNanoseconds: uptime, at: at)
     }
 
-    /// The next nettop block that started after this call, so a transfer that just ended is in it.
-    private func freshBlock() async -> Run {
-        if !stream.isRunning {
-            // A new child counts from zero again: old cumulative counters would read as going backwards.
-            tracker = NetworkDeltaTracker()
-            do { try stream.start(executable: Self.nettop, sampleSeconds: sampleSeconds) } catch {
-                return .failure("nettop did not start: \(error.localizedDescription)")
-            }
-        }
-        let mark = stream.currentSequence
-        let deadline = DispatchTime.now().uptimeNanoseconds + UInt64(sampleSeconds + 4) * 1_000_000_000
-        while DispatchTime.now().uptimeNanoseconds < deadline {
-            if Task.isCancelled { return .failure("the collection was cancelled") }
-            if let block = stream.completedBlock(after: mark) { return .success(block) }
-            guard stream.isRunning else { return .failure("nettop stopped; it restarts on the next tick") }
-            try? await Task.sleep(for: .milliseconds(40))
-        }
-        stream.stop()
-        return .failure("nettop produced no sample in time; it restarts on the next tick")
-    }
-
-    /// Ends the nettop child; the next `collect` starts a new one.
+    /// Drops the readings so far and ends calls queued behind the running one.
     public func stop() {
         epoch += 1
         previousInterfaces = nil
-        stream.stop()
+        tracker = NetworkDeltaTracker()
     }
 
     private enum Run { case success(String), failure(String) }

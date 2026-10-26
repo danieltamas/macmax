@@ -64,7 +64,7 @@ struct SettingsView: View {
         case .general: GeneralPane(model: model)
         case .audit: AuditPane(model: model)
         case .network: NetworkPane(model: model)
-        case .cleanup: CleanupPane()
+        case .cleanup: CleanupPane(model: model)
         case .agent: AgentPane()
         case .permissions: PermissionsPane()
         case .about: AboutPane()
@@ -99,7 +99,7 @@ struct SettingsView: View {
                     }
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(PressStyle(scale: 0.98))
+                .buttonStyle(PressStyle(scale: 0.98, lift: 0.08))
             }
             Spacer()
             AppControls().padding(.horizontal, 10)

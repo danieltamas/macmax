@@ -1,9 +1,10 @@
 import Foundation
 import MacMaxCore
 
-// install.sh recognizes a previous MacMax CLI by the literal "macmax-cli:" in this binary; keep it.
+// install.sh recognizes a previous MacMax CLI by the literal "macmax-cli:" in this binary; keep it. The prefix is longer
+// than 15 bytes on purpose: Swift keeps a shorter literal inside the code, where `strings` cannot see it.
 func fail(_ message: String, code: Int32 = 64) -> Never {
-    FileHandle.standardError.write(Data("macmax-cli: \(message)\n".utf8))
+    FileHandle.standardError.write(Data("macmax-cli: error: \(message)\n".utf8))
     exit(code)
 }
 

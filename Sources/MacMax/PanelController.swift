@@ -20,6 +20,7 @@ final class PanelController {
     private var nowTraffic: [TrafficLine] = []
     private var windowTask: Task<Void, Never>?
     private var historyLoader: HistoryLoader?
+    private var actions: ActionController?
     /// The audit reads its thresholds off the main actor; this carries them across.
     private let settings = SettingsBox()
 
@@ -29,11 +30,12 @@ final class PanelController {
         model.snooze = { [weak self] id in self?.snooze(id) }
         model.loadConnections = { [weak self] id in self?.loadConnections(appKey: id) }
         model.clearHistory = { [weak self] in self?.clearHistory() }
+        actions = ActionController(model: model, database: { [weak self] in self?.database })
         model.windowChanged = { [weak self] in self?.showWindowTraffic() }
         model.openSettings = { [model] pane in
             model.settingsPane = pane
             NSApp.activate(ignoringOtherApps: true)
-            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            model.showSettingsWindow()
         }
     }
 
@@ -51,6 +53,7 @@ final class PanelController {
             self.database = database
             sampler = Sampler(database: database)
             Task { model.historyBytes = await database.fileSizeBytes() }
+            model.loadLastCleanups()
         } catch {
             model.samplerFailed = true
             model.samplerNote = "History is unavailable: the database could not be opened."
@@ -128,7 +131,7 @@ final class PanelController {
         model.appsState = .ready
         model.processes = PanelData.processes(rows.processes)
         model.topConsumers = PanelData.topConsumers(model.apps)
-        model.interfaces = PanelData.interfaces(rows.system)
+        model.interfaces = PanelData.interfaces(rows.system, each: rows.interfaces)
         nowTraffic = PanelData.nowTraffic(rows.apps, names: names, interval: Double(interval))
         if model.window == .now {
             model.traffic = nowTraffic

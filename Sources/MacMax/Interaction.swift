@@ -1,0 +1,159 @@
+import AppKit
+import SwiftUI
+
+/// What every clickable thing in MacMax does: the hand over its whole area, a lift on hover, a sink and dim while pressed.
+/// `hit` is the clickable area (the whole rectangle unless the label is a circle or a capsule); `lift` is the hover brightening.
+struct PressStyle: ButtonStyle {
+    var scale: CGFloat = 0.96
+    var hit = AnyShape(Rectangle())
+    var lift: Double = 0.12
+
+    func makeBody(configuration: Configuration) -> some View {
+        PressBody(configuration: configuration, scale: scale, hit: hit, lift: lift)
+    }
+}
+
+private struct PressBody: View {
+    let configuration: ButtonStyle.Configuration
+    let scale: CGFloat
+    let hit: AnyShape
+    let lift: Double
+    @State private var hovering = false
+    @Environment(\.isEnabled) private var isEnabled
+
+    var body: some View {
+        let pressed = configuration.isPressed && isEnabled
+        configuration.label
+            .contentShape(hit)
+            .overlay { hit.fill(Color.white.opacity(hovering && isEnabled && !pressed ? lift * 0.6 : 0)).allowsHitTesting(false) }
+            .opacity(pressed ? 0.72 : 1)
+            .scaleEffect(pressed ? scale : 1)
+            .animation(Motion.snappy, value: pressed)
+            .animation(Motion.snappy, value: hovering)
+            .onHover { hovering = $0 }
+            .pointingHandCursor(isEnabled)
+    }
+}
+
+/// A row-wide button: a wash behind the whole row on hover, a deeper one while pressed.
+struct RowPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        RowPressBody(configuration: configuration)
+    }
+}
+
+private struct RowPressBody: View {
+    let configuration: ButtonStyle.Configuration
+    @State private var hovering = false
+    @Environment(\.isEnabled) private var isEnabled
+
+    var body: some View {
+        let wash = configuration.isPressed ? 0.10 : hovering ? 0.05 : 0.0
+        configuration.label
+            .contentShape(Rectangle())
+            .background(Theme.wash.opacity(isEnabled ? wash : 0), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .animation(Motion.snappy, value: wash)
+            .onHover { hovering = $0 }
+            .pointingHandCursor(isEnabled)
+    }
+}
+
+extension View {
+    /// The hand over anything clickable. On macOS 15 SwiftUI owns the cursor, so a nested or
+    /// neighbouring region and AppKit's own cursor updates never put the arrow back mid-hover.
+    /// Before that it is set on every move, which a tooltip or a layout pass can still undo
+    /// until the mouse moves again.
+    @ViewBuilder
+    func pointingHandCursor(_ enabled: Bool = true) -> some View {
+        if #available(macOS 15, *) {
+            pointerStyle(enabled ? .link : nil)
+        } else {
+            setsHandOnMove(enabled)
+        }
+    }
+
+    private func setsHandOnMove(_ enabled: Bool) -> some View {
+        onContinuousHover { phase in
+            guard enabled else { return }
+            switch phase {
+            case .active: NSCursor.pointingHand.set()
+            case .ended: NSCursor.arrow.set()
+            }
+        }
+    }
+}
+
+/// A text-only action ("Reset", "Turn on"): a padded target, so the hand covers more than the letters.
+struct LinkButton: View {
+    let title: String
+    var tint: Color = Theme.teal
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title).font(.meta).foregroundStyle(tint).lineLimit(1)
+                .padding(.horizontal, 6).padding(.vertical, 5)
+        }
+        .buttonStyle(PressStyle(scale: 0.97))
+    }
+}
+
+/// The compact button for an action inside a row or card: a bordered capsule, so it reads as a button. Destructive
+/// ones (End, Quit, Stop) are red. Plain text in the accent color is only for a link that goes somewhere (LinkButton).
+struct ChipButton: View {
+    let title: String
+    var destructive = false
+    let action: () -> Void
+
+    var body: some View {
+        let tint = destructive ? Theme.crit : Theme.textPrimary
+        Button(action: action) {
+            Text(title).font(.system(size: 11, weight: .semibold)).foregroundStyle(tint).lineLimit(1)
+                .padding(.horizontal, 11).padding(.vertical, 5)
+                .background(tint.opacity(destructive ? 0.12 : 0.07), in: Capsule())
+                .overlay(Capsule().strokeBorder(tint.opacity(destructive ? 0.4 : 0.14), lineWidth: 0.5))
+                .contentShape(Capsule())
+                .fixedSize()
+        }
+        .buttonStyle(PressStyle(scale: 0.96, hit: AnyShape(Capsule())))
+    }
+}
+
+/// An on/off setting: the label on the left, the switch on the right, and the whole row is the button.
+struct SwitchRow: View {
+    let title: String
+    var detail: String?
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Button { withAnimation(Motion.snappy) { isOn.toggle() } } label: {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(.system(size: 12.5, weight: .medium)).foregroundStyle(Theme.textPrimary).lineLimit(1)
+                    if let detail { Text(detail).font(.meta).foregroundStyle(Theme.textTertiary) }
+                }
+                Spacer(minLength: 12)
+                SwitchTrack(isOn: isOn)
+            }
+            .padding(.horizontal, SettingsMetrics.rowInset).padding(.vertical, 6)
+        }
+        .buttonStyle(RowPressStyle())
+        .padding(.horizontal, -SettingsMetrics.rowInset)
+        .accessibilityLabel(title)
+        .accessibilityValue(isOn ? "On" : "Off")
+        .accessibilityAddTraits(.isToggle)
+    }
+}
+
+private struct SwitchTrack: View {
+    let isOn: Bool
+
+    var body: some View {
+        Capsule().fill(isOn ? Theme.teal : Theme.wash.opacity(0.18))
+            .frame(width: 34, height: 20)
+            .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 0.5))
+            .overlay(alignment: isOn ? .trailing : .leading) {
+                Circle().fill(isOn ? Theme.canvas : Theme.textSecondary).frame(width: 14, height: 14).padding(3)
+            }
+    }
+}

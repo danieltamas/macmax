@@ -1,10 +1,22 @@
 #!/bin/bash
-# Idle cost of the running MacMax app: CPU used over a window (default 60 s, PLAN.md uses 600) and resident
+# Idle cost of the running MacMax app and its children: CPU used over a window (default 60 s, PLAN.md uses 600) and resident
 # memory. Budget with the panel closed: under 1 percent of one core. Run it with the panel closed.
 set -euo pipefail
 
+# CPU time of the app plus the children it has already finished with (the short nettop run each tick), from the kernel's
+# resource usage: a ps snapshot would miss a child that starts and exits between two readings.
 cpu_seconds() {
-    ps -o time= -p "$1" | awk '{ n = split($1, p, ":"); s = 0; for (i = 1; i <= n; i++) s = s * 60 + p[i]; printf "%.2f", s }'
+    python3 - "$1" <<'PY'
+import ctypes, struct, sys
+libc = ctypes.CDLL("/usr/lib/libSystem.B.dylib")
+class Timebase(ctypes.Structure): _fields_ = [("numer", ctypes.c_uint32), ("denom", ctypes.c_uint32)]
+base = Timebase(); libc.mach_timebase_info(ctypes.byref(base))
+buffer = ctypes.create_string_buffer(512)
+if libc.proc_pid_rusage(int(sys.argv[1]), 2, buffer) != 0: sys.exit(1)
+fields = struct.unpack_from("<12Q", buffer.raw, 16)  # RUSAGE_INFO_V2 after the 16-byte uuid
+ticks = fields[0] + fields[1] + fields[10] + fields[11]  # user, system, child user, child system
+print("%.2f" % (ticks * base.numer / base.denom / 1e9))
+PY
 }
 
 main() {

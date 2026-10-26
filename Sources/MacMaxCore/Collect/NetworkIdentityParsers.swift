@@ -28,7 +28,7 @@ func ipBytes(_ text: String) -> [UInt8]? {
 /// quotes, so it is everything between the first quote and the last quote before the bracket.
 public enum SCUtilNCParser {
     private static let line = try! NSRegularExpression(
-        pattern: #"^\s*\*?\s*\((\w+)\)\s+[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}\s+VPN\s+\(([^)]+)\)\s+"(.*)"\s+\[VPN:\2\]\s*$"#)
+        pattern: #"^\s*\*?\s*\((\w+)\)\s+([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12})\s+VPN\s+\(([^)]+)\)\s+"(.*)"\s+\[VPN:\3\]\s*$"#)
     /// A well-formed line of another connection type (`... PPP --> en0 "x" [PPP:L2TP]`), not a Network Extension VPN.
     private static let otherType = try! NSRegularExpression(
         pattern: #"^\s*\*?\s*\(\w+\)\s+[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}\s+(PPP|IPSec)\b.*\[\1:[^\]]+\]\s*$"#)
@@ -60,10 +60,25 @@ public enum SCUtilNCParser {
             }
             func group(_ index: Int) -> String { String(text[Range(match.range(at: index), in: text)!]) }
             guard let state = states[group(1)] else { return .failed(reason: "a VPN service has an unknown state") }
-            let bundle = group(2), name = group(3)
-            services.append(VPNService(name: name, bundleID: bundle, state: state, label: labels[bundle] ?? name))
+            let bundle = group(3), name = group(4)
+            services.append(VPNService(name: name, bundleID: bundle, state: state, label: labels[bundle] ?? name, serviceID: group(2)))
         }
         return .ok(services, source: "scutil --nc list", at: at)
+    }
+}
+
+/// `scutil --nc status <id>`: the tunnel interface a connected service owns. It is the `InterfaceName` that sits directly
+/// in the IPv4 or IPv6 block (four spaces in); the deeper ones belong to excluded routes and name the physical interface.
+public enum SCUtilNCStatusParser {
+    public static func tunnelInterface(_ text: String) -> String? {
+        // The first line is the state; a service that is not connected owns no tunnel, whatever stale fields remain.
+        guard text.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: true).first?
+            .trimmingCharacters(in: .whitespaces) == "Connected" else { return nil }
+        for line in text.split(separator: "\n", omittingEmptySubsequences: true) where line.hasPrefix("    InterfaceName : ") {
+            let name = line.dropFirst("    InterfaceName : ".count).trimmingCharacters(in: .whitespaces)
+            if !name.isEmpty, !name.contains(" ") { return name }
+        }
+        return nil
     }
 }
 

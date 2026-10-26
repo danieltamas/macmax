@@ -21,6 +21,40 @@ struct PaneHeader: View {
     }
 }
 
+/// The grid every pane follows: rows keep a fixed height, the control sits on the right edge, and the pieces of a
+/// control (field, unit, reset) have the same widths in every row, so their edges line up down the card.
+enum SettingsMetrics {
+    static let rowInset: CGFloat = 8
+    static let rowHeight: CGFloat = 34
+    static let fieldWidth: CGFloat = 84
+    static let unitWidth: CGFloat = 168
+    static let resetWidth: CGFloat = 52
+}
+
+/// A name on the left, its control on the right, on one baseline-centred line.
+struct SettingsRow<Control: View>: View {
+    let title: String
+    var detail: String?
+    @ViewBuilder let control: Control
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.system(size: 12.5, weight: .medium)).foregroundStyle(Theme.textPrimary).lineLimit(1)
+                if let detail { Text(detail).font(.meta).foregroundStyle(Theme.textTertiary) }
+            }
+            Spacer(minLength: 12)
+            control
+        }
+        .frame(minHeight: SettingsMetrics.rowHeight)
+    }
+}
+
+/// A hairline between the rows of one card.
+struct RowDivider: View {
+    var body: some View { Rectangle().fill(Theme.hairline).frame(height: 0.5) }
+}
+
 /// One setting: its name and why it matters on the left of the card, the control below.
 struct SettingsCard<Content: View>: View {
     let title: String
@@ -29,12 +63,12 @@ struct SettingsCard<Content: View>: View {
 
     var body: some View {
         Bezel {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.textPrimary)
                     if let detail { Text(detail).font(.meta).foregroundStyle(Theme.textTertiary) }
                 }
-                content
+                VStack(alignment: .leading, spacing: 6) { content }
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -60,7 +94,7 @@ struct SegmentChip: View {
                 .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 0.5))
                 .contentShape(Capsule())
         }
-        .buttonStyle(PressStyle())
+        .buttonStyle(PressStyle(hit: AnyShape(Capsule()), lift: 0.08))
     }
 }
 
@@ -110,6 +144,7 @@ struct MenuField: View {
     let title: String
     let options: [String]
     let pick: (String) -> Void
+    @State private var hovering = false
 
     var body: some View {
         Menu {
@@ -122,22 +157,17 @@ struct MenuField: View {
                     .foregroundStyle(Theme.textTertiary)
             }
             .padding(.horizontal, 11).padding(.vertical, 8)
-            .background(Theme.canvas.opacity(0.7), in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: Radius.control, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
+            .background(Theme.canvas.opacity(hovering ? 0.9 : 0.7), in: RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Radius.control, style: .continuous)
+                .strokeBorder(hovering ? Theme.textTertiary : Theme.hairline, lineWidth: 0.5))
             .contentShape(Rectangle())
+            .onHover { hovering = $0 }
+            .pointingHandCursor()
         }
         .menuStyle(.button)
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
         .frame(maxWidth: .infinity)
-    }
-}
-
-struct FieldLabel: View {
-    let text: String
-
-    var body: some View {
-        Text(text).font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.textSecondary)
     }
 }
 

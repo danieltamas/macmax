@@ -49,6 +49,8 @@ struct ProcessLine: Equatable, Identifiable {
     let footprintBytes: UInt64?
     let isTranslated: Bool
     let commandLine: String?
+    /// Start time in microseconds: with the pid it names this process and no later one. Nil means an action is not offered.
+    var startUs: Int64?
     var id: Int32 { pid }
 }
 
@@ -63,13 +65,19 @@ struct IdentityCard: Equatable {
     var checkEnabled: Bool
     var reason: String?
     var changeNote: String?
+    /// Every connected VPN as "Name: state" (the first one found when none is connected). More than one means MacMax
+    /// cannot tell which carries the traffic, so it names none of them in the headline.
+    var vpnLines: [String] = []
 }
 
 struct InterfaceLine: Equatable, Identifiable {
     let name: String
+    /// The kernel name (en0, utun7); nil for the total.
+    var bsd: String?
     let inPerSecond: Double
     let outPerSecond: Double
-    var id: String { name }
+    var id: String { bsd ?? name }
+    var isActive: Bool { inPerSecond + outPerSecond > 0 }
 }
 
 struct TrafficLine: Equatable, Identifiable {
@@ -160,6 +168,27 @@ final class PanelModel {
     var loadConnections: (String) -> Void = { _ in }
     var snooze: (String) -> Void = { _ in }
     var openSettings: (SettingsPane) -> Void = { _ in }
+    /// Set by the panel once it is on screen: `showSettingsWindow:` does nothing from a menu bar item on macOS 14 and later,
+    /// the `openSettings` environment action does.
+    var showSettingsWindow: () -> Void = { NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil) }
+
+    // Actions
+    var actionStates: [String: ActionState] = [:]
+    var perform: (PanelAction) -> Void = { _ in }
+    var containers: [ContainerLine] = []
+    var containersState: SectionState = .ready
+    var loadContainers: () -> Void = {}
+
+    // Cleanup
+    var cleanupPreview: CleanupPreview?
+    var cleanupState: SectionState = .ready
+    var cleanupResults: [CleanupResult] = []
+    var cleanupMoving = false
+    var cleanupLogProblem: String?
+    var lastCleanups: [ActionRow] = []
+    var scanCleanup: () -> Void = {}
+    var moveToTrash: ([CleanupCandidate]) -> Void = { _ in }
+    var loadLastCleanups: () -> Void = {}
 
     // Settings
     var settingsPane: SettingsPane = .general

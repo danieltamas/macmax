@@ -16,6 +16,24 @@ public enum AppGrouping {
         return result
     }
 
+    /// Names each Claude Code session after the folder it runs in ("Claude Code - macmax"), so sessions can be told apart;
+    /// two in the same folder keep their pid. `folders` maps a pid to its working directory.
+    public static func nameSessions(_ groups: [Int32: AppKey], folders: [Int32: String]) -> [Int32: AppKey] {
+        let prefix = "claude-code:"
+        func folder(_ key: AppKey) -> String? {
+            guard key.id.hasPrefix(prefix), let pid = Int32(key.id.dropFirst(prefix.count)), let path = folders[pid] else { return nil }
+            return path == NSHomeDirectory() ? "~" : (path as NSString).lastPathComponent
+        }
+        let sessions = Set(groups.values.filter { $0.id.hasPrefix(prefix) })
+        var taken: [String: Int] = [:]
+        for key in sessions { if let name = folder(key) { taken[name, default: 0] += 1 } }
+        return groups.mapValues { key in
+            guard let name = folder(key), !name.isEmpty else { return key }
+            let pid = key.id.dropFirst(prefix.count)
+            return AppKey(id: key.id, name: taken[name, default: 0] > 1 ? "Claude Code - \(name) (pid \(pid))" : "Claude Code - \(name)")
+        }
+    }
+
     /// The app or session that owns `row` itself, or else its nearest ancestor that has one.
     private static func anchor(of row: ProcessRow, in byPid: [Int32: ProcessRow]) -> AppKey? {
         var current: ProcessRow? = row

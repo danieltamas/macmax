@@ -23,21 +23,14 @@ prints a CSV snapshot of every process with network activity since it started:
 reading (its earlier traffic is attributed to "before MacMax looked", not to this interval). A
 counter that went down marks that process's interval `failed`.
 
-**Streaming (verified in U3).** One long-lived child, `nettop -P -L 0 -s <interval> -x -J
-bytes_in,bytes_out`. The one-shot `-L 1` run is not an option: a process's totals vanish once its
-sockets close (a 5 MiB loopback download read 5242943 bytes while the socket was open and 0 after
-close), so a one-shot run misses every short connection. The running child keeps the totals. Two
-facts the reader depends on: nettop prints no block terminator (a block starts at the header line
-`,bytes_in,bytes_out,`), and through a pipe it buffers 4 KB so a block's tail arrives one sample late;
-on a pty it flushes the whole block at once. So the child's stdout is a pty (lines end in `\r\n`), a block
-counts as complete when its rows stop arriving for 200 ms, and `collect` waits for the first block
-that started after the call, so a transfer that just ended is in it (up to one interval of latency).
-
-**Supervision.** The child is a small `sh` guard that runs nettop and ends it when the app exits (the
-guard polls its parent pid), when nettop exits, or when the app terminates the guard; nettop itself
-does not exit when its reader goes away. The collector starts it on the first `collect`; if it dies
-or produces no block within the interval plus 4 s, that tick's process readings are `failed` with the
-reason and the next tick starts a new child (restart backoff arrives with the sampler in U5). A CPU check on the child is part of `scripts/perf.sh`.
+**One short run per tick.** Each tick runs `nettop -P -L 1 -x -J bytes_in,bytes_out` once (about 0.08 CPU-s
+on a Mac with 3,900 sockets). A long-lived `nettop -P -L 0 -s <n>` child was tried in U3 and removed: after its first
+sample it used about 120 percent of a core whatever the interval or flags (`-s 2` and `-s 10`, `-n`, `-d`, `-m`, `-t`),
+because it follows every socket event. The one-shot run has a known limit: a process's totals vanish once its
+sockets close (a 5 MiB loopback download read 5242943 bytes while the socket was open and 0 after close), so traffic
+of a connection that opened and closed between two ticks is not attributed to its app, and an app whose total went
+down between ticks shows that interval as unmeasured, never as a smaller number. Interface totals are not affected:
+they come from the kernel's counters. The process rows are cumulative, so the delta tracker needs two ticks.
 
 **Grouping and storage.** Rows are grouped by app (ARCHITECTURE.md, App grouping) and stored as
 `app_samples.net_in_bytes` and `net_out_bytes` per tick; interface totals come from the sum and

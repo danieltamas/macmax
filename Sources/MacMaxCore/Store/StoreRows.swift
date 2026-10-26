@@ -107,8 +107,12 @@ public struct TickRows: Sendable, Equatable {
     public var apps: [AppSampleRow]
     public var processes: [ProcSampleRow]
     public var appInfo: [AppInfo]
+    /// Per-interface rates of this tick for the panel; they are not stored (the system row holds their sum).
+    public var interfaces: [InterfaceRate]
 
-    public init(system: SystemSampleRow, apps: [AppSampleRow] = [], processes: [ProcSampleRow] = [], appInfo: [AppInfo] = []) {
+    public init(system: SystemSampleRow, apps: [AppSampleRow] = [], processes: [ProcSampleRow] = [], appInfo: [AppInfo] = [],
+                interfaces: [InterfaceRate] = []) {
+        self.interfaces = interfaces
         self.system = system
         self.apps = apps
         self.processes = processes

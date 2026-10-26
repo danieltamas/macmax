@@ -9,6 +9,7 @@ struct PanelView: View {
     static var height: CGFloat { min(780, (NSScreen.main?.visibleFrame.height ?? 820) - 40) }
     let model: PanelModel
     @Namespace private var tabSpace
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,6 +24,7 @@ struct PanelView: View {
         .frame(width: Self.width, height: Self.height)
         .background(Backdrop())
         .environment(\.colorScheme, Theme.scheme)
+        .onAppear { model.showSettingsWindow = { openSettings() } }
     }
 
     private var header: some View {
@@ -70,14 +72,15 @@ struct PanelView: View {
                     }
                     .contentShape(Capsule())
                 }
-                .buttonStyle(PressStyle(scale: 0.97))
+                .buttonStyle(PressStyle(scale: 0.97, hit: AnyShape(Capsule()), lift: 0.08))
                 .help(tab.rawValue)
                 .accessibilityLabel(tab.rawValue)
             }
         }
         .padding(3)
         .background(Capsule().fill(Theme.core))
-        .overlay(CapsuleRing(width: 0.5).fill(Theme.hairline))
+        // A filled shape hit-tests as a solid capsule: without this the ring lay over the tabs and took every click.
+        .overlay(CapsuleRing(width: 0.5).fill(Theme.hairline).allowsHitTesting(false))
         .padding(.horizontal, 14)
         .padding(.bottom, 10)
     }

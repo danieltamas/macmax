@@ -12,7 +12,8 @@ public actor NetworkIdentityCollector {
         async let services = read("/usr/sbin/scutil", ["--nc", "list"], parse: SCUtilNCParser.parse)
         async let route = read("/sbin/route", ["-n", "get", "default"], parse: RouteParser.parse)
         async let physical = read("/usr/sbin/scutil", ["--nwi"], parse: NWIParser.parse)
-        let (vpnServices, defaultRoute, physicalInterface) = await (services, route, physical)
+        let (listedServices, defaultRoute, physicalInterface) = await (services, route, physical)
+        let vpnServices = await withTunnels(listedServices)
 
         var publicIP: Reading<PublicIP> = .unavailable(reason: "the IP check is off")
         var ispIP = publicIP
@@ -25,6 +26,30 @@ public actor NetworkIdentityCollector {
                                                 publicIP: publicIP, ispIP: ispIP)
         return NetworkIdentity(vpnServices: vpnServices, defaultRoute: defaultRoute, physicalInterface: physicalInterface,
                                publicIP: publicIP, ispIP: ispIP, verdict: verdict)
+    }
+
+    /// Asks each connected service which tunnel interface it owns, so the route can be matched to one VPN. A service that
+    /// cannot be asked keeps no tunnel: the route then matches none of them and no VPN is named.
+    private func withTunnels(_ reading: Reading<[VPNService]>) async -> Reading<[VPNService]> {
+        guard case let .ok(services, source, at) = reading else { return reading }
+        var result = services
+        let asked = result.indices.filter { result[$0].state == .connected && result[$0].serviceID != nil }
+        // All at once: one hung service costs one timeout, not one per service.
+        let tunnels = await withTaskGroup(of: (Int, String?).self) { group in
+            for index in asked {
+                let id = result[index].serviceID!
+                group.addTask {
+                    guard let output = try? await ProcessRunner().run("/usr/sbin/scutil", ["--nc", "status", id], timeout: .seconds(3)),
+                          output.status == 0 else { return (index, nil) }
+                    return (index, SCUtilNCStatusParser.tunnelInterface(String(decoding: output.stdout, as: UTF8.self)))
+                }
+            }
+            var found: [Int: String] = [:]
+            for await (index, tunnel) in group { if let tunnel { found[index] = tunnel } }
+            return found
+        }
+        for (index, tunnel) in tunnels { result[index].tunnel = tunnel }
+        return .ok(result, source: source, at: at)
     }
 
     private func ispReading(_ physical: Reading<String>) async -> Reading<PublicIP> {

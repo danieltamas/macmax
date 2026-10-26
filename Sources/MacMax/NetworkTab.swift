@@ -20,26 +20,7 @@ struct NetworkTab: View {
 
     @ViewBuilder
     private var interfaces: some View {
-        if !model.interfaces.isEmpty, !model.samplerFailed {
-            Bezel {
-                VStack(alignment: .leading, spacing: 6) {
-                    Eyebrow(text: "Interfaces")
-                    ForEach(model.interfaces) { line in
-                        HStack(spacing: 8) {
-                            Text(line.name).font(.rowTitle).foregroundStyle(Theme.textPrimary).lineLimit(2)
-                            Spacer(minLength: 6)
-                            Label(CompactFormat.rate(line.inPerSecond), systemImage: "arrow.down")
-                                .foregroundStyle(Theme.netIn)
-                            Label(CompactFormat.rate(line.outPerSecond), systemImage: "arrow.up")
-                                .foregroundStyle(Theme.netOut)
-                        }
-                        .font(.meta.monospacedDigit()).lineLimit(1)
-                    }
-                }
-                .padding(14)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
+        if !model.interfaces.isEmpty, !model.samplerFailed { InterfacesCard(lines: model.interfaces) }
     }
 
     @ViewBuilder
@@ -120,5 +101,47 @@ struct TrafficRow: View {
             if lines.isEmpty { Text("No open connections.").font(.meta).foregroundStyle(Theme.textTertiary) }
             ForEach(lines) { Text($0.text).font(.system(size: 10.5, design: .monospaced)).foregroundStyle(Theme.textSecondary).lineLimit(1) }
         }
+    }
+}
+
+/// The total, then the interfaces moving data now by what they are; the idle ones stay folded until asked for.
+private struct InterfacesCard: View {
+    let lines: [InterfaceLine]
+    @State private var showIdle = false
+
+    var body: some View {
+        let active = lines.filter { $0.bsd != nil && $0.isActive }
+        let idle = lines.filter { $0.bsd != nil && !$0.isActive }
+        Bezel {
+            VStack(alignment: .leading, spacing: 8) {
+                Eyebrow(text: "Interfaces")
+                ForEach(lines.filter { $0.bsd == nil }) { row($0) }
+                if !active.isEmpty { RowDivider() }
+                ForEach(active) { row($0) }
+                if active.isEmpty { Text("No interface is moving data.").font(.meta).foregroundStyle(Theme.textTertiary) }
+                if !idle.isEmpty {
+                    if showIdle { RowDivider(); ForEach(idle) { row($0) } }
+                    ChipButton(title: showIdle ? "Hide idle interfaces" : "Show \(idle.count) idle interfaces") {
+                        withAnimation(Motion.snappy) { showIdle.toggle() }
+                    }
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func row(_ line: InterfaceLine) -> some View {
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(line.name).font(.rowTitle).lineLimit(2)
+                    .foregroundStyle(line.bsd == nil || line.isActive ? Theme.textPrimary : Theme.textTertiary)
+                if let bsd = line.bsd { Text(bsd).font(.meta).foregroundStyle(Theme.textTertiary) }
+            }
+            Spacer(minLength: 6)
+            Label(CompactFormat.rate(line.inPerSecond), systemImage: "arrow.down").foregroundStyle(Theme.netIn)
+            Label(CompactFormat.rate(line.outPerSecond), systemImage: "arrow.up").foregroundStyle(Theme.netOut)
+        }
+        .font(.meta.monospacedDigit()).lineLimit(1)
     }
 }
