@@ -39,7 +39,7 @@ written to `~/.macmax`.
 | `apps.png` | Apps sorted by memory, the browser row expanded to its processes | 404 x panel height |
 | `network.png` | Network, 1 hour window, eight apps, interface totals | 404 x panel height |
 | `findings.png` | Findings: one CRIT (Docker VM compressed), two WARN (stale agent sessions, swap) | 404 x panel height |
-| `history.png` | (U8, History is not built yet) History, 24 hours, a memory spike with "who held it" open | 404 x panel height |
+| `history-1h.png`, `history-7d.png`, `history.png` | History, 24 hours, a memory spike with "who held it" open | 404 x panel height |
 | `leak.png` | The identity card in the `leak` state | 404 x card height |
 | `settings-<pane>.png` | One per Settings pane (general, audit, network, cleanup, agent-access, permissions, about); `settings-audit.png` shows the rule list | 760 x 540 |
 

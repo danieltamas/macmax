@@ -38,7 +38,7 @@ struct PanelView: View {
             }
             IconButton(symbol: "gearshape", help: "Open Settings") { model.openSettings(model.settingsPane) }
         }
-        .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 10)
+        .padding(.horizontal, 14).padding(.top, 14).padding(.bottom, 10)
     }
 
     private var tabIsland: some View {
@@ -48,7 +48,8 @@ struct PanelView: View {
                 Button { model.select(tab) } label: {
                     HStack(spacing: 5) {
                         Image(systemName: tab.symbol).font(.system(size: 11, weight: .medium))
-                        Text(tab.rawValue).font(.system(size: 11.5, weight: .semibold)).lineLimit(1)
+                        // Five labels do not fit the panel width: only the open tab keeps its name.
+                        if active { Text(tab.rawValue).font(.system(size: 11.5, weight: .semibold)).lineLimit(1) }
                         if tab == .findings, !model.openFindings.isEmpty, active {
                             Text("\(model.openFindings.count)").font(.system(size: 10, weight: .bold))
                                 .foregroundStyle(Theme.color(model.verdict))
@@ -56,6 +57,7 @@ struct PanelView: View {
                     }
                     .fixedSize()
                     .padding(.horizontal, 11).padding(.vertical, 7)
+                    .frame(maxWidth: active ? nil : .infinity)
                     .foregroundStyle(active ? Theme.canvas : Theme.textSecondary)
                     .background {
                         if active {
@@ -69,11 +71,14 @@ struct PanelView: View {
                     .contentShape(Capsule())
                 }
                 .buttonStyle(PressStyle(scale: 0.97))
+                .help(tab.rawValue)
+                .accessibilityLabel(tab.rawValue)
             }
         }
         .padding(3)
         .background(Capsule().fill(Theme.core))
         .overlay(CapsuleRing(width: 0.5).fill(Theme.hairline))
+        .padding(.horizontal, 14)
         .padding(.bottom, 10)
     }
 
@@ -84,6 +89,7 @@ struct PanelView: View {
         case .apps: AppsTab(model: model)
         case .network: NetworkTab(model: model)
         case .findings: FindingsTab(model: model)
+        case .history: HistoryTab(model: model)
         }
     }
 

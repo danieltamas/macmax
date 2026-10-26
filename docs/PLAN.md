@@ -1,6 +1,6 @@
 # MacMax plan
 
-Status: U0 to U5 are done (2026-10-25); U6 is done; U7 (panel, menu bar icon, Settings) is built and reviewed, History (U8) is not. D9 decided: the gauge icon (2026-10-25); the palette derives from it.
+Status: U0 to U5 are done (2026-10-25); U6 is done; U7 (panel, menu bar icon, Settings) is done; U8 (History) is built and reviewed. D9 decided: the gauge icon (2026-10-25); the palette derives from it.
 Open decisions (bottom of this file) are asked when the unit that needs them starts.
 
 ## What it is

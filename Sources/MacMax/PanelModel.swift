@@ -3,7 +3,7 @@ import Observation
 import SwiftUI
 
 enum PanelTab: String, CaseIterable, Identifiable {
-    case overview = "Overview", apps = "Apps", network = "Network", findings = "Findings"
+    case overview = "Overview", apps = "Apps", network = "Network", findings = "Findings", history = "History"
     var id: String { rawValue }
 
     var symbol: String {
@@ -12,6 +12,7 @@ enum PanelTab: String, CaseIterable, Identifiable {
         case .apps: "square.grid.2x2"
         case .network: "arrow.up.arrow.down"
         case .findings: "exclamationmark.bubble"
+        case .history: "chart.xyaxis.line"
         }
     }
 }
@@ -133,6 +134,27 @@ final class PanelModel {
     var connections: [String: [ConnectionLine]] = [:]
     var connectionsLoading: Set<String> = []
 
+    // History
+    var historyRange: HistoryRange = .hour {
+        didSet {
+            guard historyRange != oldValue else { return }
+            historySelection = nil
+            // The old series belong to the old range: drawing them under the new range's axis would mislabel them.
+            history = [:]
+            historyApps = [:]
+            historyState = .loading("Reading history...")
+            historyChanged()
+        }
+    }
+    var history: [HistoryMetric: [HistoryPoint]] = [:]
+    var historyApps: [HistoryMetric: [HistoryAppSeries]] = [:]
+    var historyState: SectionState = .loading("Reading history...")
+    var historySelection: HistorySelection?
+    var historyHolders: [HistoryHolder] = []
+    var historyHoldersState: SectionState = .ready
+    var historyChanged: () -> Void = {}
+    var loadHolders: (HistorySelection) -> Void = { _ in }
+
     // What a press does. The live controller sets these; the screenshots leave them empty.
     var runAudit: () -> Void = {}
     var loadConnections: (String) -> Void = { _ in }
@@ -173,11 +195,19 @@ final class PanelModel {
 
     var openFindings: [Finding] { findings.filter { !snoozed.contains($0.ruleID) } }
 
+    func selectHistory(_ selection: HistorySelection) {
+        historySelection = selection
+        historyHolders = []
+        historyHoldersState = .loading("Reading the apps...")
+        loadHolders(selection)
+    }
+
     func select(_ tab: PanelTab, sort: AppSort? = nil) {
         withAnimation(Motion.spring) {
             self.tab = tab
             if let sort { self.sort = sort }
         }
+        if tab == .history { historyChanged() }
     }
 }
 
@@ -195,4 +225,10 @@ extension Verdict {
 
 extension Severity {
     var label: String { self == .crit ? "CRIT" : self == .warn ? "WARN" : "INFO" }
+}
+
+/// A point picked on a chart: the apps that held that resource then are listed under it.
+struct HistorySelection: Equatable {
+    let metric: HistoryMetric
+    let ts: Int64
 }
