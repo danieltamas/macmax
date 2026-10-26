@@ -367,7 +367,10 @@ file shredder, privacy cleaner, "boost" buttons.
   (`~/Library/LaunchAgents`, `/Library/LaunchAgents`, `/Library/LaunchDaemons`) with its program,
   whether it is running and whether it is turned off. Turning one off (`launchctl disable` plus
   `bootout`) or on again is a press in the app, only for the user's own agents (never `com.apple.*`
-  or MacMax itself); system-wide ones are listed with "Needs admin". The login items of System
+  or MacMax itself); system-wide ones are listed view only (they need an administrator, which MacMax never asks for).
+  Each row opens to show who added it (the app that holds its program, the plist's associated app, or a marked
+  guess from the label), what it runs (arguments redacted), when it starts, and the TCP and UDP sockets of
+  its process right now (`lsof`), never their content. The login items of System
   Settings are not read: macOS offers no way to list them without `sfltool`. App only: no CLI or MCP
   tool in this unit (the MCP tool list is fixed by the agent API tests).
 - **U14 App uninstaller.** Pick an app, see it plus its leftovers (Application Support, Caches,

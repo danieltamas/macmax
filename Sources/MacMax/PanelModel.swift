@@ -218,6 +218,10 @@ final class PanelModel {
     var startupGeneration = 0
     var scanStartup: () -> Void = {}
     var setStartupEnabled: (StartupItem, Bool) -> Void = { _, _ in }
+    /// What the detail view of a background item shows, by plist path; filled when the row is opened.
+    var startupInspections: [String: StartupInspection] = [:]
+    var startupInspecting: Set<String> = []
+    var inspectStartup: (StartupItem) -> Void = { _ in }
 
     // Permissions, as macOS answers now
     var fullDiskAccess: PermissionState = .unknown

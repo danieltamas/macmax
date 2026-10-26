@@ -21,6 +21,7 @@ final class ActionController {
         model.scanLarge = { [weak self] in self?.scanLarge() }
         model.scanStartup = { [weak self] in self?.scanStartup() }
         model.setStartupEnabled = { [weak self] in self?.setStartup($0, enabled: $1) }
+        model.inspectStartup = { [weak self] in self?.inspectStartup($0) }
         model.refreshPermissions = { [weak self] in self?.refreshPermissions() }
         model.requestNotifications = { [weak self] in self?.requestNotifications() }
     }

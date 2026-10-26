@@ -109,3 +109,16 @@ public enum StartupControl {
         return "gui/\(uid)/\(item.label)"
     }
 }
+
+extension LaunchctlList {
+    /// Label to process id, for the labels `running` lists.
+    public static func pids(_ text: String) -> [String: Int] {
+        var found: [String: Int] = [:]
+        for line in text.split(whereSeparator: \.isNewline) {
+            let columns = line.split(separator: "\t", omittingEmptySubsequences: false)
+            guard columns.count == 3, let pid = Int32(columns[0]), pid > 0, !columns[2].isEmpty else { continue }
+            found[String(columns[2])] = Int(pid)
+        }
+        return found
+    }
+}

@@ -6,6 +6,11 @@ import SwiftUI
 struct StartupCard: View {
     let model: PanelModel
     @State private var showOthers = false
+    @State private var open: Set<String>
+    init(model: PanelModel, open: Set<String> = []) {
+        self.model = model
+        _open = State(initialValue: open)
+    }
     private static let statusWidth: CGFloat = 64
     private static let actionWidth: CGFloat = 72
 
@@ -62,12 +67,20 @@ struct StartupCard: View {
         let state = model.actionStates["startup-\(item.path)"]
         return VStack(alignment: .leading, spacing: 3) {
             HStack(alignment: .center, spacing: 8) {
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(Self.title(item)).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textPrimary).lineLimit(1).truncationMode(.tail)
-                    Text(Redaction.sanitizeText(item.label)).font(.system(size: 11)).foregroundStyle(Theme.textTertiary)
-                        .lineLimit(1).truncationMode(.middle)
+                Button { toggle(item) } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: open.contains(item.path) ? "chevron.down" : "chevron.right").font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(Theme.textTertiary).frame(width: 10)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(Self.title(item)).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textPrimary).lineLimit(1).truncationMode(.tail)
+                            Text(Redaction.sanitizeText(item.label)).font(.system(size: 11)).foregroundStyle(Theme.textTertiary)
+                                .lineLimit(1).truncationMode(.middle)
+                        }
+                        Spacer(minLength: 0)
+                    }.contentShape(Rectangle())
                 }
-                .help(Self.location(item))
+                .buttonStyle(RowPressStyle())
+                .help("Click for details")
                 Spacer(minLength: 4)
                 status(item).frame(width: Self.statusWidth, alignment: .leading)
                 if action {
@@ -76,8 +89,18 @@ struct StartupCard: View {
                         .frame(width: Self.actionWidth, alignment: .trailing)
                 }
             }
+            if open.contains(item.path) {
+                StartupDetailView(item: item, inspection: model.startupInspections[item.path], isReading: model.startupInspecting.contains(item.path))
+            }
             if let state, state.isWorking { OperationProgress(text: state.text) }
             else if let state { Text(state.text).font(.meta).foregroundStyle(state.isProblem ? Theme.warn : Theme.textSecondary) }
+        }
+    }
+
+    private func toggle(_ item: StartupItem) {
+        if open.remove(item.path) == nil {
+            open.insert(item.path)
+            model.inspectStartup(item)
         }
     }
 
@@ -109,12 +132,6 @@ struct StartupCard: View {
         if parts.count > 2, ["com", "org", "net", "io", "ro", "eu", "app", "co"].contains(parts[0].lowercased()) { parts.removeFirst() }
         let name = parts.joined(separator: " ")
         return Redaction.sanitizeText(name.prefix(1).uppercased() + name.dropFirst())
-    }
-
-    private static func location(_ item: StartupItem) -> String {
-        let program = item.program.map { Redaction.sanitizeText(Redaction.redact([$0]).joined(separator: " ")) } ?? "unknown program"
-        let home = NSHomeDirectory()
-        return program.hasPrefix(home) ? "~" + program.dropFirst(home.count) : program
     }
 }
 

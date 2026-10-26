@@ -130,9 +130,11 @@ works with Outline, Tailscale, WireGuard and other VPNs.
 <table>
   <tr>
     <td width="50%" valign="top"><img src="docs/media/background-items.png" alt="Background items: launch agents, running or off, with Turn off"></td>
+    <td width="50%" valign="top"><img src="docs/media/background-item-detail.png" alt="One background item opened: who added it, what it runs, and where it is connected"></td>
   </tr>
   <tr>
     <td align="center"><b>Background items</b>: what starts by itself, and a press to turn yours off</td>
+    <td align="center"><b>Click one</b> to see who added it and where it connects</td>
   </tr>
 </table>
 
@@ -143,6 +145,9 @@ helper processes (stale agent servers, parents that never collected finished chi
 you press the button. **Background items** lists the programs macOS starts by itself (your Launch
 Agents and the system's). You can turn off your own, and turn them on again; the system-wide ones
 are only listed, because changing them needs an administrator and MacMax never asks for that.
+Click any item to see who added it (the app it belongs to, or a clearly marked guess from its name),
+what it runs, when it starts, and, while it is running, the addresses it is connected to right now.
+MacMax shows where a program connects, not what it sends.
 
 ### History
 

@@ -41,7 +41,7 @@ public struct StartupScanner: Sendable {
 
     /// The bytes of a regular file of at most 1 MB, opened without following a link and checked on the descriptor it is
     /// read from, so a file swapped in after listing is not read.
-    private static func readPlist(at path: String) -> Data? {
+    static func readPlist(at path: String) -> Data? {
         let descriptor = open(path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK)
         guard descriptor >= 0 else { return nil }
         defer { close(descriptor) }

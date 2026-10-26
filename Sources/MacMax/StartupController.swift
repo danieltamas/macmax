@@ -24,6 +24,17 @@ extension ActionController {
         }
     }
 
+    /// Reads the plist and, for a running item, its sockets. Run again on every open, so the connections are current.
+    func inspectStartup(_ item: StartupItem) {
+        guard !model.startupInspecting.contains(item.path) else { return }
+        model.startupInspecting.insert(item.path)
+        Task {
+            let inspection = await StartupInspector().inspect(item)
+            model.startupInspections[item.path] = inspection
+            model.startupInspecting.remove(item.path)
+        }
+    }
+
     func setStartup(_ item: StartupItem, enabled: Bool) {
         let key = "startup-\(item.path)"
         guard model.actionStates[key]?.isWorking != true else { return }

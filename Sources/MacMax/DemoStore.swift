@@ -65,6 +65,13 @@ enum DemoStore {
             StartupItem(label: "ro.example.notes.agent", path: "/Users/example/Library/LaunchAgents/ro.example.notes.agent.plist", scope: .userAgent,
                         program: "/Applications/Tidal Notes.app/Contents/MacOS/agent", runsAtLoad: true, isDisabled: true),
         ]
+        model.startupInspections["/Users/example/Library/LaunchAgents/ro.example.relay.helper.plist"] = StartupInspection(
+            detail: StartupDetail(program: "/Applications/Relay Chat.app/Contents/MacOS/RelayHelper", arguments: ["/Applications/Relay Chat.app/Contents/MacOS/RelayHelper", "--background"],
+                                  runAtLoad: true, keepAlive: true),
+            pid: 4_321,
+            connections: [ProcessConnection(transport: .tcp, localAddress: "192.0.2.10", localPort: "50000", remoteAddress: "198.51.100.7", remotePort: "443", state: "ESTABLISHED"),
+                          ProcessConnection(transport: .tcp, localAddress: "192.0.2.10", localPort: "50001", remoteAddress: "203.0.113.20", remotePort: "443", state: "ESTABLISHED"),
+                          ProcessConnection(transport: .tcp, localAddress: "*", localPort: "8080", state: "LISTEN")])
         model.notifications = .allowed
         model.largeItems = [
             LargeItem(path: "/Users/example/Library/Developer/Xcode/iOS DeviceSupport", bytes: 14_200_000_000, modified: now.addingTimeInterval(-86_400 * 40), isProtected: false),
