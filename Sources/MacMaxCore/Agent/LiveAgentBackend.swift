@@ -2,7 +2,7 @@ import Foundation
 
 /// The ten tools over `AgentSources`. Read-only by construction: it holds no handle that can act.
 public struct LiveAgentBackend: AgentBackend {
-    private let sources: AgentSources
+    let sources: AgentSources
 
     public init(_ sources: AgentSources) { self.sources = sources }
 
@@ -71,6 +71,7 @@ public struct LiveAgentBackend: AgentBackend {
     // MARK: Tools
 
     private func snapshot() async -> JSONValue {
+        if let stored = await storedSnapshot() { return .object(stored) }
         let system = await sources.system()
         let (processes, network) = await collected()
         let apps = AgentApp.group(processes.value ?? [], network: network)
@@ -101,7 +102,7 @@ public struct LiveAgentBackend: AgentBackend {
     }
 
     /// The newest stored verdict when MacMax keeps history here, else a fresh audit.
-    private func latestVerdict() async -> JSONValue {
+    func latestVerdict() async -> JSONValue {
         if sources.appRunning, let database = sources.database {
             do {
                 if let stored = try await database.latestAudit() { return .string(stored.verdict.rawValue) }
@@ -110,7 +111,7 @@ public struct LiveAgentBackend: AgentBackend {
         return .string(await sources.audit().report.verdict.rawValue)
     }
 
-    private static func identitySummary(_ identity: NetworkIdentity) -> JSONValue {
+    static func identitySummary(_ identity: NetworkIdentity) -> JSONValue {
         .object(["verdict": .string(identity.verdict.rawValue),
                  "public_country": identity.publicIP.json { $0.country.map(JSONValue.string) ?? .null },
                  "vpn": identity.vpnServices.json { .array($0.filter { $0.state == .connected }.map { .string($0.label) }) }])

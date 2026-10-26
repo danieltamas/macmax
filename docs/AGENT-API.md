@@ -103,8 +103,8 @@ plus an empty `findings` or `apps` list:
 | `macmax version` | version line, same as About |
 
 Exit codes: 0 success, 1, 2 and 3 for `audit` as above, 64 usage, 70 the output could not be encoded (a sentence on stderr).
-The CLI is read-only like the server; it never writes the database or the config. A command that needs rates
-(`snapshot`, `apps`, `network`) takes a second sample, so it answers after about 2 seconds. `scripts/acceptance.sh mcp`
+The CLI is read-only like the server; it never writes the database or the config. With the app running, `snapshot` answers from its newest stored tick (`sampled_at`, top lists as `value`) in well under 500 ms. A command that needs
+live rates (`apps`, `network`, and `snapshot` without the app) takes a second sample, so it answers after about 2 to 4 seconds. `scripts/acceptance.sh mcp`
 drives `macmax mcp` over stdio and checks the transcript.
 
 ## Acceptance (U10, for Codex)
