@@ -24,6 +24,8 @@ final class ActionController {
         model.inspectStartup = { [weak self] in self?.inspectStartup($0) }
         model.scanInstalledApps = { [weak self] in self?.scanInstalledApps() }
         model.readPower = { [weak self] in self?.readPower() }
+        // Read once at launch, so the first time the panel opens it already has the fans and the battery.
+        readPower()
         model.loadLeftovers = { [weak self] in self?.loadLeftovers($0) }
         model.uninstallApp = { [weak self] in self?.uninstall($0, leftovers: $1) }
         model.refreshPermissions = { [weak self] in self?.refreshPermissions() }

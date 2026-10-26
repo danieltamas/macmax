@@ -143,7 +143,7 @@ struct PowerHealthCard: View {
         let low = Double(fan.minimumRPM ?? 0), high = Double(fan.maximumRPM ?? max(fan.rpm, 6_000))
         let fraction = high > low ? (Double(fan.rpm) - low) / (high - low) : 0
         return dial(label: "Fan \(fan.index + 1)", detail: "\(fan.rpm) rpm", tint: Theme.teal, fraction: fraction,
-                    help: "Drawn turning slower than the real fan, but faster when it is faster") {
+                    help: "Turns in proportion to the real speed: one turn a second per 1000 rpm") {
             FanRotor(rpm: fan.rpm, tint: Theme.teal)
         }
     }

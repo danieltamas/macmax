@@ -64,7 +64,7 @@ struct BatteryGlyph: View {
 }
 
 /// A fan that turns. The turning is a Core Animation loop run by the window server, only while the panel is visible,
-/// and slower than the real fan (about 1 turn a second per 1500 rpm) so the eye can read faster and slower.
+/// and slower than the real fan (1 turn a second per 1000 rpm: a screen cannot draw 40 turns a second), in proportion to its rpm.
 struct FanRotor: View {
     @Environment(\.panelVisible) private var panelVisible
     @Environment(\.stillImage) private var stillImage
@@ -89,14 +89,18 @@ private struct RotorLayer: NSViewRepresentable {
     func updateNSView(_ view: RotorView, context: Context) { view.show(rpm: rpm, tint: tint, spinning: spinning) }
 }
 
+/// One turn a second at speed 1, always attached: the fan's rate is the layer's `speed`, so a new rpm changes how fast it
+/// turns from where it is, instead of restarting the blades at angle zero.
 final class RotorView: NSView {
     private let blades = CALayer()
-    private var spinningRPM: Int?
+    private var wanted: Float = 0
 
     override init(frame: NSRect) {
         super.init(frame: frame)
         wantsLayer = true
         layer?.addSublayer(blades)
+        blades.add(Self.turn, forKey: "turn")
+        blades.speed = 0
     }
 
     required init?(coder: NSCoder) { nil }
@@ -110,6 +114,24 @@ final class RotorView: NSView {
         CATransaction.commit()
     }
 
+    /// AppKit drops running animations when a view leaves its window: the rate is set again on arrival.
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if blades.animation(forKey: "turn") == nil { blades.add(Self.turn, forKey: "turn") }
+        retime(to: wanted, force: true)
+    }
+
+    private static var turn: CABasicAnimation {
+        let turn = CABasicAnimation(keyPath: "transform.rotation.z")
+        turn.fromValue = 0
+        turn.toValue = -2 * Double.pi
+        turn.duration = 1
+        turn.repeatCount = .infinity
+        turn.isRemovedOnCompletion = false
+        return turn
+    }
+
+    /// Turns per second: the fan's real speed shown at a thousandth, because a screen cannot draw 40 turns a second.
     func show(rpm: Int, tint: NSColor, spinning: Bool) {
         let configuration = NSImage.SymbolConfiguration(pointSize: 22, weight: .regular).applying(.init(paletteColors: [tint]))
         let image = NSImage(systemSymbolName: "fan.fill", accessibilityDescription: nil)?.withSymbolConfiguration(configuration)
@@ -119,16 +141,22 @@ final class RotorView: NSView {
         blades.contentsGravity = .resizeAspect
         blades.contentsScale = window?.backingScaleFactor ?? 2
         CATransaction.commit()
-        let target = spinning ? rpm : nil
-        guard target != spinningRPM else { return }
-        spinningRPM = target
-        blades.removeAnimation(forKey: "turn")
-        guard let rpm = target else { return }
-        let turn = CABasicAnimation(keyPath: "transform.rotation.z")
-        turn.fromValue = 0
-        turn.toValue = -2 * Double.pi
-        turn.duration = 1500 / Double(max(rpm, 1))
-        turn.repeatCount = .infinity
-        blades.add(turn, forKey: "turn")
+        wanted = spinning ? Float(rpm) / 1000 : 0
+        retime(to: wanted, force: false)
+    }
+
+    /// Changes the rate and keeps the angle: freeze at the current animation time, then start again from it.
+    private func retime(to speed: Float, force: Bool) {
+        guard force || blades.speed != speed else { return }
+        let now = CACurrentMediaTime()
+        let local = blades.convertTime(now, from: nil)
+        blades.speed = 0
+        blades.timeOffset = local
+        guard speed > 0 else { return }
+        // The layer's time is (parent time - beginTime) * speed + timeOffset: pick beginTime so it is `local` right now.
+        let parentNow = blades.superlayer?.convertTime(now, from: nil) ?? now
+        blades.timeOffset = 0
+        blades.speed = speed
+        blades.beginTime = parentNow - CFTimeInterval(Double(local) / Double(speed))
     }
 }
