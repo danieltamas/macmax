@@ -241,6 +241,8 @@ final class PanelModel {
     var uninstallResults: [CleanupResult] = []
     var uninstalledName: String?
     var uninstallStopping = false
+    /// By app path. Absent while it is being read; `.unavailable` is "no record", never "not opened".
+    var appLastOpened: [String: Reading<Date>] = [:]
     var scanInstalledApps: () -> Void = {}
     var loadLeftovers: (InstalledApp) -> Void = { _ in }
     var uninstallApp: (InstalledApp, [Leftover]) -> Void = { _, _ in }

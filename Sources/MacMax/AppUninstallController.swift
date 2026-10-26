@@ -17,6 +17,8 @@ extension ActionController {
             model.installedAppsUnreadable = found.unreadable
             model.installedAppsState = .ready
             model.measuringApps = Set(found.apps.map(\.path))
+            let paths = found.apps.map(\.path)
+            model.appLastOpened = await Task.detached(priority: .utility) { Dictionary(uniqueKeysWithValues: paths.map { ($0, AppLastOpened.read(path: $0)) }) }.value
             await withTaskGroup(of: (String, Int64?).self) { group in
                 var pending = found.apps.makeIterator()
                 func next() { if let app = pending.next() { group.addTask(priority: .utility) { (app.path, AppLister.measuredBytes(of: app.path)) } } }

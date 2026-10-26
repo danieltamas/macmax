@@ -11,6 +11,8 @@ struct AppUninstallCard: View {
     @State private var excluded: Set<String> = []
     @State private var added: Set<String> = []
     @State private var confirming = false
+    @State private var sort = Sort.name
+    enum Sort: String, CaseIterable { case name = "Name", size = "Size", opened = "Last opened" }
     private static let preview = 6
     private static let sizeWidth: CGFloat = 70
 
@@ -43,7 +45,8 @@ struct AppUninstallCard: View {
                 .font(.meta).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
         }
         GlassField(placeholder: "Search apps", text: $search)
-        let matches = apps.filter { search.isEmpty || $0.name.localizedCaseInsensitiveContains(search) }
+        sortChips
+        let matches = sorted(apps.filter { search.isEmpty || $0.name.localizedCaseInsensitiveContains(search) })
         let shown = showAll || !search.isEmpty ? matches : Array(matches.prefix(Self.preview))
         if matches.isEmpty { Text("No app matches.").font(.meta).foregroundStyle(Theme.textSecondary) }
         ForEach(shown) { app in
@@ -56,6 +59,39 @@ struct AppUninstallCard: View {
         }
     }
 
+    private var sortChips: some View {
+        HStack(spacing: 6) {
+            Text("Sort by").font(.meta).foregroundStyle(Theme.textTertiary)
+            ForEach(Sort.allCases, id: \.self) { option in
+                Button(option.rawValue) { sort = option }
+                    .buttonStyle(.plain).font(.system(size: 11, weight: sort == option ? .semibold : .regular))
+                    .foregroundStyle(sort == option ? Theme.teal : Theme.textSecondary).pointingHandCursor()
+            }
+        }
+    }
+
+    private func lastOpened(_ app: InstalledApp) -> Date? { model.appLastOpened[app.path]?.value }
+
+    /// Oldest first for "Last opened" (the ones to consider removing), biggest first for "Size"; unknown goes last.
+    private func sorted(_ apps: [InstalledApp]) -> [InstalledApp] {
+        switch sort {
+        case .name: return apps
+        case .size: return apps.sorted { ($0.bytes ?? -1) > ($1.bytes ?? -1) }
+        case .opened: return apps.sorted { (lastOpened($0) ?? .distantFuture) < (lastOpened($1) ?? .distantFuture) }
+        }
+    }
+
+    /// RelativeTime redraws once a minute and follows the README's fixed clock in renders.
+    @ViewBuilder private func subtitle(_ app: InstalledApp) -> some View {
+        let version = app.version.map { "Version \(Redaction.sanitizeText($0))" }
+        let prefix = version.map { $0 + " - " } ?? ""
+        switch model.appLastOpened[app.path] {
+        case let .ok(date, _, _): RelativeTime(date: date) { "\(prefix)opened \($0.split(separator: ",").first.map(String.init) ?? $0) ago" }
+        case .unavailable, .failed: Text(prefix + "no record of being opened")
+        case nil: Text(version ?? "")
+        }
+    }
+
     private func row(_ app: InstalledApp) -> some View {
         Button { toggle(app) } label: {
             HStack(spacing: 6) {
@@ -63,7 +99,7 @@ struct AppUninstallCard: View {
                     .foregroundStyle(Theme.textTertiary).frame(width: 10)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(Redaction.sanitizeText(app.name)).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textPrimary).lineLimit(1)
-                    if let version = app.version { Text("Version \(Redaction.sanitizeText(version))").font(.system(size: 11)).foregroundStyle(Theme.textTertiary).lineLimit(1) }
+                    subtitle(app).font(.system(size: 11)).foregroundStyle(Theme.textTertiary).lineLimit(1)
                 }
                 Spacer(minLength: 4)
                 Text(app.bytes.map { CompactFormat.bytes(UInt64(max(0, $0))) } ?? (model.measuringApps.contains(app.path) ? "Measuring..." : "unknown")).font(.system(size: 11, weight: .medium)).monospacedDigit()

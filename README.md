@@ -159,9 +159,11 @@ what it runs, when it starts, and, while it is running, the addresses it is conn
 MacMax shows where a program connects, not what it sends. **Uninstall apps** lists the apps in
 `/Applications` and `~/Applications`; pick one to see what it left in your Library (support files,
 caches, preferences, containers, logs, saved state, its launch agent) with sizes, untick anything you
-want to keep, and move the lot to the Trash after one confirmation. It never touches an app that is
-open, an Apple app, MacMax itself, or anything in `/Library`, which needs an administrator. Files
-matched only by the app's name are listed but start unticked.
+want to keep, and move the lot to the Trash after one confirmation. Each app shows when it was last
+opened (from Spotlight's record; "no record" is not "never"), and the list sorts by name, size or last
+opened. A closed app often leaves an updater or helper running; the same press ends those first. It
+never touches an app that is open, an Apple app, MacMax itself, or anything in `/Library`, which needs
+an administrator. Files matched only by the app's name are listed but start unticked.
 
 ### History
 

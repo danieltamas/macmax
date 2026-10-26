@@ -79,6 +79,12 @@ enum DemoStore {
             InstalledApp(path: "/Applications/Tidal Notes.app", name: "Tidal Notes", bundleID: "ro.example.notes", version: "1.7.3", bytes: 96_000_000),
             InstalledApp(path: "/Applications/Orbit Calendar.app", name: "Orbit Calendar", bundleID: "ro.example.orbit", version: "8.0", bytes: 71_000_000),
         ]
+        model.appLastOpened = [
+            "/Applications/Pixel Studio.app": .ok(now.addingTimeInterval(-3_600 * 5), source: "Spotlight", at: now),
+            relay.path: .ok(now.addingTimeInterval(-86_400 * 212), source: "Spotlight", at: now),
+            "/Applications/Tidal Notes.app": .ok(now.addingTimeInterval(-86_400 * 9), source: "Spotlight", at: now),
+            "/Applications/Orbit Calendar.app": .unavailable(reason: "Spotlight has no record of this app being opened"),
+        ]
         model.appLeftovers[relay.path] = [
             Leftover(path: "/Users/example/Library/Application Support/ro.example.relay", kind: .applicationSupport, match: .bundleID, bytes: 842_000_000),
             Leftover(path: "/Users/example/Library/Caches/ro.example.relay", kind: .caches, match: .bundleID, bytes: 233_000_000),
