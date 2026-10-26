@@ -240,6 +240,7 @@ final class PanelModel {
     var uninstallProgress: (done: Int, total: Int, next: String?)?
     var uninstallResults: [CleanupResult] = []
     var uninstalledName: String?
+    var uninstallStopping = false
     var scanInstalledApps: () -> Void = {}
     var loadLeftovers: (InstalledApp) -> Void = { _ in }
     var uninstallApp: (InstalledApp, [Leftover]) -> Void = { _, _ in }

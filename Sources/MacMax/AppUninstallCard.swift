@@ -23,7 +23,9 @@ struct AppUninstallCard: View {
         SettingsCard(title: "Uninstall apps", detail: "Move an app and the files it left behind to the Trash. You can put everything back from the Trash.") {
             VStack(alignment: .leading, spacing: 8) {
                 if case let .loading(text) = model.installedAppsState { OperationProgress(text: text) }
-                if let progress = model.uninstallProgress {
+                if model.uninstallStopping {
+                    OperationProgress(text: "Stopping what \(model.uninstalledName ?? "the app") still runs in the background...")
+                } else if let progress = model.uninstallProgress {
                     OperationProgress(text: "Moving \(min(progress.done + 1, progress.total)) of \(progress.total) to the Trash", fraction: Double(progress.done) / Double(max(progress.total, 1)))
                 } else if !model.uninstallResults.isEmpty { results }
                 if let apps = model.installedApps { list(apps) }

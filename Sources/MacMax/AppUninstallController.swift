@@ -61,8 +61,14 @@ extension ActionController {
         model.uninstallResults = []
         model.uninstalledName = app.name
         Task {
-            let results = await Task.detached(priority: .utility) { [model] in
-                AppUninstaller(home: FileManager.default.homeDirectoryForCurrentUser, trasher: FileManagerTrasher(), running: { Self.running() })
+            let results = await Task.detached(priority: .utility) { [model] () -> [CleanupResult] in
+                // A closed app often leaves updaters and daemons running from inside its bundle. They are ended first,
+                // by this same press; an app that is still open is left to the policy, which refuses it.
+                if let blocked = Self.stopBackgroundPrograms(of: app, model: model) {
+                    return [CleanupResult(path: app.path, outcome: .refused(blocked))]
+                        + leftovers.map { CleanupResult(path: $0.path, outcome: .refused("the app was not moved")) }
+                }
+                return AppUninstaller(home: FileManager.default.homeDirectoryForCurrentUser, trasher: FileManagerTrasher(), running: { Self.running() })
                     .uninstall(app, leftovers: leftovers) { done, total, next in
                         Task { @MainActor in model.uninstallProgress = (done, total, next) }
                     }
@@ -79,6 +85,19 @@ extension ActionController {
             model.uninstallProgress = nil
             model.appLeftovers[app.path] = nil
             scanInstalledApps()
+        }
+    }
+
+    /// A reason to stop the uninstall, or nil when nothing runs from the bundle any more.
+    nonisolated private static func stopBackgroundPrograms(of app: InstalledApp, model: PanelModel) -> String? {
+        guard let running = running(), !running.bundleIDs.contains(app.bundleID) else { return nil }
+        let processes = AppBackgroundProcesses.system()
+        guard processes.find(in: app.path)?.isEmpty == false else { return nil }
+        Task { @MainActor in model.uninstallStopping = true }
+        defer { Task { @MainActor in model.uninstallStopping = false } }
+        switch processes.stop(in: app.path) {
+        case .nothingRunning, .stopped: return nil
+        case let .failed(reason): return "\(app.name) still has programs running in the background: \(reason)"
         }
     }
 }
