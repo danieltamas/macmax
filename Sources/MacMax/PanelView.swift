@@ -9,6 +9,7 @@ struct PanelView: View {
     static var height: CGFloat { min(780, (NSScreen.main?.visibleFrame.height ?? 820) - 40) }
     let model: PanelModel
     @Namespace private var tabSpace
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,6 +24,7 @@ struct PanelView: View {
         .frame(width: Self.width, height: Self.height)
         .background(Backdrop())
         .environment(\.colorScheme, Theme.scheme)
+        .onAppear { model.showSettingsWindow = { openSettings() } }
     }
 
     private var header: some View {

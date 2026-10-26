@@ -178,10 +178,12 @@ Acceptance:
   never read as zero traffic).
 - Deltas: two cumulative readings give per-interval bytes; a process that restarted (new start
   time) restarts its counter.
-- Live: a test downloads 5 MB from a local `python3 -m http.server`-style listener it starts;
-  the test process's bytes in over that interval are at least 5 MB.
-- The long-lived collector child is supervised: killed with the app, restarted with backoff if
-  it dies, and its death marks network readings `failed` until it is back.
+- Live: a test downloads 5 MB from a local `python3 -m http.server`-style listener it starts and
+  keeps the client socket open; the test process's bytes in over that interval are at least 5 MB.
+  Once that socket is closed, the process's reading is never a wrong number (absent, `unavailable`
+  or `failed`).
+- Each tick runs one short `nettop -L 1` (a long-lived child cost about 120 percent of a core on
+  a busy Mac); a run that fails or exits non-zero marks network readings `failed` for that tick.
 
 `/goal scripts/check.sh exits 0, MACMAX_LIVE=1 swift test --filter NetworkTraffic passes outside the sandbox, grep -cE "^(P0|P1|P2)" $SCRATCH/review-out.md prints 0, or stop after 40 turns`
 

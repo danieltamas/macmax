@@ -162,6 +162,9 @@ final class PanelModel {
     var loadConnections: (String) -> Void = { _ in }
     var snooze: (String) -> Void = { _ in }
     var openSettings: (SettingsPane) -> Void = { _ in }
+    /// Set by the panel once it is on screen: `showSettingsWindow:` does nothing from a menu bar item on macOS 14 and later,
+    /// the `openSettings` environment action does.
+    var showSettingsWindow: () -> Void = { NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil) }
 
     // Actions
     var actionStates: [String: ActionState] = [:]

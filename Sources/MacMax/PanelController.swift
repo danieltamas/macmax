@@ -35,7 +35,7 @@ final class PanelController {
         model.openSettings = { [model] pane in
             model.settingsPane = pane
             NSApp.activate(ignoringOtherApps: true)
-            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            model.showSettingsWindow()
         }
     }
 
