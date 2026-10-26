@@ -27,11 +27,11 @@ final class UpdateController {
     init(model: PanelModel, home: MacMaxHome) {
         self.model = model
         self.home = home
-        model.checkForUpdate = { [weak self] in self?.check() }
+        model.checkForUpdate = { [weak self] in self?.check(byPress: true) }
         model.installUpdate = { [weak self] in self?.install() }
     }
 
-    /// At launch and every 24 hours; a "Check again" press goes through the same schedule, so it can never hammer GitHub.
+    /// At launch and every 24 hours; a "Check again" press skips the 15-minute floor but still waits out a GitHub pause.
     func start() {
         guard loop == nil else { return }
         loop = Task { [weak self] in
@@ -43,9 +43,13 @@ final class UpdateController {
         }
     }
 
-    private func check() {
+    private func check(byPress: Bool = false) {
         let now = Date()
-        guard !checking, schedule.mayCheck(at: now) else { return }
+        guard !checking else { return }
+        guard byPress ? schedule.mayCheckByPress(at: now) : schedule.mayCheck(at: now) else {
+            if byPress { fail("GitHub asked MacMax to wait before checking again.") }
+            return
+        }
         checking = true
         schedule.recordAttempt(at: now)
         model.releaseCheck = .loading("Checking for updates...")

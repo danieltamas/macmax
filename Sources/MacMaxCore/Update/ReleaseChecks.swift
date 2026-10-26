@@ -45,6 +45,12 @@ public struct ReleaseCheckSchedule: Sendable, Equatable {
         return true
     }
 
+    /// A press on "Check again" is the owner asking, so the 15-minute floor does not apply; GitHub's pause still does.
+    public func mayCheckByPress(at date: Date) -> Bool {
+        if let blockedUntil, date < blockedUntil { return false }
+        return true
+    }
+
     public mutating func recordAttempt(at date: Date) { lastAttempt = date }
 
     public mutating func recordSuccess(at date: Date) {
