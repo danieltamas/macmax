@@ -96,26 +96,27 @@ struct AboutPane: View {
         VStack(alignment: .leading, spacing: 22) {
             PaneHeader(pane: .about, title: "About MacMax", detail: "Who makes it, where it lives, and which build this is.")
             Bezel {
-                HStack(alignment: .center, spacing: 16) {
-                    Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 64, height: 64)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("MacMax").font(.system(size: 18, weight: .semibold)).foregroundStyle(Theme.textPrimary)
-                        Text(Self.versionLine).font(.system(size: 12, design: .monospaced)).foregroundStyle(Theme.textSecondary)
-                            .textSelection(.enabled)
-                        Text(standingText).font(.system(size: 11.5)).foregroundStyle(standingColor)
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(alignment: .center, spacing: 16) {
+                        Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 64, height: 64)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("MacMax").font(.system(size: 18, weight: .semibold)).foregroundStyle(Theme.textPrimary)
+                            Text(Self.versionLine).font(.system(size: 12, design: .monospaced)).foregroundStyle(Theme.textSecondary)
+                                .textSelection(.enabled)
+                            Text(standingText).font(.system(size: 11.5)).foregroundStyle(standingColor)
+                        }
+                        Spacer()
                     }
-                    Spacer()
-                }
-                if let note = updateNote { Text(note).font(.meta).foregroundStyle(Theme.warn).padding(.horizontal, 16).padding(.bottom, 12) }
-                HStack(spacing: 8) {
-                    if let version = model.updateVersion {
-                        PillButton(title: model.updateState.isUpdating ? "Updating..." : "Update to \(version)", symbol: "arrow.down.circle",
-                                   prominent: true, disabled: model.updateState.isUpdating) { model.installUpdate() }
+                    if let note = updateNote { Text(note).font(.meta).foregroundStyle(Theme.warn).fixedSize(horizontal: false, vertical: true) }
+                    HStack(spacing: 8) {
+                        if let version = model.updateVersion {
+                            PillButton(title: model.updateState.isUpdating ? "Updating..." : "Update to \(version)", symbol: "arrow.down.circle",
+                                       prominent: true, disabled: model.updateState.isUpdating) { model.installUpdate() }
+                        }
+                        PillButton(title: "Check again", symbol: "arrow.clockwise", prominent: false,
+                                   disabled: model.releaseCheck.isChecking) { model.checkForUpdate() }
                     }
-                    PillButton(title: "Check again", symbol: "arrow.clockwise", prominent: false,
-                               disabled: model.releaseCheck.isChecking) { model.checkForUpdate() }
                 }
-                .padding(.horizontal, 16).padding(.bottom, 16)
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
