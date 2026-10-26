@@ -153,7 +153,9 @@ Repo root; `curl -fsSL https://raw.githubusercontent.com/danieltamas/macmax/main
   `/Applications/MacMax.app` or `~/Applications/MacMax.app` and `behind` a valid tag (a copy run
   from Downloads or a build folder is never replaced). The login item follows the same rule. It runs the bundled installer: executable
   `/bin/bash`, argv `[<bundle>/Contents/Resources/install.sh]`, environment
-  `{MACMAX_VERSION: X.Y.Z, PATH: /usr/bin:/bin:/usr/sbin:/sbin}`. The installer outlives the app,
+  `{MACMAX_VERSION: X.Y.Z, MACMAX_INSTALL_ROOT: <folder of the running copy>, HOME, PATH: /usr/bin:/bin:/usr/sbin:/sbin}`
+  (the installer replaces the copy that is running, and `set -u` needs HOME). If it ends while the app is
+  still running, About shows the log's last line and a later press may try again. The installer outlives the app,
   stops it, swaps, reopens. Shows "Updating..." at once; the state lives in the store-level
   `Updater` singleton.
 - **"Install updates automatically"** (Settings > General, off by default, offered only on path B):

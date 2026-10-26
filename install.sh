@@ -3,6 +3,7 @@
 #
 #   install.sh                                the latest release (MACMAX_VERSION=X.Y.Z pins one)
 #   install.sh --app <path to MacMax.app>     a local build (scripts/install-from-source.sh)
+#   install.sh --uninstall [--purge]          remove the app and the command; --purge also removes ~/.macmax
 #
 # A release is downloaded with its SHA256SUMS and installed only when the checksum matches.
 # Everything runs from main, called on the last line: a download cut short defines nothing and
@@ -135,10 +136,36 @@ cleanup() {
   rm -f "$cli_link.new"
 }
 
+# Removes MacMax.app from both places it can live and the macmax command (only when it is ours).
+# The history in ~/.macmax stays unless --purge.
+uninstall() {
+  local purge=$1 root
+  check_cli_slot
+  for root in /Applications "$HOME/Applications"; do
+    [[ -d $root/MacMax.app ]] || continue
+    # Only our bundle is removed: another app that happens to be named MacMax.app is somebody's file.
+    [[ $(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$root/MacMax.app/Contents/Info.plist" 2>/dev/null) == ro.danieltamas.macmax ]] \
+      || fail "$root/MacMax.app is not the MacMax app: not removing it"
+    stop_running "$root/MacMax.app" || fail "could not quit the running MacMax: quit it and run this again"
+    rm -rf "$root/MacMax.app" || fail "could not remove $root/MacMax.app"
+  done
+  rm -f "$cli_link"
+  if ((purge)); then rm -rf "$HOME/.macmax"; fi
+  echo "Removed MacMax."
+  ((purge)) || echo "Your history is kept in ~/.macmax; remove it with: rm -rf ~/.macmax"
+  echo "If you connected an agent, also run: claude mcp remove macmax"
+}
+
 main() {
   [[ $(uname -s) == Darwin ]] || fail "MacMax runs on macOS only"
   (($(sw_vers -productVersion | cut -d. -f1) >= 14)) || fail "MacMax needs macOS 14 or newer"
   local app
+  if [[ ${1:-} == --uninstall && ( $# -eq 1 || ( $# -eq 2 && ${2:-} == --purge ) ) ]]; then
+    take_lock
+    trap cleanup EXIT
+    uninstall $(($# == 2))
+    return
+  fi
   if [[ ${1:-} == --app && -d ${2:-} ]]; then
     app=$2
   elif [[ $# -eq 0 ]]; then
@@ -146,7 +173,7 @@ main() {
     trap cleanup EXIT
     download_release "$(release_version)" "$work"
   else
-    fail "usage: install.sh [--app <path to MacMax.app>]"
+    fail "usage: install.sh [--app <path to MacMax.app> | --uninstall [--purge]]"
   fi
   [[ -x $app/Contents/MacOS/MacMax && -x $app/Contents/Resources/macmax ]] || fail "$app is not a MacMax.app"
 

@@ -34,6 +34,17 @@ enum ScreenshotRender {
             let cleaned = DemoStore.model(stress: stress)
             try write(VStack(spacing: 14) { JustMovedCard(model: cleaned); LastCleanupsCard(model: cleaned) }
                 .padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("cleanup-results"))
+            try write(LargeFoldersCard(model: DemoStore.model(stress: stress)).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("large-folders"))
+            let asking = DemoStore.model(stress: stress)
+            asking.fullDiskAccess = .unknown
+            try write(AccessPrompt(model: asking).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("access-prompt"))
+            let left = DemoStore.model(stress: stress), right = DemoStore.model(stress: stress)
+            right.tab = .network
+            right.window = .hour
+            try write(HStack(alignment: .top, spacing: 22) {
+                PanelView(model: left).frame(height: 780).clipShape(RoundedRectangle(cornerRadius: 22)).shadow(color: .black.opacity(0.5), radius: 18, y: 8)
+                PanelView(model: right).frame(height: 780).clipShape(RoundedRectangle(cornerRadius: 22)).shadow(color: .black.opacity(0.5), radius: 18, y: 8)
+            }.padding(.horizontal, 48).padding(.vertical, 40).background(Backdrop()), to: url("hero"))
             for range in [HistoryRange.hour, .week] {
                 let model = DemoStore.model(stress: stress)
                 model.tab = .history

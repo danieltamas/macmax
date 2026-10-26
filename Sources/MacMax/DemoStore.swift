@@ -54,6 +54,14 @@ enum DemoStore {
         let base = Int64(now.timeIntervalSince1970) - 7_200
         model.lastCleanups += (0 ..< 4).map { ActionRow(ts: base - Int64($0), kind: "cleanup", target: "/Users/example/Library/Logs/run\($0).log", result: "trashed", detail: "old_logs, 3 MB") }
         model.config.protectedPaths = ["/Users/example/Projects"]
+        model.fullDiskAccess = .granted
+        model.notifications = .allowed
+        model.largeItems = [
+            LargeItem(path: "/Users/example/Library/Developer/Xcode/iOS DeviceSupport", bytes: 14_200_000_000, modified: now.addingTimeInterval(-86_400 * 40), isProtected: false),
+            LargeItem(path: "/Users/example/Movies/Screen Recordings", bytes: 9_800_000_000, modified: now.addingTimeInterval(-86_400 * 12), isProtected: false),
+            LargeItem(path: "/Users/example/Projects/northwind", bytes: 6_100_000_000, modified: now.addingTimeInterval(-3_600), isProtected: true),
+            LargeItem(path: "/Users/example/Library/Containers/ro.example.relay", bytes: 3_400_000_000, modified: now.addingTimeInterval(-86_400 * 3), isProtected: false),
+        ]
         return model
     }
 
