@@ -38,7 +38,7 @@ enum ScreenshotRender {
             try write(LargeFoldersCard(model: DemoStore.model(stress: stress)).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("large-folders"))
             try write(StartupCard(model: DemoStore.model(stress: stress)).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("background-items"))
             try write(StartupCard(model: DemoStore.model(stress: stress), open: ["/Users/example/Library/LaunchAgents/ro.example.relay.helper.plist"]).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("background-item-detail"))
-            try write(AppUninstallCard(model: DemoStore.model(stress: stress), selected: "/Applications/Relay Chat.app").padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("uninstall-app"))
+            try write(AppUninstallCard(model: DemoStore.model(stress: stress), selected: "/Applications/Relay Chat.app").padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("uninstall-apps"))
             let moving = DemoStore.model(stress: stress)
             moving.cleanupMoving = true
             moving.cleanupProgress = (3, 12, "/Users/example/Library/Caches/ro.example.pixel")

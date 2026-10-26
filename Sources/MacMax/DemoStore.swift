@@ -78,6 +78,7 @@ enum DemoStore {
             relay,
             InstalledApp(path: "/Applications/Tidal Notes.app", name: "Tidal Notes", bundleID: "ro.example.notes", version: "1.7.3", bytes: 96_000_000),
             InstalledApp(path: "/Applications/Orbit Calendar.app", name: "Orbit Calendar", bundleID: "ro.example.orbit", version: "8.0", bytes: 71_000_000),
+            InstalledApp(path: "/Applications/Peek.app", name: "Peek", bundleID: "com.apple.example.peek", version: "3.1", bytes: 12_000_000),
         ]
         model.batteryStatus = .ok(BatteryStatus(chargePercent: 64, powerSource: .ac, isCharging: true), source: "IOPS", at: now)
         model.batteryHealth = .ok(BatteryHealth(cycleCount: 612, designCycleCount: 1000, maximumCapacityPercent: 87, temperatureCelsius: 31.4, condition: .normal), source: "AppleSmartBattery", at: now)

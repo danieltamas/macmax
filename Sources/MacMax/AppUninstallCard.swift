@@ -29,7 +29,7 @@ struct AppUninstallCard: View {
                     OperationProgress(text: "Stopping what \(model.uninstalledName ?? "the app") still runs in the background...")
                 } else if let progress = model.uninstallProgress {
                     OperationProgress(text: "Moving \(min(progress.done + 1, progress.total)) of \(progress.total) to the Trash", fraction: Double(progress.done) / Double(max(progress.total, 1)))
-                } else if !model.uninstallResults.isEmpty { results }
+                } else if !model.uninstallResults.isEmpty, !isListed(model.uninstallResults.first?.path) { results }
                 if let apps = model.installedApps { list(apps) }
                 if !model.installedAppsState.isLoading {
                     PillButton(title: model.installedApps == nil ? "Look at my apps" : "Read again", symbol: "magnifyingglass", prominent: false) { model.scanInstalledApps() }
@@ -100,6 +100,7 @@ struct AppUninstallCard: View {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(Redaction.sanitizeText(app.name)).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textPrimary).lineLimit(1)
                     subtitle(app).font(.system(size: 11)).foregroundStyle(Theme.textTertiary).lineLimit(1)
+                    if let reason = Self.unavailable(app) { Text("Not available: \(reason)").font(.system(size: 11)).foregroundStyle(Theme.warn).lineLimit(2).fixedSize(horizontal: false, vertical: true) }
                 }
                 Spacer(minLength: 4)
                 Text(app.bytes.map { CompactFormat.bytes(UInt64(max(0, $0))) } ?? (model.measuringApps.contains(app.path) ? "Measuring..." : "unknown")).font(.system(size: 11, weight: .medium)).monospacedDigit()
@@ -111,7 +112,15 @@ struct AppUninstallCard: View {
 
     @ViewBuilder private func detail(_ app: InstalledApp) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            if model.leftoversLoading.contains(app.path) || model.appLeftovers[app.path] == nil {
+            if let reason = Self.unavailable(app) {
+                Text("MacMax will not uninstall \(app.name): \(reason).").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.warn)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if model.uninstallResults.first?.path == app.path, !model.uninstallResults.isEmpty {
+                results
+            }
+            if Self.unavailable(app) != nil {
+                EmptyView()
+            } else if model.leftoversLoading.contains(app.path) || model.appLeftovers[app.path] == nil {
                 OperationProgress(text: "Looking for what \(app.name) left behind...")
             } else {
                 let leftovers = model.appLeftovers[app.path] ?? []
@@ -193,8 +202,12 @@ struct AppUninstallCard: View {
         selected = app.path
         excluded = []
         added = []
-        model.loadLeftovers(app)
+        if Self.unavailable(app) == nil { model.loadLeftovers(app) }
     }
+
+    private func isListed(_ path: String?) -> Bool { model.installedApps?.contains { $0.path == path } == true }
+
+    private static func unavailable(_ app: InstalledApp) -> String? { AppUninstallPolicy.unavailable(for: app, home: NSHomeDirectory()) }
 
     private func chosenLeftover(_ leftover: Leftover) -> Bool {
         leftover.match == .bundleID ? !excluded.contains(leftover.path) : added.contains(leftover.path)

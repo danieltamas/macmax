@@ -10,14 +10,26 @@ public enum AppUninstallPolicy {
         if running.names.contains(folderName) || running.names.contains(app.name) {
             return "\(app.name) is closed but still has programs running in the background. Stop them in the Apps tab, then try again"
         }
+        return unavailable(for: app, home: home)
+    }
+
+    /// What is true of the app itself, whatever runs: Apple's, MacMax's, an odd id, or the wrong folder. Known as soon as the
+    /// app is listed, so the card can say it on the app's own row instead of after a press.
+    public static func unavailable(for app: InstalledApp, home: String) -> String? {
         if app.bundleID.hasPrefix("com.apple.") { return "it is an Apple app" }
         if app.bundleID.hasPrefix("ro.danieltamas.macmax") { return "it is MacMax itself" }
-        guard CleanupPolicy.isBundleID(app.bundleID) else { return "its bundle id is not a normal app id" }
+        guard isUninstallableBundleID(app.bundleID) else { return "its bundle id is not a normal app id" }
         guard app.path.hasSuffix(".app") else { return "it is not an app folder" }
         let parent = (app.path as NSString).deletingLastPathComponent
         let allowed = ["/Applications", (CleanupPolicy.canonical(home) ?? home) + "/Applications"]
         guard allowed.contains(CleanupPolicy.canonical(parent) ?? parent) else { return "it is not directly in an Applications folder" }
         return nil
+    }
+
+    /// Reverse-DNS, with one allowance: a space inside a label (Tor Browser's id is "org.mozilla.tor browser"). The id only
+    /// ever becomes one path component, so a space cannot widen what may be moved.
+    static func isUninstallableBundleID(_ id: String) -> Bool {
+        !id.contains("  ") && CleanupPolicy.isBundleID(id.replacingOccurrences(of: " ", with: "-"))
     }
 }
 
