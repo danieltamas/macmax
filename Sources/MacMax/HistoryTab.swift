@@ -70,6 +70,11 @@ struct HistoryCard: View {
     let style: HistoryStyle
     let points: [HistoryPoint]
 
+    /// Where the pointer is over this chart: a local readout that moves with it. Only a click (the selection) loads the apps behind a moment.
+    @State private var hoverTS: Int64?
+    /// When the readout last moved: a 90-day chart has a bucket per pixel, so moves are paced to keep the chart from redrawing every frame.
+    @State private var lastHoverMove = HoverClock()
+
     private var selection: HistorySelection? { model.historySelection?.metric == style.metric ? model.historySelection : nil }
     private var latest: Double? { points.last(where: { $0.value != nil })?.value }
     private var peak: Double? { points.compactMap(\.value).max() }
@@ -85,6 +90,7 @@ struct HistoryCard: View {
                     }
                 }
                 chart.frame(height: 96)
+                readout
                 if !appSeries.isEmpty { legend }
                 if let selection { holders(selection) }
             }
@@ -142,8 +148,8 @@ struct HistoryCard: View {
         return Chart {
             appLines(color)
             totalLine(color)
-            if let selection {
-                RuleMark(x: .value("Selected", Date(timeIntervalSince1970: TimeInterval(selection.ts))))
+            if let marked = hoverTS ?? selection?.ts {
+                RuleMark(x: .value("Selected", Date(timeIntervalSince1970: TimeInterval(marked))))
                     .foregroundStyle(Theme.textTertiary).lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
             }
         }
@@ -162,20 +168,51 @@ struct HistoryCard: View {
             }
         }
         .chartXScale(range: .plotDimension(startPadding: 6, endPadding: 30))
-        // A press, not a hover: chartXSelection follows the pointer, and the readout it opens changes the card's height, so
-        // every card under a scrolling pointer jumped.
+        // The readout follows the pointer without changing the card's height (it always has its row), so nothing under a
+        // scrolling pointer moves; a click pins the moment and opens the apps behind it.
         .chartOverlay { proxy in
             GeometryReader { geometry in
                 Rectangle().fill(.clear).contentShape(Rectangle())
+                    .onContinuousHover { phase in
+                        switch phase {
+                        case let .active(location):
+                            guard lastHoverMove.allows(), let ts = Self.bucket(proxy, geometry, location.x, model.historyRange), ts != hoverTS
+                            else { return }
+                            hoverTS = ts
+                        case .ended: hoverTS = nil
+                        }
+                    }
                     .gesture(SpatialTapGesture().onEnded { tap in
-                        guard let frame = proxy.plotFrame,
-                              let date: Date = proxy.value(atX: tap.location.x - geometry[frame].origin.x) else { return }
-                        let step = model.historyRange.stepSeconds
-                        let ts = Int64(date.timeIntervalSince1970) / step * step
+                        guard let ts = Self.bucket(proxy, geometry, tap.location.x, model.historyRange) else { return }
                         model.selectHistory(HistorySelection(metric: style.metric, ts: ts))
                     })
+                    .pointingHandCursor()
             }
         }
+    }
+
+    private static func bucket(_ proxy: ChartProxy, _ geometry: GeometryProxy, _ x: CGFloat, _ range: HistoryRange) -> Int64? {
+        guard let frame = proxy.plotFrame, let date: Date = proxy.value(atX: x - geometry[frame].origin.x) else { return nil }
+        let step = range.stepSeconds
+        return Int64(date.timeIntervalSince1970) / step * step
+    }
+
+    /// The moment under the pointer (or the pinned one) and its value; a fixed row, so the card keeps its height.
+    private var readout: some View {
+        let ts = hoverTS ?? selection?.ts
+        return HStack {
+            if let ts {
+                Text(Date(timeIntervalSince1970: TimeInterval(ts)), format: model.historyRange.pointFormat)
+                    .font(.meta).foregroundStyle(Theme.textSecondary)
+                Spacer(minLength: 6)
+                Text(points.first { $0.ts == ts }?.value.map(style.format) ?? "no reading")
+                    .font(.meta.monospacedDigit()).foregroundStyle(Theme.textPrimary)
+            } else {
+                Text("Hover for a value, click for the apps behind it.").font(.meta).foregroundStyle(Theme.textTertiary)
+                Spacer(minLength: 0)
+            }
+        }
+        .lineLimit(1).frame(height: 14)
     }
 
     @ViewBuilder
@@ -183,12 +220,6 @@ struct HistoryCard: View {
         VStack(alignment: .leading, spacing: 4) {
             Rectangle().fill(Theme.hairline).frame(height: 0.5)
             let value = points.first { $0.ts == selection.ts }?.value
-            HStack {
-                Text(Date(timeIntervalSince1970: TimeInterval(selection.ts)), format: model.historyRange.pointFormat)
-                    .font(.meta).foregroundStyle(Theme.textSecondary)
-                Spacer(minLength: 6)
-                Text(value.map(style.format) ?? "no reading").font(.meta.monospacedDigit()).foregroundStyle(Theme.textPrimary)
-            }
             if case let .failed(collector, reason) = model.historyHoldersState {
                 Text("\(collector) is unavailable: \(reason)").font(.meta).foregroundStyle(Theme.unknown)
             } else if case let .loading(text) = model.historyHoldersState {
@@ -243,5 +274,17 @@ extension HistoryRange {
         case .hour, .day: .dateTime.hour().minute()
         case .week, .quarter: .dateTime.month(.abbreviated).day().hour().minute()
         }
+    }
+}
+
+/// Lets a hover update through at most every 40 ms.
+private final class HoverClock {
+    private var last = Date.distantPast
+
+    func allows() -> Bool {
+        let now = Date()
+        guard now.timeIntervalSince(last) >= 0.04 else { return false }
+        last = now
+        return true
     }
 }

@@ -22,7 +22,7 @@ struct NetworkPane: View {
                     if let problem { ProblemText(text: problem) }
                     Spacer()
                     if model.config.ipEndpoint != nil {
-                        LinkButton(title: "Use the default") { model.change { $0.ipEndpoint = nil }; endpoint = ""; problem = nil }
+                        ChipButton(title: "Use the default") { model.change { $0.ipEndpoint = nil }; endpoint = ""; problem = nil }
                     }
                 }
             }

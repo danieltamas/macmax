@@ -58,7 +58,7 @@ enum PanelData {
     static func kind(key: String, name: String) -> AppKind {
         let lowered = name.lowercased()
         if lowered.contains("docker") || key.lowercased().contains("docker") { return .docker }
-        if lowered == "claude" || lowered == "claude code" { return .claudeCode }
+        if lowered == "claude" || lowered.hasPrefix("claude code") || key.hasPrefix("claude-code:") { return .claudeCode }
         return key.hasSuffix(".app") || key.contains(".") && !key.contains("/") ? .app : .background
     }
 
@@ -89,8 +89,8 @@ enum PanelData {
     static func interfaces(_ row: SystemSampleRow, each: [InterfaceRate]) -> [InterfaceLine] {
         guard let down = row.netInBps, let up = row.netOutBps else { return [] }
         let lines = each.sorted { ($1.bytesInPerSecond + $1.bytesOutPerSecond, $0.name) < ($0.bytesInPerSecond + $0.bytesOutPerSecond, $1.name) }
-            .map { InterfaceLine(name: $0.name, inPerSecond: $0.bytesInPerSecond, outPerSecond: $0.bytesOutPerSecond) }
-        return [InterfaceLine(name: "All interfaces", inPerSecond: down, outPerSecond: up)] + lines
+            .map { InterfaceLine(name: InterfaceNaming.title($0.name), bsd: $0.name, inPerSecond: $0.bytesInPerSecond, outPerSecond: $0.bytesOutPerSecond) }
+        return [InterfaceLine(name: "Total", inPerSecond: down, outPerSecond: up)] + lines
     }
 
     static func nowTraffic(_ rows: [AppSampleRow], names: [String: String], interval: Double) -> [TrafficLine] {
@@ -106,7 +106,9 @@ enum PanelData {
         let services = identity.vpnServices.value ?? []
         let connected = services.filter { $0.state == .connected }
         let listed = connected.isEmpty ? Array(services.prefix(1)) : connected
-        let vpn = connected.count == 1 ? connected.first : nil
+        // Named only when the default route leaves through that service's own tunnel; anything else is "a VPN".
+        let route = identity.defaultRoute.value?.interface
+        let vpn = connected.first { $0.tunnel != nil && $0.tunnel == route }
         var card = IdentityCard(verdict: identity.verdict, publicIP: identity.publicIP.value?.address,
                                 publicCountry: identity.publicIP.value?.country, ispIP: identity.ispIP.value?.address,
                                 ispCountry: identity.ispIP.value?.country, vpnName: vpn?.label, vpnState: vpn?.state.rawValue,

@@ -92,7 +92,7 @@ private struct ThresholdField: View {
                     .frame(width: SettingsMetrics.unitWidth, alignment: .leading)
                 Group {
                     if model.config.thresholds[threshold.key] != nil {
-                        LinkButton(title: "Reset") {
+                        ChipButton(title: "Reset") {
                             model.change { $0.thresholds[threshold.key] = nil }
                             text = Self.text(threshold.defaultValue)
                             problem = nil

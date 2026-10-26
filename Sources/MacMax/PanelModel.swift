@@ -72,9 +72,12 @@ struct IdentityCard: Equatable {
 
 struct InterfaceLine: Equatable, Identifiable {
     let name: String
+    /// The kernel name (en0, utun7); nil for the total.
+    var bsd: String?
     let inPerSecond: Double
     let outPerSecond: Double
-    var id: String { name }
+    var id: String { bsd ?? name }
+    var isActive: Bool { inPerSecond + outPerSecond > 0 }
 }
 
 struct TrafficLine: Equatable, Identifiable {

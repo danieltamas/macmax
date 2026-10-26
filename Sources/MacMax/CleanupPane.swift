@@ -57,7 +57,7 @@ struct CleanupPane: View {
                             confirming = false
                             model.moveToTrash(model.cleanupPreview?.candidates ?? [])
                         }
-                        LinkButton(title: "Cancel", tint: Theme.textTertiary) { confirming = false }
+                        ChipButton(title: "Cancel") { confirming = false }
                     } else {
                         PillButton(title: total > 0 ? "Move \(CompactFormat.bytes(UInt64(total))) to Trash" : "Nothing to move", symbol: "trash") {
                             confirming = true

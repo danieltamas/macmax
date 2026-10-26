@@ -28,8 +28,8 @@ enum DemoStore {
         model.expandedApp = "ro.example.atlas"
         model.processes = ["ro.example.atlas": processes(stress: stress)]
         model.topConsumers = PanelData.topConsumers(model.apps)
-        model.interfaces = [InterfaceLine(name: "Wi-Fi (en0)", inPerSecond: stress ? 9_437_184 : 1_258_291, outPerSecond: 213_000),
-                            InterfaceLine(name: "Outline (utun4)", inPerSecond: 1_100_000, outPerSecond: 190_000)]
+        model.interfaces = [InterfaceLine(name: "Wi-Fi", bsd: "en0", inPerSecond: stress ? 9_437_184 : 1_258_291, outPerSecond: 213_000),
+                            InterfaceLine(name: "VPN or system tunnel", bsd: "utun4", inPerSecond: 1_100_000, outPerSecond: 190_000)]
         model.window = .hour
         model.traffic = traffic(stress: stress, longName: long)
         model.trafficState = .ready
@@ -94,7 +94,7 @@ enum DemoStore {
             AppRow(id: "ro.example.northwind", name: stress ? longName : "Northwind IDE", bundleID: "ro.example.northwind", pids: [410],
                    processCount: 9, cpuPercent: stress ? 1_234 : 61, footprintBytes: 2_100 * 1_048_576, diskBytesPerSecond: 40_000,
                    networkBytesPerSecond: 12_000),
-            AppRow(id: "claude", name: "Claude Code", kind: .claudeCode, pids: [520], processCount: 6, cpuPercent: 4,
+            AppRow(id: "claude", name: "Claude Code - atlas", kind: .claudeCode, pids: [520], processCount: 6, cpuPercent: 4,
                    footprintBytes: 1_300 * 1_048_576, diskBytesPerSecond: 2_000, networkBytesPerSecond: 90_000),
             AppRow(id: "ro.example.docker", name: "Docker", kind: .docker, pids: [600], processCount: 3, cpuPercent: 9,
                    footprintBytes: 4_000 * 1_048_576, diskBytesPerSecond: 800_000, networkBytesPerSecond: 20_000),

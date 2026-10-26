@@ -25,7 +25,7 @@ private struct PressBody: View {
         let pressed = configuration.isPressed && isEnabled
         configuration.label
             .contentShape(hit)
-            .brightness(hovering && isEnabled && !pressed ? lift : 0)
+            .overlay { hit.fill(Color.white.opacity(hovering && isEnabled && !pressed ? lift * 0.6 : 0)).allowsHitTesting(false) }
             .opacity(pressed ? 0.72 : 1)
             .scaleEffect(pressed ? scale : 1)
             .animation(Motion.snappy, value: pressed)
@@ -95,6 +95,27 @@ struct LinkButton: View {
                 .padding(.horizontal, 6).padding(.vertical, 5)
         }
         .buttonStyle(PressStyle(scale: 0.97))
+    }
+}
+
+/// The compact button for an action inside a row or card: a bordered capsule, so it reads as a button. Destructive
+/// ones (End, Quit, Stop) are red. Plain text in the accent color is only for a link that goes somewhere (LinkButton).
+struct ChipButton: View {
+    let title: String
+    var destructive = false
+    let action: () -> Void
+
+    var body: some View {
+        let tint = destructive ? Theme.crit : Theme.textPrimary
+        Button(action: action) {
+            Text(title).font(.system(size: 11, weight: .semibold)).foregroundStyle(tint).lineLimit(1)
+                .padding(.horizontal, 11).padding(.vertical, 5)
+                .background(tint.opacity(destructive ? 0.12 : 0.07), in: Capsule())
+                .overlay(Capsule().strokeBorder(tint.opacity(destructive ? 0.4 : 0.14), lineWidth: 0.5))
+                .contentShape(Capsule())
+                .fixedSize()
+        }
+        .buttonStyle(PressStyle(scale: 0.96, hit: AnyShape(Capsule())))
     }
 }
 

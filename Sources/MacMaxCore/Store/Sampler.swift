@@ -49,9 +49,10 @@ public actor Sampler {
                 return (sample.identity, ProcessDiskCounters(readBytes: read, writeBytes: write))
             }, uniquingKeysWith: { first, _ in first }), uptimeNanoseconds: uptime)
         let perProcessNetwork = networkSnapshot.processes.value ?? [:]
-        let groups = AppGrouping.group(samples.map {
+        let groups = AppGrouping.nameSessions(AppGrouping.group(samples.map {
             ProcessRow(pid: $0.identity.pid, parentPid: $0.parentPid, path: $0.path.value, name: $0.name)
-        })
+        }), folders: Dictionary(samples.compactMap { sample in sample.cwd.value.map { (sample.identity.pid, $0) } },
+                                uniquingKeysWith: { first, _ in first }))
         let measurements = samples.compactMap { sample -> ProcessMeasurement? in
             guard let app = groups[sample.identity.pid] else { return nil }
             let rate = rates[sample.identity] ?? nil

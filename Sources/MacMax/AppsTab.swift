@@ -63,7 +63,7 @@ struct AppsTab: View {
                 AppRowView(model: model, row: row).riseIn(index)
             }
             if page.remaining > 0 {
-                LinkButton(title: "Show \(min(page.remaining, AppListing.pageSize)) more") { model.shown += AppListing.pageSize }
+                ChipButton(title: "Show \(min(page.remaining, AppListing.pageSize)) more") { model.shown += AppListing.pageSize }
             }
         }
     }
@@ -143,22 +143,26 @@ struct AppRowView: View {
                 HStack(spacing: 8) {
                     Text("pid \(line.pid)").font(.meta.monospacedDigit()).foregroundStyle(Theme.textTertiary).lineLimit(1)
                     if line.isTranslated { Chip(text: "Rosetta", color: Theme.warn, style: .outline) }
+                    Spacer(minLength: 4)
+                    if line.startUs != nil { lineActions(line, in: row) }
                 }
                 if let command = line.commandLine {
                     Text(command).font(.system(size: 10.5, design: .monospaced)).foregroundStyle(Theme.textTertiary)
                         .lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
                 }
-                if line.startUs != nil {
-                    HStack(spacing: 12) {
-                        ActionControl(model: model, action: .endProcess(line, force: false), forced: .endProcess(line, force: true),
-                                      title: "End", forceTitle: "Force end")
-                        if row.kind == .claudeCode {
-                            ActionControl(model: model, action: .endSession(line, force: false), forced: .endSession(line, force: true),
-                                          title: "End session", forceTitle: "Force end session")
-                        }
-                    }
-                }
             }
+        }
+    }
+
+    /// End (and End session) sit on the pid line, at the right edge under the memory figure.
+    private func lineActions(_ line: ProcessLine, in row: AppRow) -> some View {
+        HStack(spacing: 8) {
+            if row.kind == .claudeCode {
+                ActionControl(model: model, action: .endSession(line, force: false), forced: .endSession(line, force: true),
+                              title: "End session", forceTitle: "Force end session")
+            }
+            ActionControl(model: model, action: .endProcess(line, force: false), forced: .endProcess(line, force: true),
+                          title: "End", forceTitle: "Force end")
         }
     }
 }

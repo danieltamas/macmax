@@ -11,12 +11,18 @@ public struct VPNService: Sendable, Equatable {
     public let state: VPNState
     /// A friendly label for known providers (Outline, Tailscale, ...), else the quoted name.
     public let label: String
+    /// The service's id in `scutil --nc`, used to ask which tunnel interface it owns.
+    public let serviceID: String?
+    /// The tunnel interface (utun7) a connected service owns, from `scutil --nc status`; nil when it was not read.
+    public var tunnel: String?
 
-    public init(name: String, bundleID: String, state: VPNState, label: String) {
+    public init(name: String, bundleID: String, state: VPNState, label: String, serviceID: String? = nil, tunnel: String? = nil) {
         self.name = name
         self.bundleID = bundleID
         self.state = state
         self.label = label
+        self.serviceID = serviceID
+        self.tunnel = tunnel
     }
 }
 

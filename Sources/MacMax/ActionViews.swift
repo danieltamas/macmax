@@ -14,16 +14,17 @@ struct ActionControl: View {
 
     var body: some View {
         HStack(spacing: 8) {
+            if let state {
+                Text(state.text).foregroundStyle(color(state)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.trailing)
+            }
             switch state {
             case .asked:
-                LinkButton(title: forceTitle, tint: Theme.crit) { model.perform(forced) }
+                ChipButton(title: forceTitle, destructive: true) { model.perform(forced) }
             case .working, .done:
                 EmptyView()
             default:
-                LinkButton(title: title) { model.perform(action) }
-            }
-            if let state {
-                Text(state.text).foregroundStyle(color(state)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                ChipButton(title: title, destructive: true) { model.perform(action) }
             }
         }
         .font(.meta)
@@ -47,7 +48,7 @@ struct ContainersList: View {
             HStack {
                 Eyebrow(text: "Containers")
                 Spacer(minLength: 6)
-                LinkButton(title: "Refresh") { model.loadContainers() }
+                ChipButton(title: "Refresh") { model.loadContainers() }
             }
             switch model.containersState {
             case let .loading(text): Text(text).font(.meta).foregroundStyle(Theme.textTertiary)
