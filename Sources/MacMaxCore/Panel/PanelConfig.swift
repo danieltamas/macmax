@@ -15,6 +15,8 @@ public struct PanelConfig: Codable, Equatable, Sendable {
     public var thresholds: [String: Double]
     public var disabledRules: [String]
     public var lookName: String?
+    /// Folders the user keeps out of cleanup, on top of the built-in protected list.
+    public var protectedPaths: [String] = []
 
     public static let `default` = PanelConfig(
         samplingSeconds: 10, menuBarText: .none, auditEveryHours: 4, auditOnCriticalPressure: true,
@@ -50,11 +52,12 @@ public struct PanelConfig: Codable, Equatable, Sendable {
         thresholds = try values.decodeIfPresent([String: Double].self, forKey: .thresholds) ?? [:]
         disabledRules = try values.decodeIfPresent([String].self, forKey: .disabledRules) ?? []
         lookName = try values.decodeIfPresent(String.self, forKey: .lookName)
+        protectedPaths = try values.decodeIfPresent([String].self, forKey: .protectedPaths) ?? []
     }
 
     private enum Key: String, CodingKey {
         case samplingSeconds, menuBarText, auditEveryHours, auditOnCriticalPressure, notifyOn, ipCheckEnabled
-        case ipEndpoint, thresholds, disabledRules, lookName
+        case ipEndpoint, thresholds, disabledRules, lookName, protectedPaths
     }
 
     /// Replaces every out-of-range value by something the app can run with.
@@ -67,6 +70,7 @@ public struct PanelConfig: Codable, Equatable, Sendable {
             guard entry.value.isFinite, let range = declared[entry.key] else { return }
             result[entry.key] = min(max(entry.value, range.lowerBound), range.upperBound)
         }
+        config.protectedPaths = Set(protectedPaths.filter { $0.hasPrefix("/") && !$0.contains("\0") }).sorted()
         let known = Set(RuleSet.all.map(\.id))
         config.disabledRules = Set(disabledRules).intersection(known).sorted()
         if let endpoint = ipEndpoint {

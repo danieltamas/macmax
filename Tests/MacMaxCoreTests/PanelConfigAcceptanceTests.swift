@@ -240,12 +240,28 @@ func configRoundTripAndEncodingShape() throws {
     #expect(Set(object.keys) == [
         "sampling_seconds", "menu_bar_text", "audit_every_hours", "audit_on_critical_pressure",
         "notify_on", "ip_check_enabled", "ip_endpoint", "thresholds", "disabled_rules", "look_name",
+        "protected_paths",
     ])
     let orderedKeys = object.keys.sorted()
     let positions = try orderedKeys.map { key in
         try #require(text.range(of: "\"\(key)\"")?.lowerBound)
     }
     #expect(positions == positions.sorted())
+}
+
+@Test("Protected cleanup paths are bounded, sorted, and persisted")
+func protectedPathsAreBoundedAndPersisted() throws {
+    #expect(PanelConfig.default.protectedPaths == [])
+
+    let temporary = try TemporaryPanelHome()
+    defer { temporary.remove() }
+    try writeJSON(["protected_paths": ["/b", "relative", "/a", "/b", ""]], to: temporary)
+    let store = ConfigStore(home: temporary.home)
+
+    #expect(try loadedConfig(from: store).protectedPaths == ["/a", "/b"])
+    let updated = try store.update { $0.protectedPaths.append("/c") }
+    #expect(updated.protectedPaths == ["/a", "/b", "/c"])
+    #expect(try loadedConfig(from: ConfigStore(home: temporary.home)).protectedPaths == ["/a", "/b", "/c"])
 }
 
 private extension JSONEncoder {

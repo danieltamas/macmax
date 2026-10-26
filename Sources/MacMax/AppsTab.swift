@@ -74,6 +74,9 @@ struct AppRowView: View {
     let model: PanelModel
     let row: AppRow
 
+    /// Both figure columns have one width in every row, so the numbers line up down the list.
+    private static let columnWidth: CGFloat = 64
+
     private var expanded: Bool { model.expandedApp == row.id }
 
     var body: some View {
@@ -82,7 +85,7 @@ struct AppRowView: View {
                 HStack(spacing: 10) {
                     AppIcon(bundleID: row.bundleID, fallback: symbol)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(row.name).font(.rowTitle).foregroundStyle(Theme.textPrimary).lineLimit(2)
+                        Text(row.name).font(.rowTitle).foregroundStyle(Theme.textPrimary).lineLimit(3)
                         Text("\(row.processCount) process\(row.processCount == 1 ? "" : "es")").font(.meta)
                             .foregroundStyle(Theme.textTertiary).lineLimit(1)
                     }
@@ -91,12 +94,14 @@ struct AppRowView: View {
                         Text(CompactFormat.percent(row.cpuPercent)).foregroundStyle(Theme.cpu)
                         Text(row.footprintBytes.map(CompactFormat.bytes) ?? "-").foregroundStyle(Theme.memory)
                     }
-                    .font(.system(size: 11.5, weight: .medium).monospacedDigit()).lineLimit(1).fixedSize()
+                    .font(.system(size: 11.5, weight: .medium).monospacedDigit()).lineLimit(1)
+                    .frame(width: Self.columnWidth, alignment: .trailing)
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(row.diskBytesPerSecond.map(CompactFormat.rate) ?? "-").foregroundStyle(Theme.disk)
                         Text(row.networkBytesPerSecond.map(CompactFormat.rate) ?? "-").foregroundStyle(Theme.netIn)
                     }
-                    .font(.system(size: 11.5, weight: .medium).monospacedDigit()).lineLimit(1).fixedSize()
+                    .font(.system(size: 11.5, weight: .medium).monospacedDigit()).lineLimit(1)
+                    .frame(width: Self.columnWidth, alignment: .trailing)
                 }
                 if expanded { details }
             }
@@ -119,6 +124,11 @@ struct AppRowView: View {
                 .font(.meta).foregroundStyle(Theme.textTertiary)
         }
         let lines = model.processes[row.id] ?? []
+        if row.kind == .app, row.bundleID != nil, lines.contains(where: { $0.startUs != nil }) {
+            ActionControl(model: model, action: .quit(row, force: false), forced: .quit(row, force: true),
+                          title: "Quit", forceTitle: "Force Quit")
+        }
+        if row.kind == .docker { ContainersList(model: model) }
         if lines.isEmpty {
             Text("No process detail kept for this app.").font(.meta).foregroundStyle(Theme.textTertiary)
         }
@@ -138,6 +148,16 @@ struct AppRowView: View {
                 if let command = line.commandLine {
                     Text(command).font(.system(size: 10.5, design: .monospaced)).foregroundStyle(Theme.textTertiary)
                         .lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                if line.startUs != nil {
+                    HStack(spacing: 12) {
+                        ActionControl(model: model, action: .endProcess(line, force: false), forced: .endProcess(line, force: true),
+                                      title: "End", forceTitle: "Force end")
+                        if row.kind == .claudeCode {
+                            ActionControl(model: model, action: .endSession(line, force: false), forced: .endSession(line, force: true),
+                                          title: "End session", forceTitle: "Force end session")
+                        }
+                    }
                 }
             }
         }

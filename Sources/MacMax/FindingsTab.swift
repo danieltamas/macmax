@@ -58,11 +58,48 @@ struct FindingCard: View {
                             .foregroundStyle(Theme.teal).fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer(minLength: 6)
+                    if let pill = FindingPill.of(finding.ruleID) {
+                        PillButton(title: pill.title, symbol: pill.symbol, prominent: false) { pill.run(model) }
+                    }
                     Button("Snooze 24 h") { model.snooze(finding.ruleID) }
                         .buttonStyle(PressStyle()).font(.meta).foregroundStyle(Theme.textTertiary).fixedSize()
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+}
+
+/// An action pill acts inside the app: it takes the user to where the finding can be dealt with.
+struct FindingPill {
+    let title: String
+    let symbol: String
+    let run: @MainActor (PanelModel) -> Void
+
+    static func of(_ ruleID: String) -> FindingPill? {
+        switch ruleID {
+        case "claude_stale":
+            FindingPill(title: "Show sessions", symbol: "terminal") { $0.show(.claudeCode) }
+        case "docker_hot_containers", "docker_vm_compressed":
+            FindingPill(title: "Show containers", symbol: "shippingbox") {
+                $0.show(.docker)
+                $0.loadContainers()
+            }
+        case "disk_free":
+            FindingPill(title: "Review cache cleanup", symbol: "trash") { $0.openSettings(.cleanup) }
+        default: nil
+        }
+    }
+}
+
+extension PanelModel {
+    /// Takes the user to the Apps tab with the first app of that kind open, so what the finding is about is on screen.
+    func show(_ kind: AppKind) {
+        filter = kind == .docker ? .docker : .claudeCode
+        tab = .apps
+        query = ""
+        shown = AppListing.pageSize
+        // The first row as the list shows it, so it is on the first page.
+        expandedApp = visibleApps.first { $0.kind == kind }?.id
     }
 }

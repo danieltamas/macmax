@@ -66,7 +66,7 @@ enum PanelData {
         Dictionary(grouping: rows, by: \.appKey).mapValues { group in
             group.sorted { ($1.cpu ?? -1, $0.pid) < ($0.cpu ?? -1, $1.pid) }.map {
                 ProcessLine(pid: $0.pid, name: $0.name, cpuPercent: $0.cpu, footprintBytes: $0.footprint.map { UInt64(max($0, 0)) },
-                            isTranslated: false, commandLine: nil)
+                            isTranslated: false, commandLine: nil, startUs: $0.startUs)
             }
         }
     }

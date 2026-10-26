@@ -61,29 +61,6 @@ struct NetworkPane: View {
     }
 }
 
-/// A pane whose feature belongs to a later unit: it says so, never pretends.
-private struct PendingCard: View {
-    let title: String
-    let detail: String
-    let note: String
-
-    var body: some View {
-        SettingsCard(title: title, detail: detail) {
-            Text(note).font(.meta).foregroundStyle(Theme.textTertiary)
-        }
-    }
-}
-
-struct CleanupPane: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            PaneHeader(pane: .cleanup, title: "Cleanup", detail: "Reclaim space from caches, always through the Trash.")
-            PendingCard(title: "Cleanup rules", detail: "What each rule removes and its current size.",
-                        note: "Cleanup is not available yet. Nothing is ever deleted without a press in the app.")
-        }
-    }
-}
-
 struct AgentPane: View {
     static let command = "claude mcp add macmax -- ~/.local/bin/macmax mcp"
 

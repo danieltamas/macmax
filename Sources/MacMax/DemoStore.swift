@@ -34,6 +34,15 @@ enum DemoStore {
         model.traffic = traffic(stress: stress, longName: long)
         model.trafficState = .ready
         model.samplerFailed = false
+        model.actionStates["end-302-2"] = .asked("Asked to end. Press again to force.")
+        model.cleanupPreview = cleanup()
+        model.lastCleanups = [
+            ActionRow(ts: Int64(now.timeIntervalSince1970) - 3_600, kind: "cleanup", target: "/Users/example/Library/Caches/ro.example.pixel",
+                      result: "trashed", detail: "app_caches, 1.2 GB"),
+            ActionRow(ts: Int64(now.timeIntervalSince1970) - 86_400, kind: "cleanup", target: "/Users/example/.npm/_cacache",
+                      result: "trashed", detail: "npm_cache, 640 MB"),
+        ]
+        model.config.protectedPaths = ["/Users/example/Projects"]
         return model
     }
 
@@ -98,11 +107,22 @@ enum DemoStore {
         ]
     }
 
+    private static func cleanup() -> CleanupPreview {
+        func item(_ rule: String, _ path: String, _ megabytes: Int64) -> CleanupCandidate {
+            CleanupCandidate(ruleID: rule, path: "/Users/example/" + path, bytes: megabytes * 1_048_576, device: 1, inode: UInt64(megabytes))
+        }
+        return CleanupPreview(candidates: [
+            item("app_caches", "Library/Caches/ro.example.pixel", 1_229), item("xcode_derived", "Library/Developer/Xcode/DerivedData/Northwind-abc", 2_480),
+            item("npm_cache", ".npm/_cacache", 640), item("homebrew_cache", "Library/Caches/Homebrew", 310),
+            item("old_logs", "Library/Logs/example.log", 24),
+        ], skipped: [CleanupSkip(path: "/Users/example/Library/Caches/Yarn", reason: "yarn is running")])
+    }
+
     private static func processes(stress: Bool) -> [ProcessLine] {
         [
-            ProcessLine(pid: 301, name: "Atlas Browser", cpuPercent: 8, footprintBytes: 640 * 1_048_576, isTranslated: false, commandLine: nil),
+            ProcessLine(pid: 301, name: "Atlas Browser", cpuPercent: 8, footprintBytes: 640 * 1_048_576, isTranslated: false, commandLine: nil, startUs: 1),
             ProcessLine(pid: 302, name: "Atlas Browser Helper (Renderer)", cpuPercent: 11, footprintBytes: 910 * 1_048_576, isTranslated: true,
-                        commandLine: "/Applications/Atlas Browser.app/Contents/MacOS/Helper --type=renderer --token [redacted]"),
+                        commandLine: "/Applications/Atlas Browser.app/Contents/MacOS/Helper --type=renderer --token [redacted]", startUs: 2),
         ]
     }
 

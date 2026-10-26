@@ -49,6 +49,8 @@ struct ProcessLine: Equatable, Identifiable {
     let footprintBytes: UInt64?
     let isTranslated: Bool
     let commandLine: String?
+    /// Start time in microseconds: with the pid it names this process and no later one. Nil means an action is not offered.
+    var startUs: Int64?
     var id: Int32 { pid }
 }
 
@@ -160,6 +162,24 @@ final class PanelModel {
     var loadConnections: (String) -> Void = { _ in }
     var snooze: (String) -> Void = { _ in }
     var openSettings: (SettingsPane) -> Void = { _ in }
+
+    // Actions
+    var actionStates: [String: ActionState] = [:]
+    var perform: (PanelAction) -> Void = { _ in }
+    var containers: [ContainerLine] = []
+    var containersState: SectionState = .ready
+    var loadContainers: () -> Void = {}
+
+    // Cleanup
+    var cleanupPreview: CleanupPreview?
+    var cleanupState: SectionState = .ready
+    var cleanupResults: [CleanupResult] = []
+    var cleanupMoving = false
+    var cleanupLogProblem: String?
+    var lastCleanups: [ActionRow] = []
+    var scanCleanup: () -> Void = {}
+    var moveToTrash: ([CleanupCandidate]) -> Void = { _ in }
+    var loadLastCleanups: () -> Void = {}
 
     // Settings
     var settingsPane: SettingsPane = .general
