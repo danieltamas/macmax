@@ -141,7 +141,7 @@ works with Outline, Tailscale, WireGuard and other VPNs.
 <table>
   <tr>
     <td width="50%" valign="top"><img src="docs/media/uninstall-app.png" alt="Uninstall apps: an app with the files it left behind and their sizes"></td>
-    <td width="50%" valign="top"><img src="docs/media/battery-and-heat.png" alt="Battery and heat: battery health, charge cycles, fan speeds and the hottest sensor"></td>
+    <td width="50%" valign="top"><img src="docs/media/battery-heat.png" alt="Battery and heat: battery health, charge cycles, fan speeds and the hottest sensor"></td>
   </tr>
   <tr>
     <td align="center"><b>Uninstall apps</b>: the app and what it left behind, to the Trash</td>

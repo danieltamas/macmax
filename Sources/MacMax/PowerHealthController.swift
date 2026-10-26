@@ -8,8 +8,11 @@ extension ActionController {
         guard !model.readingPower else { return }
         model.readingPower = true
         Task {
-            let (battery, sensors) = await Task.detached(priority: .utility) { (PowerHealthReader.batteryHealth(), PowerHealthReader.thermalSensors()) }.value
+            let (battery, status, sensors) = await Task.detached(priority: .utility) {
+                (PowerHealthReader.batteryHealth(), PowerHealthReader.batteryStatus(), PowerHealthReader.thermalSensors())
+            }.value
             model.batteryHealth = battery
+            model.batteryStatus = status
             model.thermalSensors = sensors
             model.readingPower = false
         }

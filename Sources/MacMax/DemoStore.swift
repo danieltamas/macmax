@@ -79,6 +79,7 @@ enum DemoStore {
             InstalledApp(path: "/Applications/Tidal Notes.app", name: "Tidal Notes", bundleID: "ro.example.notes", version: "1.7.3", bytes: 96_000_000),
             InstalledApp(path: "/Applications/Orbit Calendar.app", name: "Orbit Calendar", bundleID: "ro.example.orbit", version: "8.0", bytes: 71_000_000),
         ]
+        model.batteryStatus = .ok(BatteryStatus(chargePercent: 64, powerSource: .ac, isCharging: true), source: "IOPS", at: now)
         model.batteryHealth = .ok(BatteryHealth(cycleCount: 612, designCycleCount: 1000, maximumCapacityPercent: 87, temperatureCelsius: 31.4, condition: .normal), source: "AppleSmartBattery", at: now)
         model.thermalSensors = .ok(ThermalSensors(fans: [Fan(index: 0, rpm: 1_820, minimumRPM: 1_500, maximumRPM: 5_300), Fan(index: 1, rpm: 1_950, minimumRPM: 1_500, maximumRPM: 5_700)],
                                                   hottestCelsius: 58, hottestSensor: "Tp01", sensorCount: 24), source: "AppleSMC", at: now)

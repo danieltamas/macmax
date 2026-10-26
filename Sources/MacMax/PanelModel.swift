@@ -245,6 +245,7 @@ final class PanelModel {
     var appLastOpened: [String: Reading<Date>] = [:]
     var scanInstalledApps: () -> Void = {}
     var batteryHealth: Reading<BatteryHealth>?
+    var batteryStatus: Reading<BatteryStatus>?
     var thermalSensors: Reading<ThermalSensors>?
     var readPower: () -> Void = {}
     var readingPower = false

@@ -11,6 +11,9 @@ public enum PowerHealthReader {
         return BatteryHealthParser.parse(battery.properties, at: at)
     }
 
+    /// Charge, power source and charging state: what the battery is doing now, next to how worn it is.
+    public static func batteryStatus(at: Date = .now) -> Reading<BatteryStatus> { IOKitReadings.battery(at: at) }
+
     public static func thermalSensors(at: Date = .now) -> Reading<ThermalSensors> {
         switch SMCReader.readings(at: at) {
         case let .ok(values, _, _): return ThermalSensorSummary.summarize(values, at: at)

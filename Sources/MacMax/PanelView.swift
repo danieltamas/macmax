@@ -9,6 +9,8 @@ struct PanelView: View {
     static var height: CGFloat { min(780, (NSScreen.main?.visibleFrame.height ?? 820) - 40) }
     let model: PanelModel
     @Namespace private var tabSpace
+    /// Follows the window: everything that moves or refreshes on its own pauses while the panel is closed.
+    @State private var panelVisible = true
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
@@ -24,6 +26,8 @@ struct PanelView: View {
         .frame(width: Self.width, height: Self.height)
         .background(Backdrop())
         .environment(\.colorScheme, Theme.scheme)
+        .environment(\.panelVisible, panelVisible)
+        .background(WindowVisibility(visible: $panelVisible))
         .onAppear { model.showSettingsWindow = { openSettings() } }
     }
 
