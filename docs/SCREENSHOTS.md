@@ -43,7 +43,6 @@ rendered in the same run; they are the per-view sources (and, at `--scale 3`, th
 | File | What | Size (points) |
 |------|------|---------------|
 | `icon.png` | The app icon (`sips -s format png -z 256 256 Support/AppIcon.icns`, not rendered by the app), for the README header | 256 x 256 |
-| `brag.gif` | The launch film (`brag-output/brag.mp4`, made with the brag workflow), for the top of the README; not rendered by the app | 960 wide |
 | `hero.png` | Overview and Network (1 hour) side by side | 926 x 860 |
 | `findings-apps.png` | Findings and Apps side by side | 926 x 860 |
 | `mac-cards.png` | The This Mac card and the Battery and heat card | 926 x 386 |

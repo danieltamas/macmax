@@ -17,13 +17,11 @@
   <img src="https://img.shields.io/badge/license-MIT-22C55E" alt="MIT">
 </p>
 
-<!-- The launch film. GitHub plays an mp4 inline only when it is uploaded through the web editor
-     (drag brag-output/brag.mp4 into the README editor or an issue, copy the user-attachments URL
-     it produces, and replace the img below with that URL on a line of its own). Until then the
-     GIF autoplays. -->
-<p align="center">
-  <img src="docs/media/brag.gif" alt="MacMax in 25 seconds: the panel drops from the menu bar, one finding, the network identity, the cleanup rules" width="960">
-</p>
+<!-- The launch film (brag-output/brag.mp4), uploaded through the GitHub editor: a user-attachments
+     URL on its own line is the only way GitHub plays video inline. The source and the music-only
+     fallback are rebuilt by the brag workflow, see docs/SCREENSHOTS.md. -->
+
+https://github.com/user-attachments/assets/d102228f-ef1c-43d5-85da-fe63b91f2822
 
 > **Status:** early releases. By using MacMax you accept that it may have bugs; a wrong or missing
 > reading is one worth reporting at
