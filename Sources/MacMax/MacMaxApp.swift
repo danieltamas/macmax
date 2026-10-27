@@ -11,9 +11,21 @@ struct MacMaxApp: App {
         if let index = arguments.firstIndex(of: ScreenshotRender.flag), index + 1 < arguments.count {
             let look = arguments.firstIndex(of: ScreenshotRender.lookFlag)
                 .flatMap { $0 + 1 < arguments.count ? Look(rawValue: arguments[$0 + 1]) : nil }
+            // `--scale` is bounded: beyond 4x the bitmaps reach hundreds of megabytes, and a stray
+            // word or "inf" must stop the render, not silently fall back or trap in the pixel maths.
+            var scale: CGFloat = 2
+            if let scaleIndex = arguments.firstIndex(of: ScreenshotRender.scaleFlag) {
+                guard scaleIndex + 1 < arguments.count, let value = Double(arguments[scaleIndex + 1]),
+                      value.isFinite, (1...4).contains(value) else {
+                    FileHandle.standardError.write(Data("\(ScreenshotRender.scaleFlag) needs a number from 1 to 4\n".utf8))
+                    exit(2)
+                }
+                scale = CGFloat(value)
+            }
             do { try ScreenshotRender.render(to: URL(fileURLWithPath: arguments[index + 1]), look: look ?? .macmax,
                                             allLooks: arguments.contains(ScreenshotRender.allLooksFlag),
-                                            stress: arguments.contains(ScreenshotRender.stressFlag)) } catch {
+                                            stress: arguments.contains(ScreenshotRender.stressFlag),
+                                            scale: scale) } catch {
                 FileHandle.standardError.write(Data("\(error.localizedDescription)\n".utf8))
                 exit(1)
             }
