@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/license-MIT-22C55E" alt="MIT">
 </p>
 
-<!-- The launch film (brag-output/brag.mp4), uploaded through the GitHub editor: a user-attachments
+<!-- The launch film (brag-output/macmax.mp4), uploaded through the GitHub editor: a user-attachments
      URL on its own line is the only way GitHub plays video inline. The source and the music-only
      fallback are rebuilt by the brag workflow, see docs/SCREENSHOTS.md. -->
 
