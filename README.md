@@ -21,7 +21,7 @@
      URL on its own line is the only way GitHub plays video inline. The source and the music-only
      fallback are rebuilt by the brag workflow, see docs/SCREENSHOTS.md. -->
 
-https://github.com/user-attachments/assets/d102228f-ef1c-43d5-85da-fe63b91f2822
+https://github.com/user-attachments/assets/a13068de-d5aa-493e-85d8-9aee83f225b7
 
 > **Status:** early releases. By using MacMax you accept that it may have bugs; a wrong or missing
 > reading is one worth reporting at
