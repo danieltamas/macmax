@@ -1,5 +1,9 @@
 # Release log
 
+## 0.1.3 (2026-10-27)
+
+Disk IO no longer shows as a failure on a Mac that has no internal disk driver, such as a virtual machine. It now says the Mac publishes no internal disk counters. A disk read that really fails still shows as failed.
+
 ## 0.1.2 (2026-10-27)
 
 Battery and heat shows fresh readings after the Mac wakes. Before, one sensor read that hung during sleep blocked every later read, so the next morning the fans showed 0 rpm and did not turn while the hottest sensor read hot. A read that takes too long is now dropped and a new one starts.
