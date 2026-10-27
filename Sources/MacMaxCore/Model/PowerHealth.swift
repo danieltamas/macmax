@@ -90,12 +90,15 @@ public struct ThermalSensors: Sendable, Equatable {
     public let hottestCelsius: Double?
     public let hottestSensor: String?
     public let sensorCount: Int
+    /// The sensors the catalog can name, in catalog order; the hottest sensor above may be one the catalog cannot.
+    public let named: [NamedSensor]
 
-    public init(fans: [Fan], hottestCelsius: Double?, hottestSensor: String?, sensorCount: Int) {
+    public init(fans: [Fan], hottestCelsius: Double?, hottestSensor: String?, sensorCount: Int, named: [NamedSensor] = []) {
         self.fans = fans
         self.hottestCelsius = hottestCelsius
         self.hottestSensor = hottestSensor
         self.sensorCount = sensorCount
+        self.named = named
     }
 }
 
@@ -112,9 +115,14 @@ public enum ThermalSensorSummary {
             fans.append(Fan(index: index, rpm: Int(current.rounded()), minimumRPM: speed(values["F\(index)Mn"]), maximumRPM: speed(values["F\(index)Mx"])))
         }
         let plausible = values.filter { isTemperatureKey($0.key) && $0.value > 1 && $0.value <= 125 }
-        let hottest = plausible.min { ($0.value, $1.key) > ($1.value, $0.key) }
-        return .ok(ThermalSensors(fans: fans, hottestCelsius: hottest?.value, hottestSensor: hottest?.key, sensorCount: plausible.count),
-                   source: "AppleSMC", at: at)
+        let named = SensorCatalog.name(values)
+        // The SMC also exposes limit keys (TCMz, TVD0) that read 100 C and more all day; once the catalog can name real
+        // sensors, the dial reports the hottest of those, and the unnamed maximum only on a Mac with no named sensor.
+        let hottestNamed = named.filter { $0.unit == .celsius }.min { ($0.value, $1.key) > ($1.value, $0.key) }
+        let hottestAny = plausible.min { ($0.value, $1.key) > ($1.value, $0.key) }
+        let hottest = hottestNamed.map { (key: $0.key, value: $0.value) } ?? hottestAny.map { (key: $0.key, value: $0.value) }
+        return .ok(ThermalSensors(fans: fans, hottestCelsius: hottest?.value, hottestSensor: hottest?.key, sensorCount: plausible.count,
+                                  named: named), source: "AppleSMC", at: at)
     }
 
     private static func speed(_ value: Double?) -> Int? {

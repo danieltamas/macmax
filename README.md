@@ -96,12 +96,17 @@ every time (fixed thresholds you can edit in Settings).
   <img src="docs/media/mac-cards.png" alt="The This Mac card with chip, cores busy, GPU and memory, next to the Battery and heat card" width="926">
 </p>
 
-- **This Mac:** chip, cores in use, GPU and its memory, RAM, swap, uptime and free disk.
+- **This Mac:** chip, cores in use and how busy the efficiency and performance clusters are, CPU
+  time split into user, system and idle, the load averages, uptime, GPU and its memory, RAM.
 - **Battery and heat:** how worn the battery is (its maximum capacity against the original, and the
-  charge cycles used against the rated number), its temperature, the speed of each fan and the
-  hottest sensor. The numbers come from the battery's own registry entry and the System Management
-  Controller, with no administrator needed. A Mac without a battery or fans says so; a reading that
-  fails says "unknown", never "fine".
+  charge cycles used against the rated number), the speed of each fan and the hottest of the
+  sensors MacMax can name (the SMC limit keys that read 100 C all day are left out). Below them, every sensor MacMax can name, in groups: the CPU cores it can tell
+  apart, the GPU, memory, storage, the wireless chip, the battery cells and the airflow, with the
+  hottest and the average per group, plus what the Mac draws at the wall and on each Thunderbolt
+  port. The numbers
+  come from the battery's own registry entry and the System Management Controller, with no
+  administrator needed. A Mac without a battery or fans says so; a reading that fails says
+  "unknown", never "fine", and a sensor MacMax cannot name is not listed.
 
 ## Is your VPN really on?
 

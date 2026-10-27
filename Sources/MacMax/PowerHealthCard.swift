@@ -1,8 +1,8 @@
 import MacMaxCore
 import SwiftUI
 
-/// The battery drawn as a battery (charge, wear, cycles) and the cooling as gauges (each fan turning at its speed, the
-/// hottest sensor on a dial). Read while the panel is open, every few seconds; a reading that fails says so and is
+/// Two rows of the same dial: the battery (charge, health, cycles) and the cooling (the hottest sensor, each fan turning
+/// at its speed), then the named sensors in groups. Read while the panel is open, every few seconds; a reading that fails says so and is
 /// never drawn as healthy.
 struct PowerHealthCard: View {
     @ObservedObject var model: PanelModel
@@ -37,12 +37,15 @@ struct PowerHealthCard: View {
         case let .failed(reason)?: Text("Battery: unknown. It could not be read: \(reason).").font(.meta).foregroundStyle(Theme.warn)
         case let .ok(health, _, _)?:
             VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .center, spacing: 14) {
-                    charge
-                    Spacer(minLength: 0)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 10, alignment: .top)], alignment: .leading, spacing: 12) {
+                    chargeDial
                     healthDial(health)
+                    cyclesDial(health)
                 }
-                cycles(health)
+                // The battery's own figure from IOKit; once the SMC names the cell sensors, the grid's Battery group has it.
+                if let temperature = health.temperatureCelsius, !hasNamedBatterySensor {
+                    Text(String(format: "Battery temperature %.1f C", temperature)).font(.meta).foregroundStyle(Theme.textTertiary)
+                }
                 if health.condition == .serviceRecommended {
                     Text("The battery reports a fault: have it checked at service.").font(.meta).foregroundStyle(Theme.warn)
                 }
@@ -52,12 +55,13 @@ struct PowerHealthCard: View {
 
     private var status: BatteryStatus? { model.batteryStatus?.value }
 
-    private var charge: some View {
-        HStack(spacing: 12) {
-            BatteryGlyph(percent: status?.chargePercent, charging: status?.isCharging == true, tint: chargeTint)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(status.map { "\($0.chargePercent)%" } ?? "Unknown").font(.statValue).foregroundStyle(Theme.textPrimary)
-                Text(chargeCaption).font(.meta).foregroundStyle(Theme.textTertiary).fixedSize(horizontal: false, vertical: true)
+    /// The charge as a dial like the five beside it; a bolt in place of the figure while charging says so at a glance.
+    private var chargeDial: some View {
+        dial(label: chargeCaption, tint: chargeTint, fraction: Double(status?.chargePercent ?? 0) / 100,
+             help: status.map { "\($0.chargePercent)% charged, \(chargeCaption.lowercased())" } ?? "The charge could not be read") {
+            HStack(spacing: 2) {
+                if status?.isCharging == true { Image(systemName: "bolt.fill").font(.system(size: 11, weight: .bold)).foregroundStyle(chargeTint) }
+                Text(status.map { "\($0.chargePercent)%" } ?? "?").font(.statSmall).foregroundStyle(Theme.textPrimary)
             }
         }
     }
@@ -69,49 +73,41 @@ struct PowerHealthCard: View {
     }
 
     private var chargeCaption: String {
-        guard let status else { return "The charge could not be read" }
+        guard let status else { return "Charge unknown" }
         if status.isCharging { return "Charging" }
-        return status.powerSource == .ac ? "On power, not charging" : "On battery"
+        return status.powerSource == .ac ? "On power" : "On battery"
     }
 
     private func healthDial(_ health: BatteryHealth) -> some View {
-        VStack(spacing: 3) {
-            ZStack {
-                ArcGauge(fraction: Double(health.maximumCapacityPercent) / 100, tint: healthTint(health))
-                Text("\(health.maximumCapacityPercent)%").font(.statSmall).foregroundStyle(Theme.textPrimary)
-            }.frame(width: 62, height: 62)
-            Text("Health").font(.meta).foregroundStyle(Theme.textTertiary)
+        dial(label: "Health", tint: healthTint(health), fraction: Double(health.maximumCapacityPercent) / 100,
+             help: "How much of its original capacity the battery still holds") {
+            Text("\(health.maximumCapacityPercent)%").font(.statSmall).foregroundStyle(Theme.textPrimary)
         }
-        .help("How much of its original capacity the battery still holds")
+    }
+
+    /// Cycles used against the rated number; without a rated number the arc stays empty and the label says "cycles".
+    private func cyclesDial(_ health: BatteryHealth) -> some View {
+        let rated = health.designCycleCount
+        return dial(label: rated.map { "of \($0) cycles" } ?? "cycles", tint: cycleTint(health),
+                    fraction: rated.map { Double(health.cycleCount) / Double($0) } ?? 0,
+                    help: "Charge cycles used" + (rated.map { " against the \($0) the battery is rated for" } ?? "")) {
+            Text("\(health.cycleCount)").font(.statSmall.monospacedDigit()).foregroundStyle(Theme.textPrimary)
+        }
     }
 
     private func healthTint(_ health: BatteryHealth) -> Color {
         health.condition == .serviceRecommended || health.maximumCapacityPercent < 70 ? Theme.danger : health.maximumCapacityPercent < 80 ? Theme.warn : Theme.success
     }
 
-    @ViewBuilder private func cycles(_ health: BatteryHealth) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack {
-                Text("Charge cycles").font(.meta).foregroundStyle(Theme.textTertiary)
-                Spacer()
-                Text(verbatim: health.designCycleCount.map { "\(health.cycleCount) of \($0)" } ?? "\(health.cycleCount)")
-                    .font(.system(size: 12, weight: .semibold).monospacedDigit()).foregroundStyle(Theme.textPrimary)
-            }
-            if let rated = health.designCycleCount {
-                Capsule().fill(Theme.hairline).frame(height: 5).overlay(alignment: .leading) {
-                    GeometryReader { proxy in
-                        Capsule().fill(cycleTint(health.cycleCount, rated)).frame(width: proxy.size.width * min(1, Double(health.cycleCount) / Double(rated)))
-                    }
-                }
-            }
-            if let temperature = health.temperatureCelsius {
-                Text(String(format: "Battery temperature %.1f C", temperature)).font(.meta).foregroundStyle(Theme.textTertiary)
-            }
-        }
+    private var hasNamedBatterySensor: Bool {
+        if case let .ok(sensors, _, _)? = model.thermalSensors { return sensors.named.contains { $0.group == .battery } }
+        return false
     }
 
-    private func cycleTint(_ used: Int, _ rated: Int) -> Color {
-        Double(used) / Double(rated) >= 0.9 ? Theme.warn : Theme.teal
+    /// The gauge hue until nine tenths of the rated cycles are used, then warn: the figure is wear, not health.
+    private func cycleTint(_ health: BatteryHealth) -> Color {
+        guard let rated = health.designCycleCount, rated > 0 else { return Theme.teal }
+        return Double(health.cycleCount) / Double(rated) >= 0.9 ? Theme.warn : Theme.teal
     }
 
     // MARK: Heat
@@ -124,17 +120,23 @@ struct PowerHealthCard: View {
         case let .ok(sensors, _, _)?:
             VStack(alignment: .leading, spacing: 8) {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 10, alignment: .top)], alignment: .leading, spacing: 12) {
-                    if let hottest = sensors.hottestCelsius { temperatureDial(hottest) }
+                    if let hottest = sensors.hottestCelsius {
+                        temperatureDial(hottest, named: sensors.named.contains { $0.key == sensors.hottestSensor })
+                    }
                     ForEach(sensors.fans, id: \.index) { fanDial($0) }
                 }
                 if sensors.fans.isEmpty { Text(PowerWording.fanSummary(sensors)).font(.meta).foregroundStyle(Theme.textTertiary) }
+                let groups = SensorCatalog.groups(sensors.named)
+                if !groups.isEmpty { SensorsSection(model: model, groups: groups).padding(.top, 6) }
             }
         }
     }
 
-    private func temperatureDial(_ celsius: Double) -> some View {
-        let tint: Color = celsius >= 95 ? Theme.danger : celsius >= 80 ? Theme.warn : Theme.success
-        return dial(label: "Hottest sensor", tint: tint, fraction: (celsius - 20) / 90, help: "The warmest of the temperature sensors MacMax can read") {
+    private func temperatureDial(_ celsius: Double, named: Bool) -> some View {
+        let tint: Color = celsius >= 95 ? Theme.danger : celsius >= 80 ? Theme.warn : Theme.teal
+        let help = named ? "The warmest of the sensors MacMax can name; the SMC limit keys are left out"
+            : "The warmest temperature key the SMC reports; MacMax cannot name this Mac's sensors, so a limit key may be among them"
+        return dial(label: "Hottest sensor", tint: tint, fraction: (celsius - 20) / 90, help: help) {
             Text(String(format: "%.0f C", celsius)).font(.statSmall).foregroundStyle(Theme.textPrimary)
         }
     }

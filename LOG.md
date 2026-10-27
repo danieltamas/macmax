@@ -1,5 +1,13 @@
 # Release log
 
+## 0.2.0 (2026-10-28)
+
+Battery and heat now lists every sensor MacMax can name, in groups: the CPU cores it can tell apart, the GPU, memory, storage, the wireless chip, the battery cells and the airflow, each group with its hottest and average reading, plus what the Mac draws at the wall and on each Thunderbolt port. Press a group to see its sensors; the list opens right under it. The battery row is three dials (charge, health, cycles against the rated number) matching the heat row below it.
+
+The hottest-sensor dial no longer shows a false 100 C. The SMC exposes limit keys that read above 100 C all day, and the dial used to pick them up; it now reports the hottest of the sensors MacMax can name. The battery's own temperature line is gone once the grid has the battery cells.
+
+This Mac shows how busy the efficiency and performance clusters are, the CPU time split into user, system and idle as one bar, the load averages, uptime, the GPU and its memory, as a grid of small stats. A stat that does not read on your Mac is left out, never shown as zero. Core frequency is not shown: macOS offers it only through a private interface.
+
 ## 0.1.5 (2026-10-27)
 
 Disk free in the Overview now shows the same figure as Finder and Disk Utility. Before, it counted purgeable space as free, so it read tens of GB above every other tool on a Mac with Time Machine local snapshots. The tile now says, for example, "329 GB free, 80 GB purgeable": the second number is what macOS would clear on its own when a write needs the room. The disk audit rule and the agent API already used the plain figure and are unchanged; the `snapshot` command gains `purgeable_bytes` when read live.

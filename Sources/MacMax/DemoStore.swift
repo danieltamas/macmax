@@ -43,10 +43,12 @@ enum DemoStore {
                       result: "trashed", detail: "npm_cache, 640 MB"),
         ]
         let demoPaths = ["ro.example.pixel", "ro.example.relay", "ro.example.atlas"].map { "/Users/example/Library/Caches/\($0)" }
-        model.hardware = HardwareProfile(chip: "Apple M2 Pro", performanceCores: 6, efficiencyCores: 4, totalCores: 10,
-                                         gpuName: "Apple M2 Pro", gpuCores: 19, memoryBytes: 34_359_738_368)
+        model.hardware = HardwareProfile(chip: "Apple M4", performanceCores: 4, efficiencyCores: 6, totalCores: 10,
+                                         gpuName: "Apple M4", gpuCores: 10, memoryBytes: 34_359_738_368)
         model.live = SystemLive(coreBusyPercent: [92, 71, 64, 38, 12, 8, 55, 41, 6, 3], gpuPercent: 14, gpuMemoryUsedBytes: 1_190_723_584, gpuMemoryAllocatedBytes: 9_453_600_768,
-                                memoryUsedBytes: 27_917_287_424, memoryTotalBytes: 34_359_738_368)
+                                memoryUsedBytes: 27_917_287_424, memoryTotalBytes: 34_359_738_368,
+                                cpuSplit: CPUSplit(userPercent: 20, systemPercent: 14, idlePercent: 66),
+                                loadAverages: LoadAverages(one: stress ? 120.5 : 8.2, five: 6.4, fifteen: 5.9), uptimeSeconds: demoUptime(stress: stress))
         model.cleanupMovedFrom = demoPaths.enumerated().map { CleanupCandidate(ruleID: "app_caches", path: $1, bytes: 400_000_000 + Int64($0) * 90_000_000, device: 1, inode: UInt64($0)) }
             + [CleanupCandidate(ruleID: "old_logs", path: "/Users/example/Library/Logs/old.log", bytes: 12_000_000, device: 1, inode: 9)]
         model.cleanupResults = model.cleanupMovedFrom.map { CleanupResult(path: $0.path, outcome: .done) }
@@ -90,7 +92,9 @@ enum DemoStore {
         model.batteryStatus = .ok(BatteryStatus(chargePercent: 64, powerSource: .ac, isCharging: true), source: "IOPS", at: now)
         model.batteryHealth = .ok(BatteryHealth(cycleCount: 612, designCycleCount: 1000, maximumCapacityPercent: 87, temperatureCelsius: 31.4, condition: .normal), source: "AppleSmartBattery", at: now)
         model.thermalSensors = .ok(ThermalSensors(fans: [Fan(index: 0, rpm: 1_820, minimumRPM: 1_500, maximumRPM: 5_300), Fan(index: 1, rpm: 1_950, minimumRPM: 1_500, maximumRPM: 5_700)],
-                                                  hottestCelsius: 58, hottestSensor: "Tp01", sensorCount: 24), source: "AppleSMC", at: now)
+                                                  hottestCelsius: stress ? 100 : 58, hottestSensor: "Tp01", sensorCount: 24, named: Self.demoSensors(stress: stress)),
+                                   source: "AppleSMC", at: now)
+        model.expandedSensorGroup = stress ? .power : .cpu
         model.appLastOpened = [
             "/Applications/Pixel Studio.app": .ok(now.addingTimeInterval(-3_600 * 5), source: "Spotlight", at: now),
             relay.path: .ok(now.addingTimeInterval(-86_400 * 212), source: "Spotlight", at: now),
@@ -116,6 +120,42 @@ enum DemoStore {
 
     private static func series(_ base: Double, _ swing: Double, seed: Double) -> [Double] {
         (0 ..< 60).map { base + swing * sin(Double($0) / 6 + seed) * cos(Double($0) / 17 + seed * 2) }
+    }
+
+    private static func demoUptime(stress: Bool) -> Double {
+        let day = 86_400.0, hour = 3_600.0
+        return stress ? 123 * day + 22 * hour : 46 * hour + 12 * 60
+    }
+
+    /// Every catalog group, so the card renders each row; the stress set runs the CPU to the red.
+    static func demoSensors(stress: Bool) -> [NamedSensor] {
+        func t(_ key: String, _ name: String, _ group: SensorGroup, _ value: Double) -> NamedSensor {
+            NamedSensor(key: key, name: name, group: group, unit: .celsius, value: stress && group == .cpu ? value + 42 : value)
+        }
+        func e(_ key: String, _ name: String, _ unit: SensorUnit, _ value: Double) -> NamedSensor {
+            NamedSensor(key: key, name: name, group: .power, unit: unit, value: value)
+        }
+        let cpu: [NamedSensor] = [
+            t("Te05", "CPU efficiency core 1", .cpu, 51.2), t("Te0S", "CPU efficiency core 2", .cpu, 50.8),
+            t("Te09", "CPU efficiency core 3", .cpu, 50.1), t("Te0H", "CPU efficiency core 4", .cpu, 49.7),
+            t("Tp01", "CPU performance core 1", .cpu, 58), t("Tp05", "CPU performance core 2", .cpu, 57.4),
+            t("Tp09", "CPU performance core 3", .cpu, 56.1), t("Tp0D", "CPU performance core 4", .cpu, 55.9),
+        ]
+        let chip: [NamedSensor] = [
+            t("Tg0G", "GPU 1", .gpu, 49.6), t("Tg0H", "GPU 2", .gpu, 50.8), t("Tg1U", "GPU 3", .gpu, 48.5), t("Tg1k", "GPU 4", .gpu, 48.3),
+            t("Tm0p", "Memory 1", .memory, 45), t("Tm1p", "Memory 2", .memory, 44.5), t("Tm2p", "Memory 3", .memory, 44.1),
+        ]
+        let board: [NamedSensor] = [
+            t("TW0P", "Wireless chip", .wireless, 48), t("TH0x", "Storage", .storage, 35.3),
+            t("TB1T", "Battery 1", .battery, 33), t("TB2T", "Battery 2", .battery, 33.7),
+            t("TaLP", "Airflow left", .airflow, 46.9), t("TaRF", "Airflow right", .airflow, 48.4),
+        ]
+        let power: [NamedSensor] = [
+            e("VD0R", "DC in", .volts, 27.73), e("ID0R", "DC in", .amps, stress ? 5.05 : 1.01), e("PDTR", "DC in", .watts, stress ? 140 : 28),
+            e("VP0R", "12 V rail", .volts, 12.73), e("IU1R", "Thunderbolt left", .amps, 0.19), e("IU2R", "Thunderbolt right", .amps, 0),
+            e("IDBR", "Display brightness", .amps, 0.56), e("PSTR", "System total", .watts, stress ? 135.4 : 24.1),
+        ]
+        return cpu + chip + board + power
     }
 
     private static func vitals(stress: Bool) -> [Vital] {

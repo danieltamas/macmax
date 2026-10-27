@@ -35,34 +35,6 @@ struct ArcGauge: View {
 }
 
 /// The battery as it looks: an outline with a terminal, filled to the charge, a bolt while it charges.
-struct BatteryGlyph: View {
-    let percent: Int?
-    let charging: Bool
-    let tint: Color
-
-    var body: some View {
-        HStack(spacing: 2) {
-            ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.hairline.opacity(0.5))
-                RoundedRectangle(cornerRadius: 9, style: .continuous).stroke(Theme.textTertiary.opacity(0.7), lineWidth: 1.5)
-                GeometryReader { proxy in
-                    RoundedRectangle(cornerRadius: 6, style: .continuous).fill(tint.gradient)
-                        .frame(width: max(0, (proxy.size.width - 8) * Double(percent ?? 0) / 100))
-                        .padding(4)
-                }
-                if charging {
-                    Image(systemName: "bolt.fill").font(.system(size: 17, weight: .bold)).foregroundStyle(.white)
-                        .shadow(color: .black.opacity(0.55), radius: 2).frame(maxWidth: .infinity)
-                } else if percent == nil {
-                    Text("?").font(.system(size: 18, weight: .bold)).foregroundStyle(Theme.textTertiary).frame(maxWidth: .infinity)
-                }
-            }
-            .frame(width: 92, height: 44)
-            RoundedRectangle(cornerRadius: 2, style: .continuous).fill(Theme.textTertiary.opacity(0.7)).frame(width: 4, height: 16)
-        }
-    }
-}
-
 /// A fan that turns. The turning is a Core Animation loop run by the window server, only while the panel is visible,
 /// and slower than the real fan (1 turn a second per 1000 rpm: a screen cannot draw 40 turns a second), in proportion to its rpm.
 struct FanRotor: View {
