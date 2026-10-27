@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Files and folders in Downloads that nothing has touched for a while. Nothing is chosen for you: pick what goes.
 struct OldDownloadsCard: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     @State private var chosen: Set<String> = []
     @State private var confirming = false
 
@@ -39,7 +39,7 @@ struct OldDownloadsCard: View {
                 }
             }
         }
-        .onChange(of: model.oldDownloads) {
+        .onChange(of: model.oldDownloads) { _ in
             // A new list may not hold what was chosen, and a confirmation belongs to the list it was asked about.
             confirming = false
             chosen.formIntersection(Set(model.oldDownloads?.map(\.path) ?? []))

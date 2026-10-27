@@ -2,10 +2,9 @@ import MacMaxCore
 import SwiftUI
 
 struct AppsTab: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     var body: some View {
-        @Bindable var model = model
         VStack(spacing: 10) {
             HStack(spacing: 4) {
                 ForEach(AppSort.allCases, id: \.self) { sort in
@@ -70,7 +69,7 @@ struct AppsTab: View {
 }
 
 struct AppRowView: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     let row: AppRow
 
     /// Both figure columns have one width in every row, so the numbers line up down the list.

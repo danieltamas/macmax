@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "MacMax",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v13)],
     targets: [
         // Everything testable without a UI: collectors, rules, store. Never imports SwiftUI or AppKit.
         .target(name: "MacMaxCore"),

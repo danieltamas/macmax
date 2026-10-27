@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/macOS-14%2B-111?logo=apple&logoColor=white" alt="macOS 14+">
+  <img src="https://img.shields.io/badge/macOS-13%2B-111?logo=apple&logoColor=white" alt="macOS 13+">
   <img src="https://img.shields.io/badge/Apple%20silicon%20%2B%20Intel-supported-444" alt="Apple silicon and Intel">
   <img src="https://img.shields.io/badge/agents-MCP%20read--only-3B82F6" alt="MCP read-only">
   <img src="https://img.shields.io/badge/license-MIT-22C55E" alt="MIT">
@@ -31,7 +31,7 @@ Open **Terminal** (Spotlight, type "Terminal") and paste this:
 curl -fsSL https://raw.githubusercontent.com/danieltamas/macmax/main/install.sh | bash
 ```
 
-That is all. No admin password, no Homebrew, no developer tools. It needs macOS 14 or newer, on
+That is all. No admin password, no Homebrew, no developer tools. It needs macOS 13 or newer, on
 Apple silicon or Intel. MacMax appears in the menu bar a few seconds later.
 
 - **What the line does:** downloads the latest release from GitHub, checks it against the published
@@ -256,7 +256,8 @@ git clone https://github.com/danieltamas/macmax.git && cd macmax
 scripts/install-from-source.sh
 ```
 
-Needs Xcode with Swift 6.2. `scripts/check.sh` builds and runs the suite. Releases are
+Needs Xcode with Swift 6.2, which runs on macOS 15 or newer; the app it builds runs on macOS 13 or
+newer, so an older Mac installs the release zip above. `scripts/check.sh` builds and runs the suite. Releases are
 reproducible: `scripts/release.sh <x.y.z> --verify` builds twice and fails if one byte differs.
 
 </details>

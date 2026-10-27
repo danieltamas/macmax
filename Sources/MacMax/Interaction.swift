@@ -72,6 +72,12 @@ extension View {
         }
     }
 
+    /// The toggle trait exists from macOS 14; before that the label and the On/Off value carry the state.
+    @ViewBuilder
+    func toggleTrait() -> some View {
+        if #available(macOS 14, *) { accessibilityAddTraits(.isToggle) } else { self }
+    }
+
     private func setsHandOnMove(_ enabled: Bool) -> some View {
         onContinuousHover { phase in
             guard enabled else { return }
@@ -141,7 +147,7 @@ struct SwitchRow: View {
         .padding(.horizontal, -SettingsMetrics.rowInset)
         .accessibilityLabel(title)
         .accessibilityValue(isOn ? "On" : "Off")
-        .accessibilityAddTraits(.isToggle)
+        .toggleTrait()
     }
 }
 

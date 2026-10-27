@@ -5,7 +5,7 @@ import SwiftUI
 /// The biggest folders and files under home, for the cleanup that no rule covers. Shown, never removed: the owner
 /// looks in Finder and decides.
 struct LargeFoldersCard: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     var body: some View {
         SettingsCard(title: "Large folders", detail: "The biggest places under your home folder. MacMax only shows them; nothing here is deleted.") {

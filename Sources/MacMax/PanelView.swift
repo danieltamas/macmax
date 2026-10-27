@@ -7,11 +7,14 @@ struct PanelView: View {
     static let width: CGFloat = 404
     /// Tall enough for a full tab, never taller than the screen can show under the menu bar.
     static var height: CGFloat { min(780, (NSScreen.main?.visibleFrame.height ?? 820) - 40) }
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     @Namespace private var tabSpace
     /// Follows the window: everything that moves or refreshes on its own pauses while the panel is closed.
     @State private var panelVisible = true
-    @Environment(\.openSettings) private var openSettings
+    /// `Theme` reads the look through a static, which nothing observes: the root watches it and rebuilds the
+    /// tree (`.id`). The look is only chosen in the Settings window, which takes focus and so closes this panel,
+    /// so the rebuild happens while it is hidden; ticks and a scroll position on a hidden panel are the cost.
+    @ObservedObject private var appearance = Appearance.shared
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,7 +31,8 @@ struct PanelView: View {
         .environment(\.colorScheme, Theme.scheme)
         .environment(\.panelVisible, panelVisible)
         .background(WindowVisibility(visible: $panelVisible))
-        .onAppear { model.showSettingsWindow = { openSettings() } }
+        .background { if #available(macOS 14, *) { SettingsOpener(model: model) } }
+        .id(appearance.look)
     }
 
     private var header: some View {
@@ -115,5 +119,17 @@ struct PanelView: View {
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
         .overlay(alignment: .top) { Rectangle().fill(Theme.hairline).frame(height: 0.5) }
+    }
+}
+
+/// `showSettingsWindow:` does nothing from a menu bar item on macOS 14 and later; the `openSettings` action does,
+/// and it exists only there, so it is read in a view that only macOS 14 builds. macOS 13 keeps the selector.
+@available(macOS 14, *)
+private struct SettingsOpener: View {
+    let model: PanelModel
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        Color.clear.onAppear { model.showSettingsWindow = { openSettings() } }
     }
 }

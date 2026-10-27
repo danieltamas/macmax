@@ -5,7 +5,7 @@ import SwiftUI
 /// MacMax's own word before macOS has any: which protected places it would read, and the one grant that covers them,
 /// so there is one switch to flip instead of a prompt per folder.
 struct AccessPrompt: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     var body: some View {
         if model.fullDiskAccess != .granted {

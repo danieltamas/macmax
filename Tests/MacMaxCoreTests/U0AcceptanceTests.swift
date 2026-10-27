@@ -86,7 +86,7 @@ func packageDeclaresRequiredTargetsAndPlatform() throws {
 
     let package = try String(contentsOf: repositoryRoot.appendingPathComponent("Package.swift"), encoding: .utf8)
     #expect(package.contains("// swift-tools-version: 6.0"))
-    #expect(package.contains(".macOS(.v14)"))
+    #expect(package.contains(".macOS(.v13)"))
     #expect(package.contains(".target(name: \"MacMaxCore\"") )
     #expect(package.contains(".executableTarget(name: \"MacMax\"") )
     #expect(package.contains(".executableTarget(name: \"MacMaxCLI\"") )
@@ -241,7 +241,7 @@ func bundleIconAndTemplateConfiguration() throws {
     #expect(plist["CFBundleIdentifier"] as? String == "ro.danieltamas.macmax")
     #expect(plist["LSUIElement"] as? Bool == true)
     #expect(plist["CFBundleIconFile"] as? String == "AppIcon")
-    #expect(plist["LSMinimumSystemVersion"] as? String == "14.0")
+    #expect(plist["LSMinimumSystemVersion"] as? String == "13.0")
 
     let appIcon = try Data(contentsOf: repositoryRoot.appendingPathComponent("Support/AppIcon.icns"))
     #expect(appIcon.starts(with: Data("icns".utf8)))

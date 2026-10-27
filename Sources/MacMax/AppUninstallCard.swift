@@ -4,7 +4,7 @@ import SwiftUI
 /// Pick an app, see what it left in the Library with sizes, and move the lot to the Trash after one confirmation.
 /// Everything lands in the Trash, where it can be put back. System-wide files (in /Library) are never touched.
 struct AppUninstallCard: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     @State private var search = ""
     @State private var showAll = false
     @State private var selected: String?
@@ -40,7 +40,7 @@ struct AppUninstallCard: View {
         }
         .onAppear { if model.installedApps == nil { model.scanInstalledApps() } }
         // Apps come and go outside MacMax: a list older than a minute is read again when the panel opens.
-        .onChange(of: panelVisible) { _, visible in
+        .onChange(of: panelVisible) { visible in
             if visible, model.installedApps != nil, Date().timeIntervalSince(model.installedAppsAt ?? .distantPast) > Self.staleSeconds { model.scanInstalledApps() }
         }
     }

@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Under the MCP-server and zombie findings: the leftovers themselves, each ended only by a press.
 struct TidyBlock: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     let ruleID: String
     @State private var confirming = false
 

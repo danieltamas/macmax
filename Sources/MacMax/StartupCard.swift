@@ -4,7 +4,7 @@ import SwiftUI
 /// What starts by itself on this Mac, in two groups: the user's own agents, which can be turned off and on again, and
 /// everything else, which is only listed (changing it needs an administrator and MacMax never asks for that).
 struct StartupCard: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     @State private var showOthers = false
     @State private var open: Set<String>
     init(model: PanelModel, open: Set<String> = []) {

@@ -2,7 +2,7 @@ import MacMaxCore
 import SwiftUI
 
 struct OverviewTab: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     var body: some View {
         VStack(spacing: 12) {
@@ -135,7 +135,7 @@ struct VitalTile: View {
 }
 
 struct IdentityCardView: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     var body: some View {
         Bezel(glow: model.identity.map { color($0.verdict) }) {

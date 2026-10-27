@@ -1,5 +1,4 @@
 import MacMaxCore
-import Observation
 import SwiftUI
 
 enum PanelTab: String, CaseIterable, Identifiable {
@@ -96,58 +95,57 @@ struct ConnectionLine: Equatable, Identifiable {
 /// Everything the panel shows, as plain values. The live app fills it from the sampler and the audit; the
 /// screenshots fill it with synthetic data. Views read only this, so both draw the same views.
 @MainActor
-@Observable
-final class PanelModel {
-    var tab: PanelTab = .overview
-    var config: PanelConfig = .default
-    var configProblem: String?
-    var samplerNote = "Starting the sampler..."
-    var samplerFailed = false
+final class PanelModel: ObservableObject {
+    @Published var tab: PanelTab = .overview
+    @Published var config: PanelConfig = .default
+    @Published var configProblem: String?
+    @Published var samplerNote = "Starting the sampler..."
+    @Published var samplerFailed = false
 
     // Overview
-    var vitals: [Vital] = []
-    var vitalsState: SectionState = .loading("Reading the system...")
-    var identity: IdentityCard?
-    var identityState: SectionState = .loading("Reading the network...")
-    var topConsumers: [(label: String, app: String, value: String)] = []
+    @Published var vitals: [Vital] = []
+    @Published var vitalsState: SectionState = .loading("Reading the system...")
+    @Published var identity: IdentityCard?
+    @Published var identityState: SectionState = .loading("Reading the network...")
+    @Published var topConsumers: [(label: String, app: String, value: String)] = []
 
     // Audit
-    var verdict: Verdict?
-    var findings: [Finding] = []
-    var unknowns: [UnknownRule] = []
-    var auditedAt: Date?
-    var auditState: SectionState = .loading("Running the first audit...")
-    var auditRunning = false
-    var storageNote: String?
-    var snoozed: Set<String> = []
+    @Published var verdict: Verdict?
+    @Published var findings: [Finding] = []
+    @Published var unknowns: [UnknownRule] = []
+    @Published var auditedAt: Date?
+    @Published var auditState: SectionState = .loading("Running the first audit...")
+    @Published var auditRunning = false
+    @Published var storageNote: String?
+    @Published var snoozed: Set<String> = []
 
     // Apps
-    var apps: [AppRow] = []
-    var appsState: SectionState = .loading("Reading processes...")
-    var sort: AppSort = .cpu
-    var filter: AppFilter = .all
-    var query = ""
-    var shown = AppListing.pageSize
-    var expandedApp: String?
-    var processes: [String: [ProcessLine]] = [:]
+    @Published var apps: [AppRow] = []
+    @Published var appsState: SectionState = .loading("Reading processes...")
+    @Published var sort: AppSort = .cpu
+    @Published var filter: AppFilter = .all
+    @Published var query = ""
+    @Published var shown = AppListing.pageSize
+    @Published var expandedApp: String?
+    @Published var processes: [String: [ProcessLine]] = [:]
 
     // Network
-    var window: TrafficWindow = .now {
+    @Published var window: TrafficWindow = .now {
         didSet { if window != oldValue { windowChanged() } }
     }
     /// Set by the live controller: the rows shown must match the chosen window at once, not at the next tick.
-    var windowChanged: () -> Void = {}
-    var interfaces: [InterfaceLine] = []
+    @Published var windowChanged: () -> Void = {}
+    @Published var interfaces: [InterfaceLine] = []
     /// What this Mac is made of (read once) and how hard its cores, GPU and memory work this tick.
-    var hardware: HardwareProfile?
-    var live: SystemLive?
-    var traffic: [TrafficLine] = []
-    var trafficState: SectionState = .loading("Reading network usage...")
-    var connections: [String: [ConnectionLine]] = [:]
-    var connectionsLoading: Set<String> = []
+    @Published var hardware: HardwareProfile?
+    @Published var live: SystemLive?
+    @Published var traffic: [TrafficLine] = []
+    @Published var trafficState: SectionState = .loading("Reading network usage...")
+    @Published var connections: [String: [ConnectionLine]] = [:]
+    @Published var connectionsLoading: Set<String> = []
 
     // History
-    var historyRange: HistoryRange = .hour {
+    @Published var historyRange: HistoryRange = .hour {
         didSet {
             guard historyRange != oldValue else { return }
             historySelection = nil
@@ -158,124 +156,124 @@ final class PanelModel {
             historyChanged()
         }
     }
-    var history: [HistoryMetric: [HistoryPoint]] = [:]
-    var historyApps: [HistoryMetric: [HistoryAppSeries]] = [:]
-    var historyState: SectionState = .loading("Reading history...")
-    var historySelection: HistorySelection?
-    var historyHolders: [HistoryHolder] = []
-    var historyHoldersState: SectionState = .ready
-    var historyChanged: () -> Void = {}
-    var loadHolders: (HistorySelection) -> Void = { _ in }
+    @Published var history: [HistoryMetric: [HistoryPoint]] = [:]
+    @Published var historyApps: [HistoryMetric: [HistoryAppSeries]] = [:]
+    @Published var historyState: SectionState = .loading("Reading history...")
+    @Published var historySelection: HistorySelection?
+    @Published var historyHolders: [HistoryHolder] = []
+    @Published var historyHoldersState: SectionState = .ready
+    @Published var historyChanged: () -> Void = {}
+    @Published var loadHolders: (HistorySelection) -> Void = { _ in }
 
     // What a press does. The live controller sets these; the screenshots leave them empty.
-    var runAudit: () -> Void = {}
-    var loadConnections: (String) -> Void = { _ in }
-    var snooze: (String) -> Void = { _ in }
-    var openSettings: (SettingsPane) -> Void = { _ in }
+    @Published var runAudit: () -> Void = {}
+    @Published var loadConnections: (String) -> Void = { _ in }
+    @Published var snooze: (String) -> Void = { _ in }
+    @Published var openSettings: (SettingsPane) -> Void = { _ in }
     /// Set by the panel once it is on screen: `showSettingsWindow:` does nothing from a menu bar item on macOS 14 and later,
     /// the `openSettings` environment action does.
-    var showSettingsWindow: () -> Void = { NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil) }
+    @Published var showSettingsWindow: () -> Void = { NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil) }
 
     // Actions
-    var actionStates: [String: ActionState] = [:]
-    var perform: (PanelAction) -> Void = { _ in }
-    var containers: [ContainerLine] = []
-    var containersState: SectionState = .ready
-    var loadContainers: () -> Void = {}
+    @Published var actionStates: [String: ActionState] = [:]
+    @Published var perform: (PanelAction) -> Void = { _ in }
+    @Published var containers: [ContainerLine] = []
+    @Published var containersState: SectionState = .ready
+    @Published var loadContainers: () -> Void = {}
 
     // Cleanup
-    var cleanupPreview: CleanupPreview?
-    var cleanupState: SectionState = .ready
-    var cleanupResults: [CleanupResult] = []
+    @Published var cleanupPreview: CleanupPreview?
+    @Published var cleanupState: SectionState = .ready
+    @Published var cleanupResults: [CleanupResult] = []
     /// What was asked to move, in the order of `cleanupResults`, for the size and the rule of each.
-    var cleanupMovedFrom: [CleanupCandidate] = []
-    var cleanupMoving = false
+    @Published var cleanupMovedFrom: [CleanupCandidate] = []
+    @Published var cleanupMoving = false
     /// How far a cleanup has got: items finished, items in all, and the path being moved.
-    var cleanupProgress: (done: Int, total: Int, current: String?)?
-    var cleanupLogProblem: String?
-    var lastCleanups: [ActionRow] = []
-    var scanCleanup: () -> Void = {}
-    var moveToTrash: ([CleanupCandidate]) -> Void = { _ in }
-    var loadLastCleanups: () -> Void = {}
+    @Published var cleanupProgress: (done: Int, total: Int, current: String?)?
+    @Published var cleanupLogProblem: String?
+    @Published var lastCleanups: [ActionRow] = []
+    @Published var scanCleanup: () -> Void = {}
+    @Published var moveToTrash: ([CleanupCandidate]) -> Void = { _ in }
+    @Published var loadLastCleanups: () -> Void = {}
 
     // Tidy: leftovers a finding can offer to end
-    var tidy: TidyScan?
-    var tidyState: SectionState = .ready
-    var scanTidy: () -> Void = {}
+    @Published var tidy: TidyScan?
+    @Published var tidyState: SectionState = .ready
+    @Published var scanTidy: () -> Void = {}
 
     // Large folders
-    var largeItems: [LargeItem]?
-    var largeIncomplete = false
-    var largeSkippedPrivate = false
-    var largeState: SectionState = .ready
-    var scanLarge: () -> Void = {}
+    @Published var largeItems: [LargeItem]?
+    @Published var largeIncomplete = false
+    @Published var largeSkippedPrivate = false
+    @Published var largeState: SectionState = .ready
+    @Published var scanLarge: () -> Void = {}
 
     // Background items: launch agents and daemons
-    var startupItems: [StartupItem]?
-    var startupUnreadable = 0
-    var startupState: SectionState = .ready
+    @Published var startupItems: [StartupItem]?
+    @Published var startupUnreadable = 0
+    @Published var startupState: SectionState = .ready
     /// Counts the scans: only the newest publishes, so a slow older one cannot overwrite what an action just changed.
-    var startupGeneration = 0
-    var scanStartup: () -> Void = {}
-    var setStartupEnabled: (StartupItem, Bool) -> Void = { _, _ in }
+    @Published var startupGeneration = 0
+    @Published var scanStartup: () -> Void = {}
+    @Published var setStartupEnabled: (StartupItem, Bool) -> Void = { _, _ in }
     /// What the detail view of a background item shows, by plist path; filled when the row is opened.
-    var startupInspections: [String: StartupInspection] = [:]
-    var startupInspecting: Set<String> = []
-    var inspectStartup: (StartupItem) -> Void = { _ in }
+    @Published var startupInspections: [String: StartupInspection] = [:]
+    @Published var startupInspecting: Set<String> = []
+    @Published var inspectStartup: (StartupItem) -> Void = { _ in }
 
     // Apps: the installed ones, what each left behind (by app path), and the last uninstall
-    var installedAppsAt: Date?
-    var installedApps: [InstalledApp]?
-    var installedAppsUnreadable = 0
-    var installedAppsState: SectionState = .ready
-    var appLeftovers: [String: [Leftover]] = [:]
-    var leftoversLoading: Set<String> = []
+    @Published var installedAppsAt: Date?
+    @Published var installedApps: [InstalledApp]?
+    @Published var installedAppsUnreadable = 0
+    @Published var installedAppsState: SectionState = .ready
+    @Published var appLeftovers: [String: [Leftover]] = [:]
+    @Published var leftoversLoading: Set<String> = []
     /// Paths whose size is still being measured: "Measuring..." rather than "unknown".
-    var measuringApps: Set<String> = []
+    @Published var measuringApps: Set<String> = []
     /// Count the scans: only the newest may publish sizes, so an older one cannot overwrite a newer list.
-    var installedAppsGeneration = 0
-    var leftoversGeneration: [String: Int] = [:]
+    @Published var installedAppsGeneration = 0
+    @Published var leftoversGeneration: [String: Int] = [:]
     /// "app path, newline, leftover path": two apps may share a leftover.
-    var measuringLeftovers: Set<String> = []
-    var uninstalling: String?
-    var uninstallProgress: (done: Int, total: Int, next: String?)?
-    var uninstallResults: [CleanupResult] = []
-    var uninstalledName: String?
-    var uninstallStopping = false
+    @Published var measuringLeftovers: Set<String> = []
+    @Published var uninstalling: String?
+    @Published var uninstallProgress: (done: Int, total: Int, next: String?)?
+    @Published var uninstallResults: [CleanupResult] = []
+    @Published var uninstalledName: String?
+    @Published var uninstallStopping = false
     /// By app path. Absent while it is being read; `.unavailable` is "no record", never "not opened".
-    var appLastOpened: [String: Reading<Date>] = [:]
-    var scanInstalledApps: () -> Void = {}
-    var batteryHealth: Reading<BatteryHealth>?
-    var batteryStatus: Reading<BatteryStatus>?
-    var thermalSensors: Reading<ThermalSensors>?
-    var readPower: () -> Void = {}
+    @Published var appLastOpened: [String: Reading<Date>] = [:]
+    @Published var scanInstalledApps: () -> Void = {}
+    @Published var batteryHealth: Reading<BatteryHealth>?
+    @Published var batteryStatus: Reading<BatteryStatus>?
+    @Published var thermalSensors: Reading<ThermalSensors>?
+    @Published var readPower: () -> Void = {}
     /// When the read in flight started; nil when none is. A read that hangs (a sensor call across sleep) is abandoned after a while.
-    var readingPowerSince: Date?
-    var loadLeftovers: (InstalledApp) -> Void = { _ in }
-    var uninstallApp: (InstalledApp, [Leftover]) -> Void = { _, _ in }
+    @Published var readingPowerSince: Date?
+    @Published var loadLeftovers: (InstalledApp) -> Void = { _ in }
+    @Published var uninstallApp: (InstalledApp, [Leftover]) -> Void = { _, _ in }
 
     // Old downloads: what sits in Downloads past the chosen age, and the last move
-    var oldDownloads: [OldDownload]?
-    var oldDownloadsState: SectionState = .ready
-    var oldDownloadsDays = OldDownloads.defaultDays
-    var oldDownloadsMoving = false
-    var oldDownloadsProgress: (done: Int, total: Int, next: String?)?
-    var oldDownloadsResults: [CleanupResult] = []
-    var scanOldDownloads: () -> Void = {}
-    var moveOldDownloads: ([OldDownload]) -> Void = { _ in }
+    @Published var oldDownloads: [OldDownload]?
+    @Published var oldDownloadsState: SectionState = .ready
+    @Published var oldDownloadsDays = OldDownloads.defaultDays
+    @Published var oldDownloadsMoving = false
+    @Published var oldDownloadsProgress: (done: Int, total: Int, next: String?)?
+    @Published var oldDownloadsResults: [CleanupResult] = []
+    @Published var scanOldDownloads: () -> Void = {}
+    @Published var moveOldDownloads: ([OldDownload]) -> Void = { _ in }
 
     // Permissions, as macOS answers now
-    var fullDiskAccess: PermissionState = .unknown
-    var notifications: NotificationAccess = .unknown
-    var refreshPermissions: () -> Void = {}
-    var requestNotifications: () -> Void = {}
+    @Published var fullDiskAccess: PermissionState = .unknown
+    @Published var notifications: NotificationAccess = .unknown
+    @Published var refreshPermissions: () -> Void = {}
+    @Published var requestNotifications: () -> Void = {}
 
     // Updates: the newest release, where this build stands, and the installer's progress
-    var latestRelease: ReleaseInfo?
-    var releaseCheck: SectionState = .ready
-    var updateState: UpdateState = .idle
-    var checkForUpdate: () -> Void = {}
-    var installUpdate: () -> Void = {}
+    @Published var latestRelease: ReleaseInfo?
+    @Published var releaseCheck: SectionState = .ready
+    @Published var updateState: UpdateState = .idle
+    @Published var checkForUpdate: () -> Void = {}
+    @Published var installUpdate: () -> Void = {}
     var runningVersion: String { (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "0.0.0" }
     var buildSource: String? { Bundle.main.infoDictionary?["MacMaxSource"] as? String }
     var standing: Standing { MacMaxRelease.standing(version: runningVersion, source: buildSource, latestTag: latestRelease?.tag) }
@@ -288,16 +286,18 @@ final class PanelModel {
     var newerRelease: Bool { standing == .behind }
 
     // Settings
-    var settingsPane: SettingsPane = .general
+    @Published var settingsPane: SettingsPane = .general
     /// Nil in the screenshots: edits then change only this model.
-    var configStore: ConfigStore?
-    var vpnServices: [(name: String, state: String)] = []
-    var physicalInterface: String?
-    var historyBytes: Int64?
-    var clearHistory: () -> Void = {}
-    var lastCleared: Date?
-    var clearError: String?
-    var clearing = false
+    @Published var configStore: ConfigStore?
+    @Published var vpnServices: [(name: String, state: String)] = []
+    @Published var physicalInterface: String?
+    @Published var historyBytes: Int64?
+    @Published var clearHistory: () -> Void = {}
+    @Published var lastCleared: Date?
+    @Published var clearError: String?
+    @Published var clearing = false
+    /// Why the login item could not be set. In the model, not the pane: a look change rebuilds the Settings tree.
+    @Published var loginProblem: String?
 
     /// Applies an edit and saves it as it changes. The store re-reads the file first, so a hand edit survives, and
     /// refuses to touch a file that does not parse: the problem shows under the control instead.

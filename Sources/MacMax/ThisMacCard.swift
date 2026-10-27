@@ -3,7 +3,7 @@ import SwiftUI
 
 /// The whole machine in one card: chip and cores with how many are working, the GPU, and the memory against its size.
 struct ThisMacCard: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     var body: some View {
         if model.hardware != nil || model.live != nil {

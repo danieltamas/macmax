@@ -4,7 +4,7 @@ import SwiftUI
 /// One press and where it got to: the button, then the answer. After a polite request that did not end it, the same
 /// place offers the forceful one. Nothing is signalled until the press.
 struct ActionControl: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     let action: PanelAction
     let forced: PanelAction
     let title: String
@@ -42,7 +42,7 @@ struct ActionControl: View {
 
 /// The running containers of Docker, read when asked, each with a Stop that re-checks it is still running.
 struct ContainersList: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {

@@ -4,9 +4,8 @@ import ServiceManagement
 import SwiftUI
 
 struct GeneralPane: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     @State private var opensAtLogin = SMAppService.mainApp.status == .enabled
-    @State private var loginProblem: String?
     @State private var confirmClear = false
     private let home = MacMaxHome()
 
@@ -44,7 +43,7 @@ struct GeneralPane: View {
             }
             SettingsCard(title: "Open at login", detail: "MacMax only measures while it runs.") {
                 SwitchRow(title: "Open MacMax when you log in", isOn: Binding(get: { opensAtLogin }, set: { setOpensAtLogin($0) }))
-                if let loginProblem { ProblemText(text: loginProblem) }
+                if let loginProblem = model.loginProblem { ProblemText(text: loginProblem) }
             }
             SettingsCard(title: "Data folder", detail: "History and logs on this Mac. Nothing leaves it.") {
                 SettingsRow(title: home.url.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")) {
@@ -87,9 +86,9 @@ struct GeneralPane: View {
     private func setOpensAtLogin(_ on: Bool) {
         do {
             if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
-            loginProblem = nil
+            model.loginProblem = nil
         } catch {
-            loginProblem = "macOS refused: \(error.localizedDescription) MacMax must run from an Applications folder."
+            model.loginProblem = "macOS refused: \(error.localizedDescription) MacMax must run from an Applications folder."
         }
         opensAtLogin = SMAppService.mainApp.status == .enabled
     }

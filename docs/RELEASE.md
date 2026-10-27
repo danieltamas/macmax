@@ -43,7 +43,7 @@ notifications) survive local rebuilds; releases never use it.
 
 `scripts/bundle.sh [--universal] [--version x.y.z --build n] [--source <describe>] [--scratch d]
 [--out d] [--identity <name>|-]` prints the `.app` path on stdout, noise on stderr. Per arch:
-`swift build -c release --triple <arch>-apple-macosx14.0` with `-file-prefix-map` for the source
+`swift build -c release --triple <arch>-apple-macosx13.0` with `-file-prefix-map` for the source
 and scratch paths and `ZERO_AR_DATE=1`; `lipo -create` for universal; delete the toolchain rpath
 SwiftPM adds; `strip -S`. Assemble Info.plist (versions replaced with `plutil`), `AppIcon.icns`,
 `MenuBarIcon.pdf`, and `install.sh` into `Contents/Resources/`. The CLI goes into
@@ -114,7 +114,7 @@ It takes minutes: run it in a terminal, never behind a button with a short timeo
 
 Repo root; `curl -fsSL https://raw.githubusercontent.com/danieltamas/macmax/main/install.sh | bash`.
 - Every step in a function; `main "$@"` is the last line, so a truncated download runs nothing.
-- Darwin and macOS 14 or newer, else a sentence and exit.
+- Darwin and macOS 13 or newer, else a sentence and exit.
 - `fetch()` = `curl -fsSL --connect-timeout 20 --speed-limit 1024 --speed-time 60`.
 - Version: `MACMAX_VERSION=X.Y.Z` (validated as semver) pins a release; otherwise
   `releases/latest/download/`. Downloads the zip and `SHA256SUMS`; exactly one line must match

@@ -1,6 +1,6 @@
 # Contributing to MacMax
 
-Thanks for looking. MacMax is a small macOS menu bar app (SwiftPM, Swift 6, macOS 14+, no
+Thanks for looking. MacMax is a small macOS menu bar app (SwiftPM, Swift 6, macOS 13+, no
 third-party packages). Start with [`docs/PLAN.md`](docs/PLAN.md) and
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 

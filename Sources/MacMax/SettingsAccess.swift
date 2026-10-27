@@ -4,7 +4,7 @@ import SwiftUI
 
 /// The settings that say what other programs may see: agents through MCP, and what macOS lets MacMax itself see.
 struct AgentPane: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     static let command = "claude mcp add macmax -- ~/.local/bin/macmax mcp"
 
     var body: some View {
@@ -33,7 +33,7 @@ struct AgentPane: View {
 }
 
 struct PermissionsPane: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
@@ -89,7 +89,7 @@ struct PermissionsPane: View {
 
 /// Who made MacMax and why, its repo, and which build this is.
 struct AboutPane: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     private static let repo = URL(string: "https://github.com/danieltamas/macmax")!
 
     var body: some View {

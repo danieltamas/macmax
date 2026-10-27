@@ -5,7 +5,7 @@ import SwiftUI
 /// hottest sensor on a dial). Read while the panel is open, every few seconds; a reading that fails says so and is
 /// never drawn as healthy.
 struct PowerHealthCard: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     @Environment(\.panelVisible) private var panelVisible
     private static let refreshSeconds: UInt64 = 10
 

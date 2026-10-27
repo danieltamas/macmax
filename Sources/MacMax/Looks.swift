@@ -1,5 +1,4 @@
 import AppKit
-import Observation
 import SwiftUI
 
 /// The looks MacMax can wear, chosen under General. Each one is a palette and a finish; the
@@ -105,12 +104,11 @@ struct Palette {
 /// The look this Mac chose, kept across launches. Every view that reads a `Theme` token reads
 /// it through here, so a new choice redraws them all.
 @MainActor
-@Observable
-final class Appearance {
+final class Appearance: ObservableObject {
     static let shared = Appearance()
 
     /// Set directly only for drawing that must not touch the saved choice (the README's screenshots).
-    var look: Look {
+    @Published var look: Look {
         didSet { applyToApp() }
     }
 

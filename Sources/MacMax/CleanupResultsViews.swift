@@ -37,7 +37,7 @@ private func items(_ count: Int) -> String { "\(count) item\(count == 1 ? "" : "
 
 /// The last press: how much went, grouped by rule, with the skipped and failed ones counted apart.
 struct JustMovedCard: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     private struct Moved { let name: String; let rule: String; let bytes: Int64 }
 
@@ -95,7 +95,7 @@ struct JustMovedCard: View {
 
 /// Earlier cleanups, one row per press: when, how many, and the items on request.
 struct LastCleanupsCard: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     /// Rows logged within two minutes of each other came from one press.
     private var runs: [[ActionRow]] {

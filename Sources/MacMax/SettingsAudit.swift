@@ -2,7 +2,7 @@ import MacMaxCore
 import SwiftUI
 
 struct AuditPane: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
@@ -50,7 +50,7 @@ struct AuditPane: View {
 }
 
 private struct RuleRow: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     let rule: Rule
 
     private var enabled: Bool { !model.config.disabledRules.contains(rule.id) }
@@ -73,7 +73,7 @@ private struct RuleRow: View {
 }
 
 private struct ThresholdField: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     let threshold: Threshold
     @State private var text = ""
     @State private var problem: String?

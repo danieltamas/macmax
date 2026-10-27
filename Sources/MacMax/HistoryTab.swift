@@ -42,7 +42,7 @@ extension HistoryRange {
 }
 
 struct HistoryTab: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     var body: some View {
         VStack(spacing: 12) {
@@ -66,7 +66,7 @@ struct HistoryTab: View {
 }
 
 struct HistoryCard: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     let style: HistoryStyle
     let points: [HistoryPoint]
 
@@ -192,7 +192,8 @@ struct HistoryCard: View {
     }
 
     private static func bucket(_ proxy: ChartProxy, _ geometry: GeometryProxy, _ x: CGFloat, _ range: HistoryRange) -> Int64? {
-        guard let frame = proxy.plotFrame, let date: Date = proxy.value(atX: x - geometry[frame].origin.x) else { return nil }
+        let frame = proxy.plotAreaFrame
+        guard let date: Date = proxy.value(atX: x - geometry[frame].origin.x) else { return nil }
         let step = range.stepSeconds
         return Int64(date.timeIntervalSince1970) / step * step
     }

@@ -2,7 +2,7 @@ import MacMaxCore
 import SwiftUI
 
 struct FindingsTab: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     var body: some View {
         VStack(spacing: 10) {
@@ -33,7 +33,7 @@ struct FindingsTab: View {
 }
 
 struct FindingCard: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     let finding: Finding
 
     var body: some View {

@@ -25,7 +25,7 @@ enum RuleText {
 struct CleanupPane: View {
     enum Place { case tab, settings }
 
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     var place: Place = .settings
     @State private var confirming = false
 
@@ -150,7 +150,7 @@ private struct CommandLine: View {
 }
 
 private struct ProtectedPathsCard: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     var body: some View {
         SettingsCard(title: "Protected paths", detail: "Never touched, also through a link. Your documents, keys, mail, app data and anything under git are always protected.") {

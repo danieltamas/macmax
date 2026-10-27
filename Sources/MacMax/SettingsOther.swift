@@ -3,7 +3,7 @@ import MacMaxCore
 import SwiftUI
 
 struct NetworkPane: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     @State private var endpoint = ""
     @State private var problem: String?
 

@@ -158,7 +158,7 @@ uninstall() {
 
 main() {
   [[ $(uname -s) == Darwin ]] || fail "MacMax runs on macOS only"
-  (($(sw_vers -productVersion | cut -d. -f1) >= 14)) || fail "MacMax needs macOS 14 or newer"
+  (($(sw_vers -productVersion | cut -d. -f1) >= 13)) || fail "MacMax needs macOS 13 or newer"
   local app
   if [[ ${1:-} == --uninstall && ( $# -eq 1 || ( $# -eq 2 && ${2:-} == --purge ) ) ]]; then
     take_lock

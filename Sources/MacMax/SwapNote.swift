@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Under the swap finding: swap cannot be emptied on demand, so say what does help and who holds the memory.
 struct SwapNote: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     static func applies(to ruleID: String) -> Bool { ruleID == "swap_used" }
 

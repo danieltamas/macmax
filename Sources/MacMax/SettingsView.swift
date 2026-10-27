@@ -36,7 +36,9 @@ enum SettingsPane: String, CaseIterable, Identifiable {
 
 /// MacMax's settings window: every setting is edited in place and saved as it changes.
 struct SettingsView: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
+    /// See `PanelView`: the look is read through a static, so the root observes it for the whole tree.
+    @ObservedObject private var appearance = Appearance.shared
     private var selection: SettingsPane {
         get { model.settingsPane }
         nonmutating set { model.settingsPane = newValue }
@@ -57,6 +59,7 @@ struct SettingsView: View {
         .background(Backdrop())
         .preferredColorScheme(Theme.scheme)
         .animation(Motion.spring, value: selection)
+        .id(appearance.look)
     }
 
     @ViewBuilder private var pane: some View {

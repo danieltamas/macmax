@@ -2,7 +2,7 @@ import MacMaxCore
 import SwiftUI
 
 struct NetworkTab: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
 
     var body: some View {
         VStack(spacing: 12) {
@@ -47,7 +47,7 @@ struct NetworkTab: View {
 }
 
 struct TrafficRow: View {
-    let model: PanelModel
+    @ObservedObject var model: PanelModel
     let line: TrafficLine
     let top: Double
 

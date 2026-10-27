@@ -3,7 +3,7 @@
 ## Targets
 
 ```
-Package.swift            swift-tools-version 6.0, macOS 14, no dependencies
+Package.swift            swift-tools-version 6.0, macOS 13 deployment target, no dependencies
 Sources/MacMaxCore/      everything testable; imports Foundation, Darwin, IOKit, SystemConfiguration,
                          Network, SQLite3; never SwiftUI or AppKit
   Collect/               SystemCollector, ProcessCollector, AppGrouping, NetworkTraffic, NetworkIdentity,
@@ -182,7 +182,7 @@ a missing tool prints a sentence. Commands and JSON shapes: `docs/AGENT-API.md`.
 
 ## Concurrency
 
-- `AppStore` is `@MainActor @Observable`; collectors and the database are actors or nonisolated
+- `PanelModel` is a `@MainActor ObservableObject` (`@Observable` is macOS 14; the floor is 13); collectors and the database are actors or nonisolated
   pure functions; heavy work never runs on the main actor.
 - The tick is a detached loop with a monotonic clock; a slow collector times out and yields a
   `failed` reading instead of delaying the tick. The `nettop` stream is one supervised child.

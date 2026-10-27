@@ -1,5 +1,9 @@
 # Release log
 
+## 0.1.4 (2026-10-27)
+
+MacMax now installs and runs on macOS 13 (Ventura) as well as 14 and newer, on Apple silicon and Intel. The one-line installer accepts a Mac on 13 and downloads the same release build; nothing is built on your Mac. Building MacMax from source still needs Xcode 26 on macOS 15 or newer.
+
 ## 0.1.3 (2026-10-27)
 
 Disk IO no longer shows as a failure on a Mac that has no internal disk driver, such as a virtual machine. It now says the Mac publishes no internal disk counters. A disk read that really fails still shows as failed.

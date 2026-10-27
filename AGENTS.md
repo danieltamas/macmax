@@ -19,8 +19,9 @@ MCP server for coding agents. Owner: Daniel Tamas. Repo: github.com/danieltamas/
 
 ## Stack
 
-SwiftPM only (no Xcode project), Swift 6 language mode with strict concurrency, macOS 14 minimum,
-no third-party packages. Targets: `MacMaxCore` (no SwiftUI or AppKit imports), `MacMax` (the app),
+SwiftPM only (no Xcode project), Swift 6 language mode with strict concurrency, macOS 13 minimum
+(`@Observable` and the other macOS 14 APIs are replaced or gated, LESSONS.md section 2), no
+third-party packages. Targets: `MacMaxCore` (no SwiftUI or AppKit imports), `MacMax` (the app),
 `MacMaxCLI` (installed as `macmax`; never a target named `macmax`, it collides with `MacMax` on a
 case-insensitive disk), `MacMaxCoreTests` (Swift Testing). Bundle id `ro.danieltamas.macmax`.
 App home `~/.macmax` (or `$MACMAX_HOME`), mode 0700.

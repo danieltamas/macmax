@@ -51,7 +51,7 @@ the "UI glitch" list and the defect classes into every Codex review prompt.
   scene may open by itself at launch; `Settings` never does and gives Cmd-, for free.
 - **Panel size**: 404 points wide; height `min(780, visibleFrame.height - 40)` of the screen under
   the menu bar. A fixed 780 was cut off on a 13-inch screen.
-- **One `@MainActor @Observable` store.** Anything that must survive closing the panel or switching
+- **One `@MainActor ObservableObject` store (`@Observable` is macOS 14).** Anything that must survive closing the panel or switching
   tab lives in it: in-flight flags, the open tab, the open sheet, a running update. Views hold only
   ephemeral layout state.
 - **Never name the CLI target like the app in another case** (`macmax` vs `MacMax`): the
@@ -84,8 +84,10 @@ the "UI glitch" list and the defect classes into every Codex review prompt.
   notification-permission prompt; the app cannot remove another id's login item.
 - **Swift 6.2.3 compiler crash** (signal 6): a `@MainActor` method passed point-free as a closure,
   e.g. `Binding(get:set: setX)`. Wrap it: `set: { setX($0) }`.
-- **macOS 14 availability**: check every API (`Decimal.formatted(notation:)` is macOS 15; format
-  "1.2K" by hand). `pointerStyle` is macOS 15 (see the cursor glitch below).
+- **macOS 13 availability**: check every API. `@Observable`, `@Bindable`, `openSettings`, the two-value
+  `onChange`, `plotFrame` and the `.isToggle` trait are macOS 14: the models are `ObservableObject`, views
+  take them as `@ObservedObject`, and a macOS 14 API lives behind `#available` with the macOS 13 path
+  beside it. `Decimal.formatted(notation:)` and `pointerStyle` are macOS 15 (see the cursor glitch below).
 
 ## 3. CPU and lag: MacMax must not be the thing slowing the Mac
 
@@ -101,7 +103,7 @@ A performance app that costs performance is dead on arrival, so these are hard r
 - **Relative times redraw once a minute**: `Text(date, style: .relative)` redraws every second under
   an hour. Use a `TimelineView(.everyMinute)` label; for live counters `Text(start, style: .timer)`.
 - **The menu bar icon is a still image.** SwiftUI animations never run in the status item. Draw
-  frames into a 22x22 `NSImage` in an `@Observable` icon model; a template image at rest. Never a
+  frames into a 22x22 `NSImage` in an `ObservableObject` icon model; a template image at rest. Never a
   perpetual icon animation (it re-renders on every display every frame). A live readout in the
   menu bar ("CPU 34%") updates at most once per sampler tick and only when its text changes.
 - **Heavy work off the main actor**: parsing, SQLite reads for charts, rollups. Never build a

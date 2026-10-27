@@ -72,34 +72,48 @@ extension NSApplication {
 }
 
 /// The menu bar item: the icon at rest, tinted by a verdict that needs attention, plus the optional live text.
-/// It reads only the model, so it redraws when the verdict or the chosen text changes, not on every tick.
+/// The model publishes every write of every tick; the label keeps only its own face and redraws when that
+/// changes, so the menu bar is not drawn again for a process list.
 struct MenuBarLabel: View {
     let model: PanelModel
+    @State private var face: Face
+
+    init(model: PanelModel) {
+        self.model = model
+        _face = State(initialValue: Face(model))
+    }
 
     var body: some View {
         HStack(spacing: 4) {
-            Image(nsImage: NSImage.menuBarIcon(tint: tint))
-            if let text { Text(text).monospacedDigit() }
+            Image(nsImage: NSImage.menuBarIcon(tint: face.tint))
+            if let text = face.text { Text(text).monospacedDigit() }
+        }
+        // `objectWillChange` fires before the write; the next main-queue turn reads the value after it.
+        .onReceive(model.objectWillChange.receive(on: DispatchQueue.main)) { _ in
+            let next = Face(model)
+            if next != face { face = next }
         }
     }
 
-    private var tint: NSColor? {
-        switch model.verdict {
-        case .warn: .systemOrange
-        case .crit: .systemRed
-        case .unknown: .systemGray
-        case .ok, nil: nil
-        }
-    }
+    private struct Face: Equatable {
+        let tint: NSColor?
+        let text: String?
 
-    private var text: String? {
-        func vital(_ kind: Vital.Kind) -> String? { model.vitals.first { $0.kind == kind }?.value }
-        switch model.config.menuBarText {
-        case .none: return nil
-        case .cpu: return vital(.cpu)
-        case .memory: return vital(.memory)
-        case .network: return vital(.netIn)
-        case .country: return model.identity?.publicCountry
+        @MainActor init(_ model: PanelModel) {
+            tint = switch model.verdict {
+            case .warn: .systemOrange
+            case .crit: .systemRed
+            case .unknown: .systemGray
+            case .ok, nil: nil
+            }
+            func vital(_ kind: Vital.Kind) -> String? { model.vitals.first { $0.kind == kind }?.value }
+            text = switch model.config.menuBarText {
+            case .none: nil
+            case .cpu: vital(.cpu)
+            case .memory: vital(.memory)
+            case .network: vital(.netIn)
+            case .country: model.identity?.publicCountry
+            }
         }
     }
 }
