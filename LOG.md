@@ -1,5 +1,9 @@
 # Release log
 
+## 0.1.2 (2026-10-27)
+
+Battery and heat shows fresh readings after the Mac wakes. Before, one sensor read that hung during sleep blocked every later read, so the next morning the fans showed 0 rpm and did not turn while the hottest sensor read hot. A read that takes too long is now dropped and a new one starts.
+
 ## 0.1.1 (2026-10-26)
 
 "Check again" in About now checks when you press it. Before, a press within 15 minutes of the last check did nothing, so right after launch the button looked broken. It only waits now when GitHub has asked MacMax to pause, and it says so.
