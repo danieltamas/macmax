@@ -8,8 +8,13 @@ or paths. This is how Bton's README images are made (`DemoShots.swift` in Bton's
 
 ```
 scripts/bundle.sh --out "$SCRATCH/app"                         # a bundled build, for the real icon
-"$SCRATCH/app/MacMax.app/Contents/MacOS/MacMax" --render-screenshots docs/media
+"$SCRATCH/app/MacMax.app/Contents/MacOS/MacMax" --render-screenshots "$SCRATCH/shots"   # absolute path
+cp "$SCRATCH/shots"/*.png docs/media/
 ```
+
+Give the renderer an absolute path: the app has no permission to write into a relative one.
+`--scale 3` renders the same set at 3x for the launch film's plates (`brag-output/`), not for the
+README; the README set is 2x.
 
 The flag is handled first thing in `MacMaxApp.init()`: it builds a demo store, renders, writes PNGs
 and exits before the sampler, the database or any network call starts. Nothing is read from or
@@ -31,17 +36,23 @@ written to `~/.macmax`.
 
 ## Shot list (docs/media)
 
+The README shows one wide composite per section: two panels, or a panel and a column of cards,
+over the backdrop, each surface rounded (22 pt) and shadowed, 48 pt inset. The single shots are
+rendered in the same run; they are the per-view sources (and, at `--scale 3`, the film's plates).
+
 | File | What | Size (points) |
 |------|------|---------------|
 | `icon.png` | The app icon (`sips -s format png -z 256 256 Support/AppIcon.icns`, not rendered by the app), for the README header | 256 x 256 |
-| `hero.png` | Overview and Network panels side by side over the backdrop | about 926 x 860 |
-| `overview.png` | Overview: verdict WARN with two findings, vitals tiles, identity card (`tunnel_ok`) | 404 x panel height |
-| `apps.png` | Apps sorted by memory, the browser row expanded to its processes | 404 x panel height |
-| `network.png` | Network, 1 hour window, eight apps, interface totals | 404 x panel height |
-| `findings.png` | Findings: one CRIT (Docker VM compressed), two WARN (stale agent sessions, swap) | 404 x panel height |
-| `history-1h.png`, `history-7d.png`, `history.png` | History, 24 hours, a memory spike with "who held it" open | 404 x panel height |
-| `cleanup.png`, `cleanup-results.png`, `large-folders.png`, `access-prompt.png`, `this-mac.png` | The Cleanup tab, the just-moved and last-cleanups cards, the large folders card, the one permission prompt, the This Mac card | 404 wide |
-| `leak.png` | The identity card in the `leak` state | 404 x card height |
+| `hero.png` | Overview and Network (1 hour) side by side | 926 x 860 |
+| `findings-apps.png` | Findings and Apps side by side | 926 x 860 |
+| `mac-cards.png` | The This Mac card and the Battery and heat card | 926 x 386 |
+| `network-leak.png` | Network (24 hours) and the identity card in the `leak` state | 926 x 860 |
+| `cleanup-safety.png` | Cleanup, with the just-moved card, the last-cleanups card and the one permission prompt stacked beside it | 926 x 860 |
+| `background-uninstall.png` | Background items with one item open, and Uninstall apps with one app selected | 926 x 776 |
+| `downloads-folders.png` | Old downloads and Large folders | 926 x 483 |
+| `history-pair.png` | History over the last hour and over the last week | 926 x 860 |
+| `overview.png`, `apps.png`, `network.png`, `findings.png`, `cleanup.png`, `history.png`, `history-1h.png`, `history-7d.png` | One panel per tab: Overview (verdict WARN, two findings, vitals, identity `tunnel_ok`), Apps sorted by memory with the browser row expanded, Network (1 hour, eight apps), Findings (one CRIT, two WARN), Cleanup, History (24 hours, 1 hour, 7 days) with a memory spike and "who held it" open | 404 x 780 |
+| `this-mac.png`, `battery-and-heat.png`, `leak.png`, `cleanup-results.png`, `cleanup-moving.png`, `large-folders.png`, `old-downloads.png`, `access-prompt.png`, `background-items.png`, `background-item-detail.png`, `uninstall-apps.png` | One card each: This Mac, Battery and heat, the identity card in the `leak` state, the just-moved and last-cleanups cards, a cleanup in progress, Large folders, Old downloads, the permission prompt, Background items closed and open, Uninstall apps | 404 wide |
 | `settings-<pane>.png` | One per Settings pane (general, audit, network, cleanup, agent-access, permissions, about); `settings-audit.png` shows the rule list | 760 x 540 |
 
 ## Synthetic data (the demo store)

@@ -17,11 +17,16 @@
   <img src="https://img.shields.io/badge/license-MIT-22C55E" alt="MIT">
 </p>
 
-<p align="center">
-  <img src="docs/media/hero.png" alt="MacMax: the Overview and Network panels" width="860">
-</p>
+<!-- The launch film (brag-output/brag.mp4), uploaded through the GitHub editor: a user-attachments
+     URL on its own line is the only way GitHub plays video inline. The source and the music-only
+     fallback are rebuilt by the brag workflow, see docs/SCREENSHOTS.md. -->
 
-> **Status:** version 0.1.0, the first release. It is signed ad hoc, not notarized, so macOS asks you to confirm the first open.
+https://github.com/user-attachments/assets/d102228f-ef1c-43d5-85da-fe63b91f2822
+
+> **Status:** early releases. By using MacMax you accept that it may have bugs; a wrong or missing
+> reading is one worth reporting at
+> [github.com/danieltamas/macmax/issues](https://github.com/danieltamas/macmax/issues). The app is
+> signed ad hoc, not notarized, so macOS asks you to confirm the first open.
 
 ## Install
 
@@ -43,23 +48,14 @@ Apple silicon or Intel. MacMax appears in the menu bar a few seconds later.
 - **Updating:** when a new version is out, an arrow appears in the panel header. Press it, then
   Update in Settings, About. Or run the install line again.
 
-## What you get
-
-### One answer: is this Mac healthy, and if not, why?
+## One answer
 
 The menu bar icon turns **OK**, **WARN** or **CRIT**. Open it and you see the few things that
 matter, each with the numbers behind it, why it slows the Mac, and the button that fixes it.
 
-<table>
-  <tr>
-    <td width="50%" valign="top"><img src="docs/media/overview.png" alt="Overview with a WARN verdict and three findings"></td>
-    <td width="50%" valign="top"><img src="docs/media/findings.png" alt="Findings with the evidence and the fix for each"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Overview</b>: the verdict and live numbers</td>
-    <td align="center"><b>Findings</b>: what fired, why, and the fix</td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/media/hero.png" alt="The Overview panel with a WARN verdict and three findings, next to the Network panel" width="926">
+</p>
 
 A slow afternoon, explained:
 
@@ -73,120 +69,98 @@ A slow afternoon, explained:
 Nothing is guessed: every finding names the numbers that fired it, and the checks are the same
 every time (fixed thresholds you can edit in Settings).
 
-### Know your Mac
-
-<table>
-  <tr>
-    <td width="50%" valign="top"><img src="docs/media/this-mac.png" alt="The This Mac card: chip, cores busy, GPU, memory"></td>
-    <td width="50%" valign="top"><img src="docs/media/apps.png" alt="Apps, each with CPU, memory, disk and network"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>This Mac</b>: chip, cores in use, GPU and its memory, RAM</td>
-    <td align="center"><b>Apps</b>: the real cost of each app</td>
-  </tr>
-</table>
-
-Apps are grouped the way you think of them: Chrome's 38 helpers are one row, an agent session and
-its helper processes are one row. Expand a row to see its processes. Memory is the number Activity
-Monitor shows.
-
-### Network: who is using it, and is your VPN really on
-
-<table>
-  <tr>
-    <td width="50%" valign="top"><img src="docs/media/network.png" alt="Traffic per app and the network identity card"></td>
-    <td width="50%" valign="top"><img src="docs/media/leak.png" alt="The identity card when the VPN is connected but traffic leaks"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Traffic per app</b>, now, 1 hour or 24 hours</td>
-    <td align="center"><b>A leak</b>, in red: the VPN says connected, your ISP address still shows</td>
-  </tr>
-</table>
-
-MacMax reads the counters macOS already keeps. It does not capture or look inside your traffic. It
-works with Outline, Tailscale, WireGuard and other VPNs.
-
-### Cleanup that cannot hurt you
-
-<table>
-  <tr>
-    <td width="50%" valign="top"><img src="docs/media/cleanup.png" alt="Cleanup rules with sizes"></td>
-    <td width="50%" valign="top"><img src="docs/media/cleanup-results.png" alt="What was just moved to the Trash, and the history of cleanups"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Rules</b>: caches that rebuild themselves, sized and previewed</td>
-    <td align="center"><b>Results</b>: a summary, and the items one click away</td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top"><img src="docs/media/large-folders.png" alt="The biggest folders under your home folder"></td>
-    <td width="50%" valign="top"><img src="docs/media/access-prompt.png" alt="One prompt that lists the folders MacMax needs"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Large folders</b>: shown, never deleted</td>
-    <td align="center"><b>One permission prompt</b> instead of thirteen</td>
-  </tr>
-</table>
-
-<table>
-  <tr>
-    <td width="50%" valign="top"><img src="docs/media/background-items.png" alt="Background items: launch agents, running or off, with Turn off"></td>
-    <td width="50%" valign="top"><img src="docs/media/background-item-detail.png" alt="One background item opened: who added it, what it runs, and where it is connected"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Background items</b>: what starts by itself, and a press to turn yours off</td>
-    <td align="center"><b>Click one</b> to see who added it and where it connects</td>
-  </tr>
-</table>
-
-<table>
-  <tr>
-    <td width="50%" valign="top"><img src="docs/media/uninstall-apps.png" alt="Uninstall apps: an app with the files it left behind and their sizes"></td>
-    <td width="50%" valign="top"><img src="docs/media/battery-heat.png" alt="Battery and heat: battery health, charge cycles, fan speeds and the hottest sensor"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Uninstall apps</b>: the app and what it left behind, to the Trash</td>
-    <td align="center"><b>Battery and heat</b>: wear, cycles, fans and temperature</td>
-  </tr>
-</table>
+## What fired it, and what it costs
 
 <p align="center">
-  <img src="docs/media/old-downloads.png" alt="Old downloads: pick what to move to the Trash" width="420">
+  <img src="docs/media/findings-apps.png" alt="Findings with the evidence and the fix for each, next to Apps sorted by memory" width="926">
 </p>
 
-Cleanup moves things to the **Trash**, so you can put them back, and only after you confirm. It
-covers app caches, Xcode build data, npm, pip and Homebrew downloads, browser caches, the copies Mail made of opened attachments, and old logs. A separate list shows what has sat in Downloads for months and moves only what you tick. Language files are left alone: removing them breaks an app's signature. Your documents,
-keychains, mail and any folder with a `.git` inside are never touched. MacMax can also end leftover
-helper processes (stale agent servers, parents that never collected finished children), only when
-you press the button. **Background items** lists the programs macOS starts by itself (your Launch
-Agents and the system's). You can turn off your own, and turn them on again; the system-wide ones
-are only listed, because changing them needs an administrator and MacMax never asks for that.
-Click any item to see who added it (the app it belongs to, or a clearly marked guess from its name),
-what it runs, when it starts, and, while it is running, the addresses it is connected to right now.
-MacMax shows where a program connects, not what it sends. **Uninstall apps** lists the apps in
-`/Applications` and `~/Applications`; pick one to see what it left in your Library (support files,
-caches, preferences, containers, logs, saved state, its launch agent) with sizes, untick anything you
-want to keep, and move the lot to the Trash after one confirmation. Each app shows when it was last
-opened (from Spotlight's record; "no record" is not "never"), and the list sorts by name, size or last
-opened. A closed app often leaves an updater or helper running; the same press ends those first. It
-never touches an app that is open, an Apple app, MacMax itself, or anything in `/Library`, which needs
-an administrator. Files matched only by the app's name are listed but start unticked.
+- **Findings** shows what fired, the reading that fired it, and the one press that fixes it.
+- **Apps** shows the real cost of each app: CPU, memory, disk and network. Apps are grouped the way
+  you think of them: Chrome's 38 helpers are one row, an agent session and its helper processes are
+  one row. Expand a row to see its processes. Memory is the number Activity Monitor shows.
 
-**Battery and heat** (on the Overview tab) shows how worn the battery is (its maximum capacity against
-the original, and the charge cycles used against the rated number), its temperature, the speed of each
-fan and the hottest temperature sensor. The numbers come from the battery's own registry entry and the
-System Management Controller, with no administrator needed. A Mac without a battery or fans says so;
-a reading that fails says "unknown", never "fine"."
-
-### History
+## Know your Mac
 
 <p align="center">
-  <img src="docs/media/history.png" alt="History with a memory spike and the apps that held it" width="360">
+  <img src="docs/media/mac-cards.png" alt="The This Mac card with chip, cores busy, GPU and memory, next to the Battery and heat card" width="926">
+</p>
+
+- **This Mac:** chip, cores in use, GPU and its memory, RAM, swap, uptime and free disk.
+- **Battery and heat:** how worn the battery is (its maximum capacity against the original, and the
+  charge cycles used against the rated number), its temperature, the speed of each fan and the
+  hottest sensor. The numbers come from the battery's own registry entry and the System Management
+  Controller, with no administrator needed. A Mac without a battery or fans says so; a reading that
+  fails says "unknown", never "fine".
+
+## Is your VPN really on?
+
+<p align="center">
+  <img src="docs/media/network-leak.png" alt="Traffic per app over 24 hours, next to the identity card in red: the VPN says connected, the ISP address still shows" width="926">
+</p>
+
+- **Traffic per app,** now, over the last hour or the last 24 hours, with the totals per interface.
+- **The identity card** shows your public address, your ISP's address and which one the world sees.
+  When the VPN says connected but your ISP address still shows, the card turns red.
+- MacMax reads the counters macOS already keeps. It does not capture or look inside your traffic.
+  It works with Outline, Tailscale, WireGuard and other VPNs.
+
+## Cleanup that cannot hurt you
+
+<p align="center">
+  <img src="docs/media/cleanup-safety.png" alt="Cleanup rules with sizes, next to what was just moved to the Trash, the history of cleanups, and the one permission prompt" width="926">
+</p>
+
+- **To the Trash, after you confirm.** Everything can be put back.
+- **What it covers:** app caches, Xcode build data, npm, pip and Homebrew downloads, browser caches,
+  the copies Mail made of opened attachments, and old logs. Each rule is sized and previewed first.
+- **What it never touches:** your documents, keychains, mail, language files (removing them breaks
+  an app's signature) and any folder with a `.git` inside.
+- **One permission prompt** instead of thirteen: a single list of the folders MacMax needs.
+- MacMax can also end leftover helper processes (stale agent servers, parents that never collected
+  finished children), only when you press the button.
+
+## What starts by itself, and what apps leave behind
+
+<p align="center">
+  <img src="docs/media/background-uninstall.png" alt="Background items with one launch agent opened, next to Uninstall apps showing an app and the files it left behind" width="926">
+</p>
+
+- **Background items** lists the programs macOS starts by itself: your Launch Agents and the
+  system's. You can turn off your own, and turn them on again. The system-wide ones are only listed,
+  because changing them needs an administrator and MacMax never asks for that.
+- **Click an item** to see who added it (the app it belongs to, or a clearly marked guess from its
+  name), what it runs, when it starts, and, while it is running, the addresses it is connected to
+  right now. MacMax shows where a program connects, not what it sends.
+- **Uninstall apps** lists the apps in `/Applications` and `~/Applications`. Pick one to see what it
+  left in your Library (support files, caches, preferences, containers, logs, saved state, its launch
+  agent) with sizes, untick anything you want to keep, and move the lot to the Trash after one
+  confirmation. A closed app often leaves an updater or helper running; the same press ends those
+  first.
+- Each app shows when it was last opened (from Spotlight's record; "no record" is not "never"), and
+  the list sorts by name, size or last opened. It never touches an app that is open, an Apple app,
+  MacMax itself, or anything in `/Library`. Files matched only by the app's name are listed but
+  start unticked.
+
+## Old downloads and large folders
+
+<p align="center">
+  <img src="docs/media/downloads-folders.png" alt="Old downloads with checkboxes, next to the biggest folders under the home folder" width="926">
+</p>
+
+- **Old downloads:** what has sat in Downloads for months. MacMax moves only what you tick.
+- **Large folders:** the biggest folders under your home folder, shown, never deleted.
+
+## History
+
+<p align="center">
+  <img src="docs/media/history-pair.png" alt="History over the last hour and over the last week, with a memory spike and the apps that held it" width="926">
 </p>
 
 CPU, memory, swap, disk and network, from the last hour to the last 90 days. Point at a spike to
 see which apps held the Mac at that moment.
 
-### Ask your coding agent
+## Ask your coding agent
 
 `macmax mcp` lets Claude Code, or any MCP client, read the same data: "what is slowing my Mac?"
 gets an answer from real numbers. **It is off until you turn it on** in Settings, Agent access, and
@@ -219,6 +193,11 @@ Manager).
 
 **What will it never do?** Block traffic, run anything as root, or end or delete anything without
 your press.
+
+**I found a bug.** Open an issue at
+[github.com/danieltamas/macmax/issues](https://github.com/danieltamas/macmax/issues): macOS
+version, Mac model, what you did, what you expected and what MacMax showed. Early releases have
+bugs, and the report is how they get fixed.
 
 ## Privacy and security
 
@@ -257,8 +236,9 @@ scripts/install-from-source.sh
 ```
 
 Needs Xcode with Swift 6.2, which runs on macOS 15 or newer; the app it builds runs on macOS 13 or
-newer, so an older Mac installs the release zip above. `scripts/check.sh` builds and runs the suite. Releases are
-reproducible: `scripts/release.sh <x.y.z> --verify` builds twice and fails if one byte differs.
+newer, so an older Mac installs the release zip above. `scripts/check.sh` builds and runs the suite.
+Releases are reproducible: `scripts/release.sh <x.y.z> --verify` builds twice and fails if one byte
+differs.
 
 </details>
 

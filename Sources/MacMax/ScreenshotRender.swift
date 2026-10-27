@@ -13,11 +13,19 @@ enum ScreenshotRender {
 
     static let allLooksFlag = "--all-looks"
     static let stressFlag = "--stress"
+    /// `--scale 3` renders at 3x instead of the README's 2x: plates for the launch film's close-ups.
+    static let scaleFlag = "--scale"
+
+    /// The backdrop's padding around a composite and the gap between its panels.
+    private static let compositeInset: CGFloat = 48
+    private static let compositeGap: CGFloat = 22
 
     /// Every shot of docs/SCREENSHOTS.md that the app draws, in the chosen look (or all three), optionally with the
     /// longest names and largest values to check that nothing wraps.
-    static func render(to directory: URL, look: Look = .macmax, allLooks: Bool = false, stress: Bool = false) throws {
+    static func render(to directory: URL, look: Look = .macmax, allLooks: Bool = false, stress: Bool = false,
+                       scale: CGFloat = 2) throws {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        self.scale = scale
         for look in allLooks ? Look.allCases : [look] {
             Appearance.shared.look = look
             let suffix = look == .macmax || !allLooks ? "" : look == .solidGlass ? "-solid-glass" : "-solid-glass-light"
@@ -47,13 +55,7 @@ enum ScreenshotRender {
             let asking = DemoStore.model(stress: stress)
             asking.fullDiskAccess = .unknown
             try write(AccessPrompt(model: asking).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("access-prompt"))
-            let left = DemoStore.model(stress: stress), right = DemoStore.model(stress: stress)
-            right.tab = .network
-            right.window = .hour
-            try write(HStack(alignment: .top, spacing: 22) {
-                PanelView(model: left).frame(height: 780).clipShape(RoundedRectangle(cornerRadius: 22)).shadow(color: .black.opacity(0.5), radius: 18, y: 8)
-                PanelView(model: right).frame(height: 780).clipShape(RoundedRectangle(cornerRadius: 22)).shadow(color: .black.opacity(0.5), radius: 18, y: 8)
-            }.padding(.horizontal, 48).padding(.vertical, 40).background(Backdrop()), to: url("hero"))
+            try writeComposites(stress: stress, url: url)
             for range in [HistoryRange.hour, .week] {
                 let model = DemoStore.model(stress: stress)
                 model.tab = .history
@@ -70,6 +72,48 @@ enum ScreenshotRender {
         }
     }
 
+    /// The README's wide shots: two panels, or a panel and a column of cards, over the backdrop, each
+    /// surface rounded and shadowed. One image per README section reads larger than a two-column table.
+    private static func writeComposites(stress: Bool, url: (String) -> URL) throws {
+        func panel(_ tab: PanelTab, window: TrafficWindow? = nil, history: HistoryRange? = nil) -> some View {
+            let model = DemoStore.model(stress: stress)
+            model.tab = tab
+            if let window { model.window = window }
+            if let history { DemoStore.history(for: model, range: history, stress: stress); DemoStore.selectSpike(model, metric: .cpu) }
+            return surface(PanelView(model: model).frame(height: 780))
+        }
+        func card(_ view: some View) -> some View { surface(view.frame(width: PanelView.width)) }
+        let demo = DemoStore.model(stress: stress)
+        try write(composite(.top) { panel(.overview); panel(.network, window: .hour) }, to: url("hero"))
+        try write(composite(.top) { panel(.findings); panel(.apps) }, to: url("findings-apps"))
+        try write(composite(.top) { card(ThisMacCard(model: demo)); card(PowerHealthCard(model: demo)) }, to: url("mac-cards"))
+        try write(composite(.center) { panel(.network, window: .day); card(IdentityCardView(model: DemoStore.model(stress: stress, leak: true))) },
+                  to: url("network-leak"))
+        let cleaned = DemoStore.model(stress: stress), asking = DemoStore.model(stress: stress)
+        asking.fullDiskAccess = .unknown
+        try write(composite(.top) {
+            panel(.cleanup)
+            VStack(spacing: compositeGap) { card(JustMovedCard(model: cleaned)); card(LastCleanupsCard(model: cleaned)); card(AccessPrompt(model: asking)) }
+        }, to: url("cleanup-safety"))
+        try write(composite(.top) {
+            card(StartupCard(model: demo, open: ["/Users/example/Library/LaunchAgents/ro.example.relay.helper.plist"]))
+            card(AppUninstallCard(model: demo, selected: "/Applications/Relay Chat.app"))
+        }, to: url("background-uninstall"))
+        try write(composite(.top) { card(OldDownloadsCard(model: demo)); card(LargeFoldersCard(model: demo)) }, to: url("downloads-folders"))
+        try write(composite(.top) { panel(.history, history: .hour); panel(.history, history: .week) }, to: url("history-pair"))
+    }
+
+    private static func composite(_ alignment: VerticalAlignment, @ViewBuilder _ content: () -> some View) -> some View {
+        HStack(alignment: alignment, spacing: compositeGap, content: content)
+            .padding(.horizontal, compositeInset).padding(.vertical, compositeInset - 8).background(Backdrop())
+    }
+
+    private static func surface(_ view: some View) -> some View {
+        view.clipShape(RoundedRectangle(cornerRadius: 22)).shadow(color: .black.opacity(0.5), radius: 18, y: 8)
+    }
+
+    private static var scale: CGFloat = 2
+
     /// An offscreen window, not `ImageRenderer`: that one leaves text fields and other
     /// AppKit-backed controls as placeholders.
     private static func write(_ view: some View, to url: URL) throws {
@@ -80,7 +124,7 @@ enum ScreenshotRender {
         host.layoutSubtreeIfNeeded()
         RunLoop.main.run(until: .now.addingTimeInterval(0.3))
         let size = host.bounds.size
-        guard let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width * 2), pixelsHigh: Int(size.height * 2),
+        guard let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width * scale), pixelsHigh: Int(size.height * scale),
                                             bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
                                             colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)
         else { throw CocoaError(.fileWriteUnknown) }
