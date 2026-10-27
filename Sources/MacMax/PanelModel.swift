@@ -249,7 +249,8 @@ final class PanelModel {
     var batteryStatus: Reading<BatteryStatus>?
     var thermalSensors: Reading<ThermalSensors>?
     var readPower: () -> Void = {}
-    var readingPower = false
+    /// When the read in flight started; nil when none is. A read that hangs (a sensor call across sleep) is abandoned after a while.
+    var readingPowerSince: Date?
     var loadLeftovers: (InstalledApp) -> Void = { _ in }
     var uninstallApp: (InstalledApp, [Leftover]) -> Void = { _, _ in }
 
