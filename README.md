@@ -36,12 +36,22 @@ Open **Terminal** (Spotlight, type "Terminal") and paste this:
 curl -fsSL https://raw.githubusercontent.com/danieltamas/macmax/main/install.sh | bash
 ```
 
-That is all. No admin password, no Homebrew, no developer tools. It needs macOS 13 or newer, on
+Or, with Homebrew:
+
+```bash
+brew install --cask danieltamas/tap/macmax
+```
+
+That is all. No admin password, no developer tools. It needs macOS 13 or newer, on
 Apple silicon or Intel. MacMax appears in the menu bar a few seconds later.
 
 - **What the line does:** downloads the latest release from GitHub, checks it against the published
   checksum, and copies MacMax to `/Applications` (or `~/Applications` if you cannot write there).
   [Read the script](install.sh) first if you like; it is short.
+- **Homebrew:** the cask pins each release by checksum and installs the `macmax` command too.
+  The install line also records the cask as trusted in Homebrew 7, so `brew upgrade --cask macmax`
+  updates it afterwards. The app's own Update button works as well; run the brew upgrade once
+  afterwards so Homebrew's record matches.
 - **Prefer a download?** Take `MacMax-X.Y.Z.zip` from the
   [Releases page](https://github.com/danieltamas/macmax/releases), unzip it and drag MacMax to
   Applications. macOS asks you to confirm the first time: right-click the app, then Open.

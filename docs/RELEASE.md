@@ -186,8 +186,12 @@ MacMax" until the update returns.
 
 ## Homebrew (decision D7)
 
-After v0.1.0, a cask in `danieltamas/homebrew-tap`, pinned by `sha256`, pointing at the release zip.
-Only for path B (casks that are not notarized are discouraged).
+`Casks/macmax.rb` in `danieltamas/homebrew-tap`, pinned by `sha256` to the release zip, with the
+`macmax` CLI as its `binary` and a `postflight_steps` that clears the quarantine flag, so the ad hoc
+signed app opens like the curl install does. `scripts/tap.sh X.Y.Z` runs in the release's verify
+step: it rewrites the two pinned lines from `dist/SHA256SUMS`, pushes the tap, and `brew fetch`
+proves the published zip matches. A cask bump never changes anything else in the file. Decided
+2026-10-27: own tap; homebrew-core would need notarization (D1).
 
 ## Second Mac check (v0.1.0 and installer or signing changes)
 

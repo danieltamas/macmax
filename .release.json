@@ -15,6 +15,7 @@
   "githubRelease": true,
   "verify": [
     "MACMAX_VERSION={version} bash install.sh",
-    "test \"$(defaults read /Applications/MacMax.app/Contents/Info.plist CFBundleShortVersionString)\" = {version}"
+    "test \"$(defaults read /Applications/MacMax.app/Contents/Info.plist CFBundleShortVersionString)\" = {version}",
+    "scripts/tap.sh {version}"
   ]
 }
