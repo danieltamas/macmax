@@ -71,7 +71,7 @@ source fails its proof, pick the fallback, update this table and PLAN.md, and te
 | Swap used | `sysctl vm.swapusage` | verified (mac-audit) | none |
 | Swap-ins per second | `vm_statistics64.swapins` deltas | verified in U1 | `vm_stat` deltas (verified) |
 | Memory pressure level | `sysctl kern.memorystatus_level` | verified (mac-audit) | `memory_pressure -Q` |
-| Disk free | `URLResourceValues.volumeAvailableCapacityForImportantUsage` on `/` | verified in U1 | `df -k /` (verified) |
+| Disk free | `URLResourceValues.volumeAvailableCapacity` on `/System/Volumes/Data` (the Finder and `df` figure); purgeable is `volumeAvailableCapacityForImportantUsage` minus it, shown next to the free figure | verified in U1 | `df -k /System/Volumes/Data` (verified) |
 | Disk IO bytes and ops | IOKit `IOBlockStorageDriver` "Statistics" deltas, summed over the internal drivers (the boot disk on a Mac with one internal drive; external drives and disk images are excluded) | verified in U1 | `iostat -d -c 2 -w 1` (verified) |
 | Thermal | `ProcessInfo.thermalState`; `pmset -g therm` CPU_Speed_Limit | verified (mac-audit, pmset) | thermalState only |
 | GPU utilization | IOKit `IOAccelerator` PerformanceStatistics "Device Utilization %" | verified in U1 | `unavailable` |

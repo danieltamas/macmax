@@ -139,12 +139,22 @@ public actor SystemCollector {
                              encrypted: usage.xsu_encrypted != 0), source: "sysctl vm.swapusage", at: at)
     }
 
+    /// The data volume, where user files live (the sealed system volume shares its container but mounts a
+    /// read-only snapshot); `/` on a layout without one. The purgeable figure is derived, not read: macOS only
+    /// exposes it as the difference between the important-usage capacity and the plain one, and the free figure
+    /// stands without it.
     private static func diskSpace(at: Date) -> Reading<DiskSpace> {
-        let keys: Set<URLResourceKey> = [.volumeAvailableCapacityForImportantUsageKey, .volumeTotalCapacityKey]
-        guard let values = try? URL(fileURLWithPath: "/").resourceValues(forKeys: keys),
-              let free = values.volumeAvailableCapacityForImportantUsage, let total = values.volumeTotalCapacity,
-              free >= 0, total > 0, free <= Int64(total) else { return .failed(reason: "the startup volume capacity could not be read") }
-        return .ok(DiskSpace(freeBytes: UInt64(free), totalBytes: UInt64(total)), source: "volume capacity", at: at)
+        let keys: Set<URLResourceKey> = [.volumeAvailableCapacityKey, .volumeAvailableCapacityForImportantUsageKey,
+                                         .volumeTotalCapacityKey]
+        let path = ["/System/Volumes/Data", "/"].first { FileManager.default.fileExists(atPath: $0) } ?? "/"
+        guard let values = try? URL(fileURLWithPath: path).resourceValues(forKeys: keys),
+              let free = values.volumeAvailableCapacity, let total = values.volumeTotalCapacity,
+              free >= 0, total > 0, free <= total
+        else { return .failed(reason: "the capacity of \(path) could not be read") }
+        let purgeable = values.volumeAvailableCapacityForImportantUsage
+            .flatMap { $0 >= 0 && $0 <= Int64(total) ? UInt64(max($0 - Int64(free), 0)) : nil }
+        return .ok(DiskSpace(freeBytes: UInt64(free), totalBytes: UInt64(total), purgeableBytes: purgeable),
+                   source: "volume capacity", at: at)
     }
 
     /// `pmset -g therm` is a process spawn, so it is cached; `ProcessInfo.thermalState` is the fallback

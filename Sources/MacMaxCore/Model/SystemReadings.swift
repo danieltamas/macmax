@@ -120,13 +120,18 @@ public struct DiskIORates: Sendable, Equatable {
 }
 
 public struct DiskSpace: Sendable, Equatable {
-    /// Free space as the system counts it for important usage (purgeable space included).
+    /// Free space the way Finder, Disk Utility and `df` report it: purgeable space is not counted, because the
+    /// system may not give it back. A free figure that includes it reads tens of GB above every other tool.
     public let freeBytes: UInt64
     public let totalBytes: UInt64
+    /// What macOS would purge for an important write on top of `freeBytes`: local snapshots, caches, old updates.
+    /// nil when that figure could not be read; the free figure stands on its own.
+    public let purgeableBytes: UInt64?
 
-    public init(freeBytes: UInt64, totalBytes: UInt64) {
+    public init(freeBytes: UInt64, totalBytes: UInt64, purgeableBytes: UInt64? = nil) {
         self.freeBytes = freeBytes
         self.totalBytes = totalBytes
+        self.purgeableBytes = purgeableBytes
     }
 }
 

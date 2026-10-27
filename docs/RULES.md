@@ -169,9 +169,9 @@ the script's own roundings first:
   `unavailable("first audit")` without `previous`; `unavailable` when the previous snapshot had no public IP.
 - Rounding snaps to six decimals before the tie rule applies, so a byte count a few bytes short of a tie still
   counts as the tie (the script reads decimal text, which has no such error).
-- `disk_free` reads the data volume's plain available capacity (what `df` reports), not the important-usage
-  figure of the Overview, which adds purgeable space: a nearly full disk must not hide behind space the system
-  may not give back. `claude_stale` counts a process whose binary was replaced by an update (no readable path)
+- `disk_free` reads the data volume's plain available capacity (what `df` reports), never the important-usage
+  figure, which adds purgeable space: a nearly full disk must not hide behind space the system may not give
+  back. The Overview shows the same figure with the purgeable amount beside it. `claude_stale` counts a process whose binary was replaced by an update (no readable path)
   by its kernel command name, `claude` or a version number, as the script's `ps` does.
 - The top probe samples a 3 second window (`top -l 2 -s 3`), like the script. kernel_task CPU swings widely on
   a Mac that is swapping (37 to 169 percent within a minute was measured) and the two tools sample about 40

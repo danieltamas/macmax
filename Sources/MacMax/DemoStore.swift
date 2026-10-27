@@ -123,7 +123,7 @@ enum DemoStore {
             Vital(kind: .cpu, value: "38%", detail: "busy", series: series(40, 25, seed: 1), edge: nil),
             Vital(kind: .memory, value: "Warning", detail: stress ? "123 GB used" : "13 GB used", series: series(70, 12, seed: 2), edge: .warn),
             Vital(kind: .swap, value: "3.1 GB", detail: "in use", series: series(3, 1.2, seed: 3), edge: .warn),
-            Vital(kind: .disk, value: "86 GB", detail: "free", series: series(86, 0.4, seed: 4), edge: nil),
+            Vital(kind: .disk, value: "86 GB", detail: "free, 41 GB purgeable", series: series(86, 0.4, seed: 4), edge: nil),
             Vital(kind: .netIn, value: stress ? "9999 KB/s" : "1.2 MB/s", detail: "right now", series: series(1.2, 0.9, seed: 5), edge: nil),
             Vital(kind: .netOut, value: "208 KB/s", detail: "right now", series: series(0.2, 0.15, seed: 6), edge: nil),
         ]

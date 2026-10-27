@@ -27,7 +27,8 @@ extension LiveAgentBackend {
                                                                        "compressed_bytes": row.memCompressed.map { .int(Int($0)) } ?? AgentJSON.notRead("not stored")]) },
             "swap": reading(row.swapUsed.map(Double.init)) { .object(["used_bytes": .int(Int($0))]) },
             "pressure": reading(row.pressureLevel.map(Double.init)) { .object(["level": .int(Int($0))]) },
-            "disk": reading(row.diskFree.map(Double.init)) { .object(["free_bytes": .int(Int($0))]) },
+            "disk": reading(row.diskFree.map(Double.init)) { .object(["free_bytes": .int(Int($0)),
+                                                                     "purgeable_bytes": AgentJSON.notRead("not stored in the tick")]) },
             "disk_io": reading(row.diskReadBps.flatMap { read in row.diskWriteBps.map { (read, $0) } }.map { $0.0 }) { _ in
                 .object(["read_bps": AgentJSON.number(row.diskReadBps ?? 0), "write_bps": AgentJSON.number(row.diskWriteBps ?? 0)]) },
             "network": reading(row.netInBps.flatMap { input in row.netOutBps.map { (input, $0) } }.map { $0.0 }) { _ in

@@ -16,7 +16,7 @@ enum PanelData {
 
     /// `row` nil keeps the previous values and only refreshes the edges (an audit landed between ticks).
     static func vitals(_ row: SystemSampleRow?, series: [Vital.Kind: [Double]], edges: [Vital.Kind: Severity],
-                       keeping previous: [Vital] = []) -> [Vital] {
+                       purgeableBytes: UInt64? = nil, keeping previous: [Vital] = []) -> [Vital] {
         guard let row else {
             return previous.map { var vital = $0; vital.edge = edges[vital.kind]; return vital }
         }
@@ -36,10 +36,16 @@ enum PanelData {
             make(.cpu, cpu.map { CompactFormat.percent($0) }, "busy"),
             make(.memory, pressure, row.memUsed.map { "\(CompactFormat.bytes(UInt64(max($0, 0)))) used" } ?? "pressure"),
             make(.swap, row.swapUsed.map { CompactFormat.bytes(UInt64(max($0, 0))) }, "in use"),
-            make(.disk, row.diskFree.map { CompactFormat.bytes(UInt64(max($0, 0))) }, "free"),
+            make(.disk, row.diskFree.map { CompactFormat.bytes(UInt64(max($0, 0))) }, diskDetail(purgeableBytes)),
             make(.netIn, row.netInBps.map(CompactFormat.rate), "right now"),
             make(.netOut, row.netOutBps.map(CompactFormat.rate), "right now"),
         ]
+    }
+
+    /// Below 1 GB the purgeable figure is noise; above it, it is the gap between this tile and Finder.
+    static func diskDetail(_ purgeableBytes: UInt64?) -> String {
+        guard let purgeableBytes, purgeableBytes >= 1 << 30 else { return "free" }
+        return "free, \(CompactFormat.bytes(purgeableBytes)) purgeable"
     }
 
     static func appRow(_ row: AppSampleRow, name: String?, interval: Double, pids: [Int32] = []) -> AppRow {

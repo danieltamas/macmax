@@ -43,15 +43,19 @@ public struct SystemLive: Sendable, Equatable {
     public let gpuMemoryAllocatedBytes: UInt64?
     public let memoryUsedBytes: UInt64?
     public let memoryTotalBytes: UInt64?
+    /// Space macOS would purge on top of the free figure; shown next to it so the tile explains why it is below Finder's.
+    public let diskPurgeableBytes: UInt64?
 
     public init(coreBusyPercent: [Double], gpuPercent: Double?, gpuMemoryUsedBytes: UInt64? = nil,
-                gpuMemoryAllocatedBytes: UInt64? = nil, memoryUsedBytes: UInt64?, memoryTotalBytes: UInt64?) {
+                gpuMemoryAllocatedBytes: UInt64? = nil, memoryUsedBytes: UInt64?, memoryTotalBytes: UInt64?,
+                diskPurgeableBytes: UInt64? = nil) {
         self.coreBusyPercent = coreBusyPercent
         self.gpuPercent = gpuPercent
         self.gpuMemoryUsedBytes = gpuMemoryUsedBytes
         self.gpuMemoryAllocatedBytes = gpuMemoryAllocatedBytes
         self.memoryUsedBytes = memoryUsedBytes
         self.memoryTotalBytes = memoryTotalBytes
+        self.diskPurgeableBytes = diskPurgeableBytes
     }
 
     /// nil when the CPU read failed: no core list is better than an empty one that reads as an idle Mac.
@@ -61,7 +65,8 @@ public struct SystemLive: Sendable, Equatable {
         self.init(coreBusyPercent: cpu.perCore.map { min(100, max(0, $0.userPercent + $0.systemPercent)) },
                   gpuPercent: snapshot.gpuUtilizationPercent.value,
                   gpuMemoryUsedBytes: gpuMemory?.used, gpuMemoryAllocatedBytes: gpuMemory?.allocated,
-                  memoryUsedBytes: snapshot.memory.value?.usedBytes, memoryTotalBytes: snapshot.memory.value?.physicalBytes)
+                  memoryUsedBytes: snapshot.memory.value?.usedBytes, memoryTotalBytes: snapshot.memory.value?.physicalBytes,
+                  diskPurgeableBytes: snapshot.diskSpace.value?.purgeableBytes)
     }
 
     /// Cores doing real work right now: at or above `threshold` percent.
