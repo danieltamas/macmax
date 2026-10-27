@@ -127,6 +127,7 @@ final class PanelModel: ObservableObject {
     @Published var query = ""
     @Published var shown = AppListing.pageSize
     @Published var expandedApp: String?
+    @Published var expandedSensorGroup: SensorGroup?
     @Published var processes: [String: [ProcessLine]] = [:]
 
     // Network

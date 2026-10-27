@@ -384,6 +384,19 @@ file shredder, privacy cleaner, "boost" buttons.
   capacity figure first), fans and temperatures from the SMC user client (no root; a nested-struct padding trap is
   checked at runtime and the read is refused if the layout is wrong). Read while the panel is visible, every 10 s.
   No CLI command or MCP tool yet: nothing agents need from it.
+  Named sensors (2026-10-27): the card lists every sensor it can name, in groups (CPU, GPU, Memory, Storage,
+  Battery, Wireless, Airflow, Power), each group with its sensor count, hottest and average, expandable to the
+  named rows. Names come from an allowlist of SMC keys per chip generation (`SensorCatalog`); the generation is
+  not read from the chip name but chosen as the list with the most keys the SMC exposes on this Mac, and a
+  list only applies when at least half of its keys are exposed (exposure, not the tick's values, so the choice
+  cannot flip between ticks and rename a key two lists share). The hottest-sensor dial reports the hottest named
+  sensor once any is named: the SMC limit keys (TCMz, TVD0) read above 100 C all day and used to win the dial. A key outside the allowlist is never named or shown
+  (prefix guessing shipped 8 C "airflow" and 16-million-volt readings); it still counts toward the existing
+  hottest-sensor summary, which is unchanged. Electrical sensors (DC in volts, amps and watts, the 12 V rail,
+  Thunderbolt left and right, display brightness, battery and system power) are read by name, shown only when
+  they read, and never as zero for an unread key. The This Mac card gains the CPU split (system, user, idle), the
+  efficiency and performance cluster load (Apple silicon lists the efficiency cores first), uptime and the load
+  averages. Core frequency is not shown: macOS exposes it only through a private interface.
 - **U16 More cleanup rules and old downloads.** Mail attachments, language files, browser caches as
   rules with previews, and a list of old files in Downloads. Same cleanup rules as U9: Trash only,
   protected paths, preview first.

@@ -76,6 +76,7 @@ source fails its proof, pick the fallback, update this table and PLAN.md, and te
 | Thermal | `ProcessInfo.thermalState`; `pmset -g therm` CPU_Speed_Limit | verified (mac-audit, pmset) | thermalState only |
 | GPU utilization | IOKit `IOAccelerator` PerformanceStatistics "Device Utilization %" | verified in U1 | `unavailable` |
 | Battery, power source | `IOPSCopyPowerSourcesInfo` | verified in U1 | `pmset -g batt` (verified) |
+| Fans, temperatures, named sensors | `AppleSMC` user client (no root): every `T` key, the fan keys and the catalog's electrical keys; `SensorCatalog` names only allowlisted keys, choosing the chip generation's list by how many of its keys read, never by chip name | verified in U15 on M2 Pro (M1 key layout) | the hottest-sensor summary still counts every plausible `T` key |
 | Process list | `proc_listallpids` | verified in U2 | `ps -axo` (verified) |
 | Pid, ppid, start time, user | `sysctl KERN_PROC_PID` (`p_starttime`, `e_ppid`, `cr_uid`); `proc_pidinfo(PROC_PIDTBSDINFO)` is denied (EPERM) for about 20% of processes, root-owned ones included | verified in U2 (the sysctl, not pidinfo) | `ps -o lstart` |
 | Footprint, CPU time, disk bytes | `proc_pid_rusage(RUSAGE_INFO_V4)` (`ri_phys_footprint`, `ri_user_time`, `ri_system_time`, `ri_diskio_bytes*`) | verified in U2: EPERM on root-owned processes is `unavailable` (about 18% of processes) | `ps -o rss,time` (rss, not footprint: label it) |

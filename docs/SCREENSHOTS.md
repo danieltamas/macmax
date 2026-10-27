@@ -45,7 +45,7 @@ rendered in the same run; they are the per-view sources (and, at `--scale 3`, th
 | `icon.png` | The app icon (`sips -s format png -z 256 256 Support/AppIcon.icns`, not rendered by the app), for the README header | 256 x 256 |
 | `hero.png` | Overview and Network (1 hour) side by side | 926 x 860 |
 | `findings-apps.png` | Findings and Apps side by side | 926 x 860 |
-| `mac-cards.png` | The This Mac card and the Battery and heat card | 926 x 386 |
+| `mac-cards.png` | The This Mac card and the Battery and heat card, with the Power sensor group open under its row | 926 x 652 |
 | `network-leak.png` | Network (24 hours) and the identity card in the `leak` state | 926 x 860 |
 | `cleanup-safety.png` | Cleanup, with the just-moved card, the last-cleanups card and the one permission prompt stacked beside it | 926 x 860 |
 | `background-uninstall.png` | Background items with one item open, and Uninstall apps with one app selected | 926 x 776 |

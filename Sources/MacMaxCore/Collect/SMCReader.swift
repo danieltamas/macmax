@@ -25,9 +25,10 @@ enum SMCReader {
     private static let handleEvent: UInt32 = 2
     private static let readBytes: UInt8 = 5, readKeyInfo: UInt8 = 9, keyAtIndex: UInt8 = 8
 
-    /// Every temperature key and the fan keys, decoded. `unavailable` when this Mac has no SMC service at all, `failed`
+    /// Every temperature key, the fan keys and the catalog's electrical keys, decoded. `unavailable` when this Mac has no SMC service at all, `failed`
     /// when it exists but cannot be read in full: a key list with holes, or a fan or count key that will not decode.
     /// A temperature key or a fan limit that will not read is skipped (many keys are placeholders); the fan count and current speeds are required.
+    /// A catalog key that will not read is kept as NaN: its presence picks the chip generation, its value is never shown.
     static func readings(at: Date = .now) -> Reading<[String: Double]> {
         // The offsets the kernel's struct has: a wrong layout would read other bytes, so it is refused, not tried.
         guard MemoryLayout<Call>.size == 80, MemoryLayout<KeyInfo>.size == 12, MemoryLayout<Call>.offset(of: \.key) == 0,
@@ -54,8 +55,14 @@ enum SMCReader {
             guard let key = key(at: index, connection) else { return .failed(reason: "the sensor key list has a gap") }
             let required = key == "FNum" || (key.count == 4 && key.hasPrefix("F") && key.dropFirst().first?.isNumber == true && key.hasSuffix("Ac"))
             let optional = key.count == 4 && key.hasPrefix("F") && key.dropFirst().first?.isNumber == true && (key.hasSuffix("Mn") || key.hasSuffix("Mx"))
-            guard key.hasPrefix("T") || required || optional else { continue }
-            if let decoded = value(of: key, connection) { values[key] = decoded } else if required { return .failed(reason: "the fan key \(key) could not be read") }
+            guard key.hasPrefix("T") || required || optional || SensorCatalog.electricalKeys.contains(key) else { continue }
+            if let decoded = value(of: key, connection) {
+                values[key] = decoded
+            } else if required {
+                return .failed(reason: "the fan key \(key) could not be read")
+            } else if SensorCatalog.allKeys.contains(key) {
+                values[key] = .nan  // exposed but unread this tick: the catalog still counts the key as this Mac's
+            }
         }
         return .ok(values, source: "AppleSMC", at: at)
     }
