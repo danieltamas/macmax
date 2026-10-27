@@ -24,7 +24,8 @@ public actor SystemCollector {
         let clock = DispatchTime.now().uptimeNanoseconds
         let ticks = MachStatistics.cpuTicks()
         let vm = MachStatistics.vmCounters()
-        let disk = IOKitReadings.diskCounters()
+        let diskRead = IOKitReadings.diskCounters()
+        let disk: DiskCounters? = if case .counters(let counters) = diskRead { counters } else { nil }
 
         let swapIns = vm.map { CounterSample(value: $0.swapins, uptimeNanoseconds: clock) }
         let swapOuts = vm.map { CounterSample(value: $0.swapouts, uptimeNanoseconds: clock) }
@@ -39,7 +40,9 @@ public actor SystemCollector {
                                 current: ticks) { MachStatistics.usage(from: $0, to: $1, at: now) }
         let swapInRate = rate(previous?.swapIns, swapIns, source: "vm_statistics64 swapins", at: now, hadPrevious: previous != nil)
         let swapOutRate = rate(previous?.swapOuts, swapOuts, source: "vm_statistics64 swapouts", at: now, hadPrevious: previous != nil)
-        let diskIO = diskRates(diskSamples, at: now)
+        let diskIO: Reading<DiskIORates> = diskRead == .absent
+            ? .unavailable(reason: "this Mac publishes no internal disk counters")
+            : diskRates(diskSamples, at: now)
 
         previous = Previous(ticks: ticks, swapIns: swapIns, swapOuts: swapOuts, disk: diskSamples)
 

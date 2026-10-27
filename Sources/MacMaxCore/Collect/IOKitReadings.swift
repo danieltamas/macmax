@@ -7,6 +7,13 @@ struct DiskCounters: Sendable, Equatable {
     let readBytes, writeBytes, readOperations, writeOperations: UInt64
 }
 
+/// Present, absent and failed are three states: a VM publishes no internal driver, which is not a read failure.
+enum DiskRead: Sendable, Equatable {
+    case counters(DiskCounters)
+    case absent
+    case failed
+}
+
 /// Readings that come from the IO registry and the power-source API.
 enum IOKitReadings {
     /// Each matching registry entry with its properties and a lookup that also searches its parents.
@@ -37,25 +44,25 @@ enum IOKitReadings {
     }
 
     /// Totals over the internal drivers: external drives and disk images are not the Mac's own disk.
-    /// nil when the registry cannot be read or no internal driver publishes statistics: that is
-    /// "failed", not "idle".
-    static func diskCounters() -> DiskCounters? {
-        guard let drivers = entries(matching: "IOBlockStorageDriver") else { return nil }
+    /// `.failed` when the registry or an internal driver's statistics cannot be read, `.absent` when
+    /// no internal driver exists (a VM): neither is "idle".
+    static func diskCounters() -> DiskRead {
+        guard let drivers = entries(matching: "IOBlockStorageDriver") else { return .failed }
         var totals = (read: UInt64(0), write: UInt64(0), readOps: UInt64(0), writeOps: UInt64(0))
         var seen = false
         for driver in drivers where driver.inherited("Physical Interconnect Location") as? String == "Internal" {
             guard let statistics = driver.properties["Statistics"] as? [String: Any],
                   let read = counter(statistics, "Bytes (Read)"), let write = counter(statistics, "Bytes (Write)"),
                   let readOps = counter(statistics, "Operations (Read)"),
-                  let writeOps = counter(statistics, "Operations (Write)") else { return nil }
+                  let writeOps = counter(statistics, "Operations (Write)") else { return .failed }
             let sums = (totals.read.addingReportingOverflow(read), totals.write.addingReportingOverflow(write),
                         totals.readOps.addingReportingOverflow(readOps), totals.writeOps.addingReportingOverflow(writeOps))
-            guard !sums.0.overflow, !sums.1.overflow, !sums.2.overflow, !sums.3.overflow else { return nil }
+            guard !sums.0.overflow, !sums.1.overflow, !sums.2.overflow, !sums.3.overflow else { return .failed }
             totals = (sums.0.partialValue, sums.1.partialValue, sums.2.partialValue, sums.3.partialValue)
             seen = true
         }
-        return seen ? DiskCounters(readBytes: totals.read, writeBytes: totals.write,
-                                   readOperations: totals.readOps, writeOperations: totals.writeOps) : nil
+        return seen ? .counters(DiskCounters(readBytes: totals.read, writeBytes: totals.write,
+                                             readOperations: totals.readOps, writeOperations: totals.writeOps)) : .absent
     }
 
     /// The busiest accelerator's "Device Utilization %". `unavailable` when the Mac publishes none.
