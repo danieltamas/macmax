@@ -121,7 +121,8 @@ final class PanelController {
         record(rows.system)
         model.samplerFailed = false
         model.samplerNote = "Sampling every \(interval) s"
-        model.vitals = PanelData.vitals(rows.system, series: series, edges: edges())
+        model.vitals = PanelData.vitals(rows.system, series: series, edges: edges(),
+                                        purgeableBytes: rows.live?.diskPurgeableBytes)
         model.vitalsState = .ready
         if model.config.auditOnCriticalPressure, let raw = rows.system.pressureLevel,
            let level = MemoryPressureLevel(rawValue: raw) {

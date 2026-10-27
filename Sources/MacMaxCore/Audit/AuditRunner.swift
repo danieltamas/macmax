@@ -39,7 +39,7 @@ public actor AuditRunner {
             }
         }
         if let roundProblem { latest = .failed(reason: roundProblem) }
-        let snapshot = await system.collect().replacing(diskSpace: Self.plainDiskSpace(at: Date()))
+        let snapshot = await system.collect()
         let now = Date()
         async let identity = network.collect(checkEnabled: ipCheckEnabled)
         async let probed = probes.run(processes: latest, now: now)
@@ -62,24 +62,5 @@ public actor AuditRunner {
         } catch {
             return .failed(reason: "the history database could not be read")
         }
-    }
-
-    /// The data volume's available space the way `df` counts it. The Overview shows the Finder figure, which
-    /// adds purgeable space; the audit must not hide a nearly full disk behind space the system may not give back.
-    static func plainDiskSpace(at: Date) -> Reading<DiskSpace> {
-        let keys: Set<URLResourceKey> = [.volumeAvailableCapacityKey, .volumeTotalCapacityKey]
-        guard let values = try? URL(fileURLWithPath: "/System/Volumes/Data").resourceValues(forKeys: keys),
-              let free = values.volumeAvailableCapacity, let total = values.volumeTotalCapacity,
-              free >= 0, total > 0, free <= total else { return .failed(reason: "the data volume capacity could not be read") }
-        return .ok(DiskSpace(freeBytes: UInt64(free), totalBytes: UInt64(total)), source: "volume capacity", at: at)
-    }
-}
-
-extension SystemSnapshot {
-    func replacing(diskSpace: Reading<DiskSpace>) -> SystemSnapshot {
-        SystemSnapshot(cpu: cpu, load: load, coreCount: coreCount, uptimeSeconds: uptimeSeconds, bootTime: bootTime,
-                       memory: memory, pressure: pressure, swap: swap, swapInsPerSecond: swapInsPerSecond,
-                       swapOutsPerSecond: swapOutsPerSecond, diskSpace: diskSpace, diskIO: diskIO, thermal: thermal,
-                       gpuUtilizationPercent: gpuUtilizationPercent, battery: battery)
     }
 }
