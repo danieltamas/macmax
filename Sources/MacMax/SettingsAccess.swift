@@ -20,10 +20,7 @@ struct AgentPane: View {
                     Text(Self.command).font(.system(size: 11.5, design: .monospaced)).foregroundStyle(Theme.textSecondary)
                         .lineLimit(1).truncationMode(.middle)
                     Spacer(minLength: 6)
-                    IconButton(symbol: "doc.on.doc", help: "Copy the command", size: 22) {
-                        NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(Self.command, forType: .string)
-                    }
+                    CopyButton(text: Self.command, help: "Copy the command")
                 }
                 Text("The server runs under your terminal's permissions, not MacMax's: an agent never reads more through MacMax than it could read itself.")
                     .font(.meta).foregroundStyle(Theme.textTertiary)

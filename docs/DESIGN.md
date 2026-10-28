@@ -110,6 +110,7 @@ Structure per LESSONS.md section 5 (sidebar 196, window minimum 760 x 540, `Pane
 | Cleanup | disk | Protected paths (add by choosing a folder, remove). The cleanup itself (rules with sizes, Move to Trash, Large folders, Docker and Time Machine commands, Last cleanups) is the Cleanup tab of the panel |
 | Agent access | brand | The MCP command with a copy button (`claude mcp add macmax -- ~/.local/bin/macmax mcp`); the tool list and that every tool is read-only; recent MCP calls (tool, time, size) |
 | Permissions | unknown | Full Disk Access (state, what it unlocks, Open System Settings, a re-check button); Notifications (state, Open System Settings) |
+| More apps | memory | The owner's other open source tools in two groups, In the menu bar (Bton, RMJ) and In the terminal (Axon, Run.dev, Cloak): each a card with its own icon (`Support/MoreApps`, glowing in its hue), name, platform chip, pitch, one line, Website and GitHub links, and its install command with a copy button. No install command until the app has a published release (RMJ shows In development) |
 | About | neutral | Per LESSONS.md section 6 |
 
 Every card follows the Settings rules: saved as it changes, a problem shown under the control,

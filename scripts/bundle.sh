@@ -72,6 +72,8 @@ if [[ -n $source ]]; then
   plutil -replace MacMaxSource -string "$source" "$app/Contents/Info.plist"
 fi
 cp Support/AppIcon.icns Support/MenuBarIcon.pdf "$app/Contents/Resources/"
+# Settings > More apps shows these; rendered from each project's own icon and committed like the rest of Support.
+cp -R Support/MoreApps "$app/Contents/Resources/"
 # About's Update runs the same installer as the curl line, pinned to the release it showed.
 install -m 755 install.sh "$app/Contents/Resources/install.sh"
 

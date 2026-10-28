@@ -6,7 +6,7 @@ import SwiftUI
 /// The panes of the Settings window, in the order of docs/DESIGN.md.
 enum SettingsPane: String, CaseIterable, Identifiable {
     case general = "General", audit = "Audit", network = "Network", cleanup = "Cleanup"
-    case agent = "Agent access", permissions = "Permissions", about = "About"
+    case agent = "Agent access", permissions = "Permissions", moreApps = "More apps", about = "About"
 
     var id: String { rawValue }
 
@@ -18,6 +18,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .cleanup: "trash"
         case .agent: "terminal"
         case .permissions: "lock.shield"
+        case .moreApps: "square.grid.2x2"
         case .about: "info.circle"
         }
     }
@@ -29,6 +30,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .network: Theme.netIn
         case .cleanup: Theme.disk
         case .permissions: Theme.unknown
+        case .moreApps: Theme.memory
         case .about: Theme.neutral
         }
     }
@@ -70,6 +72,7 @@ struct SettingsView: View {
         case .cleanup: CleanupPane(model: model)
         case .agent: AgentPane(model: model)
         case .permissions: PermissionsPane(model: model)
+        case .moreApps: MoreAppsPane()
         case .about: AboutPane(model: model)
         }
     }
