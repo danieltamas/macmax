@@ -11,7 +11,7 @@ Sources/MacMaxCore/      everything testable; imports Foundation, Darwin, IOKit,
   Model/                 Snapshot, Reading<T> (ok | unavailable(reason) | failed(reason)), AppKey, ProcIdentity
   Rules/                 Rule, RuleSet (data), AuditEngine, Finding, Verdict, Thresholds
   Store/                 Database (SQLite actor), Schema + migrations, Rollups, Retention, Queries
-  Act/                   ProcessActions, CleanupScanner, CleanupMover, ActionLog
+  Act/                   ProcessActions, CleanupScanner, CleanupMover, ActionLog, PermissionProbe, ReopenAfterGrant
   Agent/                 MCPServer (JSON-RPC over stdio), Tools, Redaction
   Release/               MacMaxRelease (standing, canUpdate), ReleaseCheck, GitHubReleases (the one
                          unauthenticated `releases/latest` fetch, for the update check),

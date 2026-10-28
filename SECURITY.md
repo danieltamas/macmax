@@ -35,8 +35,9 @@ caches to the Trash, each only on your press.
    and an entry that fails any rule is not shown. All have timeouts. A
    failed check shows as unknown, never as OK. No telemetry or analytics.
 5. **Updates** are downloaded from this repository's GitHub releases and verified against the
-   release's `SHA256SUMS` before anything is replaced. Releases are ad hoc signed, so the checksum is
-   the only check on the new app (see Residual risks). Update runs only for the installed copy in
+   release's `SHA256SUMS` before anything is replaced. Releases are signed with a self-signed
+   certificate pinned in `Support/toolchain`, not notarized; the installer checks the checksum, not
+   the signer (see Residual risks). Update runs only for the installed copy in
    `/Applications` or `~/Applications`, and replaces that copy.
 6. **The agent server** (`macmax mcp`) speaks only over the stdin and stdout of the program that
    started it; MacMax opens no listening socket. It answers nothing until you turn on Settings, Agent
@@ -53,8 +54,10 @@ caches to the Trash, each only on your press.
   against your own user account.
 - Redaction is pattern-based. A secret in an unusual format may pass; MacMax never stores full
   command lines in its history for that reason, only redacted short forms when shown.
-- With ad hoc signed releases, the update's integrity rests on GitHub and this repository's
-  release process (checksums come from the same release). macOS also treats each new version as a
-  new app, so privacy grants such as Full Disk Access are given again after an update.
+- The update's integrity rests on GitHub and this repository's release process (checksums come
+  from the same release). macOS ties privacy grants such as Full Disk Access to the release
+  certificate, so a version signed with anything else, a tampered one included, gets no grant you
+  gave MacMax. Whoever holds the certificate's private key (the maintainer's keychain only) can sign
+  a build that keeps those grants.
 - The IP check reveals your IP address to the endpoint you configure (Cloudflare by default), as
   any website you visit would see it.

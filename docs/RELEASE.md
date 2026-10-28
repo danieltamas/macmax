@@ -37,7 +37,8 @@ After installing, check the installed build is this checkout:
 `/usr/libexec/PlistBuddy -c 'Print MacMaxSource' /Applications/MacMax.app/Contents/Info.plist`
 equals `git describe --tags --always --dirty`. For local builds, `scripts/make-signing-identity.sh`
 creates a self-signed "MacMax Local" code-signing identity once, so TCC grants (Full Disk Access,
-notifications) survive local rebuilds; releases never use it.
+notifications) survive local rebuilds. On the owner's Mac it is also the release identity (Signing,
+below), so a source build and a release keep the same grants.
 
 ## bundle.sh
 
@@ -51,7 +52,23 @@ SwiftPM adds; `strip -S`. Assemble Info.plist (versions replaced with `plutil`),
 
 ## Signing (decision D1)
 
-**Path A, ad hoc (Bton's choice).** `codesign --force --sign -`. Reproducible bit for bit. Gatekeeper
+**What ships: a stable self-signed certificate (chosen 2026-10-28).** Every release is signed with
+the owner's "MacMax Local" identity, pinned by its SHA-1 in `Support/toolchain`
+(`signing-certificate`). macOS ties a Full Disk Access grant to the designated requirement
+`identifier "ro.danieltamas.macmax" and certificate leaf = H"<pin>"`, which every release then shares,
+so a grant outlives updates for every user, at no cost. Gatekeeper treats the app as it treats an
+ad hoc one: not notarized, so a zip downloaded in a browser is blocked on first open until it is
+allowed (macOS 15 and newer: System Settings, Privacy & Security, Open Anyway; older: right-click >
+Open). The one-line installer and Homebrew are not affected. The signature
+carries its signing time, so the signed zip is not reproducible; the ad hoc build it was signed from
+ships beside it as `MacMax-X.Y.Z-adhoc.zip`, and that one is.
+
+The private key exists only in the owner's login keychain. Keep an encrypted backup of it
+(Keychain Access, export "MacMax Local" as .p12) somewhere safe: a lost key means a new certificate,
+a new pin, and every user granting Full Disk Access once more. `release.sh` refuses to run when the
+pinned certificate is not in the keychain, so a release is never signed with another one by accident.
+
+**Path A, ad hoc (Bton's choice, MacMax before 0.4.1).** `codesign --force --sign -`. Reproducible bit for bit. Gatekeeper
 does not block it because `curl` sets no quarantine flag; a zip downloaded in a browser needs
 right-click > Open the first time. The cost for MacMax: every update is a new app to TCC, so Full
 Disk Access and notification permission must be granted again after each update, and the updater
@@ -77,14 +94,20 @@ owner's keychain only, never in the repo or CI logs.
 
 ## release.sh
 
-`scripts/release.sh <X.Y.Z> [--verify] [--developer-id "<identity>"]`. Preconditions, each failing
-with a message: semver; clean tree; HEAD is tag `vX.Y.Z`; not shallow; Xcode build equals the pin.
+`scripts/release.sh <X.Y.Z> [--verify] [--adhoc-only] [--out d] [--scratch d] [--ref <rev>]`. Preconditions, each
+failing with a message: semver; clean tree; HEAD is tag `vX.Y.Z`; not shallow; Xcode build equals
+the pin; the pinned signing certificate is in the keychain (not with `--adhoc-only`).
 Build from `git archive HEAD | tar -x` in a temp dir with `SOURCE_DATE_EPOCH` = the tag commit's
 time, normalize modes (`chmod -R u=rwX,go=rX`), `xattr -cr`, `touch -h -t <stamp>` every file, zip
 with sorted entries (`find MacMax.app | LC_ALL=C sort | TZ=UTC zip -q -X -D -y -@`). `--verify`
-builds a second copy at another path and `cmp`s the zips. With `--developer-id`, it then signs,
-notarizes, staples and zips the signed copy. Output in `dist/`: `MacMax-X.Y.Z.zip` (the one users
-install), `MacMax-X.Y.Z-adhoc.zip` (path B only), and `SHA256SUMS` with one line per zip.
+builds a second copy at another path and `cmp`s the ad hoc zips. It then unpacks the ad hoc zip,
+signs the CLI and the app with the pinned certificate (`--timestamp=none`), checks that the signature
+verifies and that the designated requirement names the pin, and zips it the same way. Output in
+`dist/`: `MacMax-X.Y.Z.zip` (signed, the one users install), `MacMax-X.Y.Z-adhoc.zip`
+(reproducible), and `SHA256SUMS` with one line per zip. A resumed release rebuilds the signed zip
+with a new signing time, so its bytes differ from an asset already uploaded. `--adhoc-only` builds
+and verifies the reproducible zip alone, with no certificate: the CI release-verify job and anyone
+checking a release use it.
 
 It takes minutes: run it in a terminal, never behind a button with a short timeout.
 

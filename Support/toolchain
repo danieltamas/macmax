@@ -1,3 +1,7 @@
 # The toolchain a release is built with; scripts/release.sh refuses any other.
 xcode-build 17C52
 # For reference: Xcode 26.2, Swift 6.2.3, macOS SDK 26.2, ld-1230.1
+# The certificate every release is signed with (SHA-1, as codesign's designated requirement names it): the
+# self-signed "MacMax Local" identity in the owner's keychain. macOS ties Full Disk Access to it, so a grant
+# outlives updates. A different certificate means every user grants again: never change it casually.
+signing-certificate A0BCB3518DF42B6781FB4172506B0F5BC5C08CC3

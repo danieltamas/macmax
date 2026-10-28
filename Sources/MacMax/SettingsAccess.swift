@@ -40,7 +40,7 @@ struct PermissionsPane: View {
                     status(fullDisk)
                     Spacer(minLength: 6)
                     PillButton(title: "Open System Settings", symbol: "arrow.up.right", prominent: false) {
-                        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!)
+                        FullDiskAccessGrant.openSettings()
                     }
                 }
             }

@@ -198,7 +198,9 @@ for the README check, and every new view is checked in all three.
 - `swift`, `gh`, `codesign` and `codex` fail inside the Claude Code Bash sandbox: run them with the
   sandbox off. `open` and `osascript` are blocked there: give the owner the command.
 - Releases are reproducible: pinned Xcode (`Support/toolchain`), `git archive` build, fixed
-  timestamps, sorted zip entries, `--verify` builds twice and compares. The build number came from
+  timestamps, sorted zip entries, `--verify` builds twice and compares. That holds for the ad hoc
+  zip only: a certificate signature carries its signing time, so the signed zip users install is
+  the ad hoc build re-signed with the pinned certificate (MacMax 0.4.1). The build number came from
   clone depth once; a shallow clone is refused. Toolchain rpaths are stripped.
 - `release.sh` takes minutes: never behind a button with a 120-second timeout.
 - The README's one-line install works only once the repo is public and the release has its zip and

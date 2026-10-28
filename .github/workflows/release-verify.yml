@@ -29,4 +29,4 @@ jobs:
           echo "found=0" >> "$GITHUB_OUTPUT"
       - name: Build twice and compare
         if: steps.xcode.outputs.found == '1'
-        run: scripts/release.sh "${GITHUB_REF_NAME#v}" --verify --scratch "$RUNNER_TEMP/release" --out "$RUNNER_TEMP/dist"
+        run: scripts/release.sh "${GITHUB_REF_NAME#v}" --verify --adhoc-only --scratch "$RUNNER_TEMP/release" --out "$RUNNER_TEMP/dist"

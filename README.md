@@ -26,7 +26,7 @@ https://github.com/user-attachments/assets/a13068de-d5aa-493e-85d8-9aee83f225b7
 > **Status:** early releases. By using MacMax you accept that it may have bugs; a wrong or missing
 > reading is one worth reporting at
 > [github.com/danieltamas/macmax/issues](https://github.com/danieltamas/macmax/issues). The app is
-> signed ad hoc, not notarized, so macOS asks you to confirm the first open.
+> signed with its own certificate, not notarized, so macOS asks you to confirm the first open.
 
 ## Install
 
@@ -54,7 +54,9 @@ Apple silicon or Intel. MacMax appears in the menu bar a few seconds later.
   afterwards so Homebrew's record matches.
 - **Prefer a download?** Take `MacMax-X.Y.Z.zip` from the
   [Releases page](https://github.com/danieltamas/macmax/releases), unzip it and drag MacMax to
-  Applications. macOS asks you to confirm the first time: right-click the app, then Open.
+  Applications. macOS blocks the first open of an app that is not notarized: on macOS 15 and newer,
+  open it once, then press Open Anyway in System Settings, Privacy & Security; on older versions,
+  right-click the app, then Open.
 - **Updating:** when a new version is out, an arrow appears in the panel header. Press it, then
   Update in Settings, About. Or run the install line again.
 
@@ -196,9 +198,11 @@ promise more than they can do.
 Intel. A reading a Mac does not have (performance and efficiency cores exist only on Apple silicon)
 shows as unavailable, never as a made-up number.
 
-**It lost Full Disk Access after an update.** MacMax is not signed with a paid Apple developer
-certificate, so macOS treats each new version as a new app. Turn MacMax on again in System
-Settings, Privacy & Security, Full Disk Access. Everything else works without it.
+**It lost Full Disk Access after an update.** From 0.4.1 on, every release is signed with the same
+certificate, so a grant you give stays through later updates. Moving from 0.4.0 or older to 0.4.1
+asks once more: in MacMax, Settings, Permissions, press Open System Settings and turn MacMax on. When
+System Settings then closes MacMax to apply the switch, MacMax opens itself again. Everything else works
+without Full Disk Access.
 
 **Can I free my swap?** Not safely: swap is memory that macOS moved to disk and gives back by
 itself when the apps that need it close or restart. Close the apps MacMax names, or restart.
@@ -255,8 +259,9 @@ scripts/install-from-source.sh
 
 Needs Xcode with Swift 6.2, which runs on macOS 15 or newer; the app it builds runs on macOS 13 or
 newer, so an older Mac installs the release zip above. `scripts/check.sh` builds and runs the suite.
-Releases are reproducible: `scripts/release.sh <x.y.z> --verify` builds twice and fails if one byte
-differs.
+Releases are reproducible: `scripts/release.sh <x.y.z> --verify --adhoc-only` builds twice and fails
+if one byte differs. Each release ships that build as `MacMax-x.y.z-adhoc.zip`, beside the zip you install, which
+is the same app signed with the release certificate.
 
 </details>
 

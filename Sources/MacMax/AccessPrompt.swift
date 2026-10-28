@@ -16,7 +16,7 @@ struct AccessPrompt: View {
                         .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                     HStack(spacing: 8) {
                         PillButton(title: "Allow access", symbol: "lock.open", prominent: true) {
-                            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!)
+                            FullDiskAccessGrant.openSettings()
                         }
                         Text("Turn MacMax on, then come back.").font(.meta).foregroundStyle(Theme.textTertiary)
                     }

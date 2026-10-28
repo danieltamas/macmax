@@ -412,7 +412,7 @@ struct AppControls: View {
         HStack(spacing: 14) {
             control("Restart", symbol: "arrow.clockwise", help: "Quit MacMax and open it again") { NSApp.relaunch() }
             control("Quit", symbol: "power", help: "Quit MacMax: nothing is measured until it runs again") {
-                NSApp.terminate(nil)
+                FullDiskAccessGrant.quit()
             }
         }
     }

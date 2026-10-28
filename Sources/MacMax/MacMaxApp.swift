@@ -32,6 +32,7 @@ struct MacMaxApp: App {
             exit(0)
         }
         LoginItem.registerOnce()
+        FullDiskAccessGrant.watch()
         controller.start()
     }
 
@@ -45,6 +46,12 @@ struct MacMaxApp: App {
 
         // A Settings scene, not a Window: it never opens by itself at launch, and gets Cmd-, for free.
         Settings { SettingsView(model: controller.model) }
+            .commands {
+                // Cmd-Q in the Settings window is MacMax's own quit too, never mistaken for System Settings'.
+                CommandGroup(replacing: .appTermination) {
+                    Button("Quit MacMax") { FullDiskAccessGrant.quit() }.keyboardShortcut("q")
+                }
+            }
     }
 }
 
@@ -66,10 +73,16 @@ extension NSApplication {
     /// Quits, then opens MacMax again once this process is gone: opening it while it still runs
     /// would only bring the running copy forward.
     func relaunch() {
+        guard openAgainWhenGone() else { return NSSound.beep() }
+        FullDiskAccessGrant.quit()
+    }
+
+    /// Starts a helper that opens MacMax once this process has exited. False when there is nothing to reopen.
+    func openAgainWhenGone() -> Bool {
         // `swift run` has no bundle to open again, and quitting would leave nothing running.
         let bundle = Bundle.main.bundleURL
         guard bundle.pathExtension == "app", FileManager.default.isExecutableFile(atPath: Bundle.main.executablePath ?? "")
-        else { return NSSound.beep() }
+        else { return false }
         let reopen = Process()
         reopen.executableURL = URL(fileURLWithPath: "/bin/sh")
         // Own streams, so nothing hangs on a pipe that closes with this process.
@@ -78,8 +91,7 @@ extension NSApplication {
         reopen.standardError = FileHandle.nullDevice
         reopen.arguments = ["-c", "while kill -0 \"$0\" 2>/dev/null; do sleep 0.2; done; for try in 1 2 3 4 5 6; do /usr/bin/open \"$1\" && exit 0; sleep 1; done",
                             String(ProcessInfo.processInfo.processIdentifier), bundle.path]
-        guard (try? reopen.run()) != nil else { return NSSound.beep() }
-        terminate(nil)
+        return (try? reopen.run()) != nil
     }
 }
 

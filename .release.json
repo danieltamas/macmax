@@ -10,6 +10,7 @@
   ],
   "assets": [
     "dist/MacMax-{version}.zip",
+    "dist/MacMax-{version}-adhoc.zip",
     "dist/SHA256SUMS"
   ],
   "githubRelease": true,
