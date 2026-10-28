@@ -1,5 +1,11 @@
 # Release log
 
+## 0.3.0 (2026-10-28)
+
+Settings has a new More apps page with the other open source tools from the maker of MacMax, for a Mac that runs coding agents: Bton and RMJ in the menu bar, Axon, Run.dev and Cloak in the terminal. Each one shows what it does, links to its website and GitHub, and its install command with a copy button. RMJ has no release yet, so it shows as in development with no install command. The page only opens links in your browser when you press them; MacMax still contacts nothing new.
+
+The copy button in Agent access now turns into a check for a moment when you press it, so you can see the command was copied.
+
 ## 0.2.0 (2026-10-28)
 
 Battery and heat now lists every sensor MacMax can name, in groups: the CPU cores it can tell apart, the GPU, memory, storage, the wireless chip, the battery cells and the airflow, each group with its hottest and average reading, plus what the Mac draws at the wall and on each Thunderbolt port. Press a group to see its sensors; the list opens right under it. The battery row is three dials (charge, health, cycles against the rated number) matching the heat row below it.

@@ -21,6 +21,7 @@ Sources/MacMaxCLI/       `macmax` (installed name): snapshot, apps, network, ip,
                          history, mcp
 Tests/MacMaxCoreTests/   <Topic>AcceptanceTests (Codex), <Topic>RegressionTests, Fixtures/
 Support/                 Info.plist, toolchain (pinned Xcode build), AppIcon.icns, MenuBarIcon.pdf
+                         MoreApps/ (the other apps' icons for Settings > More apps, from their repos)
 Brand/                   SVG sources for the icons
 scripts/                 check.sh, bundle.sh, install-from-source.sh, release.sh, render-icons.sh,
                          make-signing-identity.sh, perf.sh, parity.sh, acceptance.sh
