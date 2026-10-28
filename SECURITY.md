@@ -27,10 +27,12 @@ caches to the Trash, each only on your press.
    never inside protected folders (documents, mail, keychains, application support, containers,
    anything with `.git`, your own list), including through symlinks; and re-checks each item right
    before moving it.
-4. **Network**: two destinations only, the IP check (default `https://1.1.1.1/cdn-cgi/trace`,
-   editable, can be turned off) and `api.github.com` for the update check and, when Settings, More
-   apps is open, the latest release of each app it lists (unauthenticated, read-only, no data
-   about you beyond the request). All have timeouts. A
+4. **Network**: three destinations only, the IP check (default `https://1.1.1.1/cdn-cgi/trace`,
+   editable, can be turned off), `api.github.com` for the update check, and, when Settings, More
+   apps is open, the app list in `raw.githubusercontent.com/danieltamas/registry` and the icons it
+   names (unauthenticated, read-only, no data about you beyond the request). The list is validated
+   whole before use: only https links on a fixed set of hosts, install commands of two fixed forms,
+   and an entry that fails any rule is not shown. All have timeouts. A
    failed check shows as unknown, never as OK. No telemetry or analytics.
 5. **Updates** are downloaded from this repository's GitHub releases and verified against the
    release's `SHA256SUMS` before anything is replaced. Releases are ad hoc signed, so the checksum is

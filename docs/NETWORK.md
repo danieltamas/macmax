@@ -117,4 +117,5 @@ in `identity` only when something changed.
 The IPs are personal data of the user. They stay on the Mac: stored in `~/.macmax` (0700), shown in
 the app, returned by the local MCP server to the user's own agent. Screenshots and fixtures use
 RFC 5737 addresses only (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24). The request to the IP
-endpoint is the only network call MacMax makes besides the update check, and the README says so.
+endpoint is the only network call MacMax makes besides the update check and, while Settings, More
+apps is open, the app list from the owner's registry and its icons; the README says so.

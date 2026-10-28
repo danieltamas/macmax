@@ -91,7 +91,9 @@ It takes minutes: run it in a terminal, never behind a button with a short timeo
 ## Release ceremony (only when the owner chooses a release)
 
 1. Everything merged on `main`; `scripts/acceptance.sh` passes on the commit to tag.
-2. README, screenshots (`docs/SCREENSHOTS.md`), docs and `SECURITY.md` match this version.
+2. README, screenshots (`docs/SCREENSHOTS.md`), docs and `SECURITY.md` match this version, and
+   `scripts/registry-snapshot.sh` has refreshed `Support/Registry` (the app list a first launch shows;
+   commit it when it changed).
 3. Release notes in `$SCRATCH/notes-X.Y.Z.md`: what users get, in plain words; known limits;
    "First install on a second Mac: <date, macOS version, result>" for v0.1.0 and any release that
    changes the installer or signing.
@@ -104,7 +106,9 @@ It takes minutes: run it in a terminal, never behind a button with a short timeo
 5. Verify on the public path: `MACMAX_VERSION=X.Y.Z ./install.sh` (the session's hook blocks
    `curl | bash`; the file is the same), then the installed `CFBundleShortVersionString` is `X.Y.Z`,
    the app opens, About says "latest". Once per release, the owner runs the real one-liner from the
-   README in Terminal.
+   README in Terminal. The `release` tool's last two verify lines ping the app registry
+   (github.com/danieltamas/registry, its docs/PRODUCER.md) and wait until it lists X.Y.Z, so every
+   other app's More apps page shows the new version within a minute.
 6. The first public release also needs: the repo public (it already is: created public and empty
    on 2026-10-25), GitHub's private vulnerability reporting on (`SECURITY.md`), branch protection
    on `main`, a `gitleaks` scan of the full history with no findings, `CONTRIBUTING.md`, and issue

@@ -119,22 +119,26 @@ enum DemoStore {
         return model
     }
 
-    /// Made-up versions that show every state a card has: behind, no release yet, released, and unknown.
+    /// The bundled app list with made-up versions that show every state a card has: behind, built from source with no
+    /// release yet, released, and a refresh that failed.
     private static func moreApps(_ model: PanelModel) {
-        func release(_ version: String, daysAgo: Double) -> LatestReleaseAnswer {
-            .release(ReleaseInfo(tag: "v\(version)", version: version, htmlURL: nil, publishedAt: now.addingTimeInterval(-86_400 * daysAgo)))
+        let versions: [String: (String, Double)?] = ["bton": ("2.4.0", 3), "rmj": nil, "axon": ("1.6.1", 0.5),
+                                                     "rundev": ("0.9.3", 12), "cloak": ("1.2.0", 40)]
+        guard let bundled = MoreAppsController.bundled() else { return }
+        let apps = bundled.apps.map { app in
+            guard let made = versions[app.id] else { return app }
+            return app.with(latest: made.map { version, daysAgo in
+                RegistryApp.Release(version: version, tag: "v\(version)", publishedAt: now.addingTimeInterval(-86_400 * daysAgo),
+                                    url: URL(string: "https://github.com/\(app.repo)/releases/tag/v\(version)")!)
+            })
         }
-        model.moreAppReleases = [
-            "danieltamas/bton": release("2.4.0", daysAgo: 3),
-            "danieltamas/runmyjob": .none,
-            "danieltamas/axon": release("1.6.1", daysAgo: 0.5),
-            "danieltamas/run.dev": release("0.9.3", daysAgo: 12),
-            "danieltamas/cloak": .failed(reason: "GitHub could not be reached."),
-        ]
+        model.moreAppsRegistry = AppRegistry(updated: now.addingTimeInterval(-3_600), apps: apps, leftOut: 0)
+        model.moreAppsReadAt = now.addingTimeInterval(-4 * 60)
+        model.moreAppIcons = Dictionary(apps.compactMap { app in MoreAppsController.bundledIcon(app.icon).map { (app.icon, $0) } },
+                                        uniquingKeysWith: { first, _ in first })
         model.moreAppsInstalled = ["ro.danieltamas.bton": InstalledCopy(url: URL(fileURLWithPath: "/Applications/Bton.app"), version: "2.3.2"),
                                    "ro.danieltamas.rmj": InstalledCopy(url: URL(fileURLWithPath: "/Applications/RMJ.app"), version: nil, source: "a1b2c3d-dirty")]
-        model.moreAppsCheckedAt = now.addingTimeInterval(-4 * 60)
-        model.moreAppsProblem = "Some versions could not be read from GitHub."
+        model.moreAppsProblem = "The app list could not be refreshed: GitHub could not be reached."
     }
 
     private static func series(_ base: Double, _ swing: Double, seed: Double) -> [Double] {

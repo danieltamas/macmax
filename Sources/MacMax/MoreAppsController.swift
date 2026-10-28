@@ -4,21 +4,15 @@ import MacMaxCore
 /// A Mac app from Settings > More apps that Launch Services knows on this Mac.
 struct InstalledCopy: Equatable {
     let url: URL
-    /// Nil when its Info.plist names no version: shown as installed, compared with nothing.
+    /// Nil when there is no release version to compare: shown as installed, compared with nothing.
     let version: String?
-    /// The `git describe` a build from a checkout stamps (BtonSource, RMJSource). Such a build keeps the template's
-    /// placeholder as its version, so only a describe that is exactly a release tag gives a version to compare.
+    /// The `git describe` a build from a checkout stamps (BtonSource, RMJSource).
     var source: String?
 
     init(url: URL, info: NSDictionary?, sourceKey: String?) {
         self.url = url
-        let source = sourceKey.flatMap { info?[$0] as? String }?.trimmingCharacters(in: .whitespacesAndNewlines)
-        self.source = source
-        if let source {
-            version = source.wholeMatch(of: /v?\d+\.\d+\.\d+/) != nil ? source : nil
-        } else {
-            version = info?["CFBundleShortVersionString"] as? String
-        }
+        source = sourceKey.flatMap { info?[$0] as? String }
+        version = InstalledVersion.comparable(shortVersion: info?["CFBundleShortVersionString"] as? String, sourceStamp: source)
     }
 
     init(url: URL, version: String?, source: String? = nil) {
@@ -28,90 +22,113 @@ struct InstalledCopy: Equatable {
     }
 }
 
-/// Settings > More apps' live part: the latest release of each app, asked when the pane opens and kept for six hours,
-/// and the installed copy of each Mac app, read on every open.
+/// Settings > More apps' live part. The list comes from the owner's registry: the bundled copy first, then the last one
+/// read into `~/.macmax/registry`, then a fresh read when the pane opens (at most hourly) or on the refresh button.
+/// A read that fails or is refused changes nothing on the cards; the header says why.
 @MainActor
 final class MoreAppsController {
     private let model: PanelModel
-    private var schedule = ReleaseCheckSchedule(now: Date(), interval: 6 * 3_600)
+    private let store: RegistryStore
     private var checking = false
-    /// The last check answered for every app. A partial answer is never served from the cache: the next open asks again
-    /// once the 15-minute floor has passed.
-    private var cacheComplete = false
 
-    init(model: PanelModel) {
+    init(model: PanelModel, home: MacMaxHome) {
         self.model = model
+        store = RegistryStore(directory: home.url.appendingPathComponent("registry", isDirectory: true))
         model.refreshMoreApps = { [weak self] byPress in self?.refresh(byPress: byPress) }
+        showStartingList()
+    }
+
+    /// The newest list that still validates: the stored read, else the bundle's copy.
+    private func showStartingList() {
+        if let stored = store.load(), case let .accepted(registry) = RegistryDecoder.read(stored.data) {
+            show(registry, readAt: stored.readAt)
+        } else if let registry = Self.bundled() {
+            show(registry, readAt: nil)
+        } else {
+            model.moreAppsProblem = "This copy of MacMax has no app list. Refresh to read it."
+        }
+    }
+
+    static func bundled() -> AppRegistry? {
+        guard let url = Bundle.main.url(forResource: "apps", withExtension: "json", subdirectory: "Registry"),
+              let data = try? Data(contentsOf: url), case let .accepted(registry) = RegistryDecoder.read(data) else { return nil }
+        return registry
+    }
+
+    /// The bundle's icon for a registry path, for an app whose icon was never fetched (or failed to).
+    static func bundledIcon(_ path: String) -> NSImage? {
+        guard AppRegistry.iconURL(path) != nil else { return nil }
+        let url = Bundle.main.resourceURL?.appendingPathComponent("Registry").appendingPathComponent(path)
+        return url.flatMap(NSImage.init(contentsOf:))
+    }
+
+    private func show(_ registry: AppRegistry, readAt: Date?) {
+        model.moreAppsRegistry = registry
+        model.moreAppsReadAt = readAt
+        var icons = model.moreAppIcons
+        for app in registry.apps where icons[app.icon] == nil {
+            icons[app.icon] = store.icon(path: app.icon).flatMap(NSImage.init(data:)) ?? Self.bundledIcon(app.icon)
+        }
+        model.moreAppIcons = icons
     }
 
     private func refresh(byPress: Bool) {
         readInstalled()
-        let now = Date()
-        guard !checking else { return }
-        if !byPress, cacheComplete, schedule.nextAutomatic > now { return }
-        guard byPress ? schedule.mayCheckByPress(at: now) : schedule.mayCheck(at: now) else {
-            if byPress { model.moreAppsProblem = "GitHub asked MacMax to wait before checking again." }
-            return
-        }
+        guard !checking, RegistryRefresh.isDue(lastRead: model.moreAppsReadAt, now: Date(), byPress: byPress) else { return }
         checking = true
-        schedule.recordAttempt(at: now)
         model.moreAppsChecking = true
-        model.moreAppsProblem = nil
         Task {
-            let answers = await Self.fetchAll(userAgent: "MacMax/\(model.runningVersion)")
-            apply(answers)
+            await read(userAgent: "MacMax/\(model.runningVersion)")
             checking = false
             model.moreAppsChecking = false
         }
     }
 
-    private static func fetchAll(userAgent: String) async -> [String: LatestReleaseAnswer] {
-        await withTaskGroup(of: (String, LatestReleaseAnswer).self) { group in
-            for app in MoreApp.all {
-                group.addTask { (app.repo, await GitHubReleases.latest(repo: app.repo, userAgent: userAgent)) }
+    private func read(userAgent: String) async {
+        let answer = await RegistryDownload.get(AppRegistry.fileURL, userAgent: userAgent, maxBytes: RegistryDecoder.maxBytes)
+        guard case let .data(data) = answer else {
+            if case let .failed(reason) = answer { model.moreAppsProblem = "The app list could not be refreshed: \(reason)" }
+            return
+        }
+        switch RegistryDecoder.read(data) {
+        case let .accepted(registry):
+            let now = Date()
+            do {
+                try store.save(data, readAt: now)
+                model.moreAppsProblem = nil
+            } catch {
+                model.moreAppsProblem = "The app list was read but could not be saved, so the next launch reads it again."
             }
-            var answers: [String: LatestReleaseAnswer] = [:]
-            for await (repo, answer) in group { answers[repo] = answer }
-            return answers
+            show(registry, readAt: now)
+            // An app new to the list may already be on this Mac: the scan before the read only knew the old list.
+            readInstalled()
+            await fetchIcons(registry.apps, userAgent: userAgent)
+        case .newerSchema:
+            model.moreAppsProblem = "This version of MacMax can't read the newer app list. Update MacMax to see it."
+        case let .refused(reason):
+            model.moreAppsProblem = "The app list could not be used: \(reason)"
         }
     }
 
-    /// Every answer replaces the last one: a failed read shows as unknown, never as the release seen hours ago.
-    private func apply(_ answers: [String: LatestReleaseAnswer]) {
-        let now = Date()
-        model.moreAppReleases = answers
-        model.moreAppsCheckedAt = now
-        var limited = false, failed = false
-        var longestPause: TimeInterval?
-        for answer in answers.values {
-            switch answer {
-            case let .rateLimited(retryAfter):
-                limited = true
-                // No Retry-After counts as the schedule's own one-hour default, so it is not outweighed by a shorter one.
-                longestPause = max(longestPause ?? 0, retryAfter ?? 3_600)
-            case .failed: failed = true
-            case .release, .none: break
-            }
-        }
-        cacheComplete = !limited && !failed
-        if limited {
-            schedule.recordRateLimit(at: now, retryAfter: longestPause)
-            model.moreAppsProblem = "GitHub asked MacMax to wait, so some versions are unknown for now."
-        } else if failed {
-            // Not a success: the next open asks again once the 15-minute floor has passed.
-            model.moreAppsProblem = "Some versions could not be read from GitHub."
-        } else {
-            schedule.recordSuccess(at: now)
+    /// Icons the store does not hold yet. A changed icon always has a new path, so a stored one is never read again;
+    /// a failed one keeps the bundle's or the fallback glyph.
+    private func fetchIcons(_ apps: [RegistryApp], userAgent: String) async {
+        for app in apps where store.icon(path: app.icon) == nil {
+            guard let url = AppRegistry.iconURL(app.icon),
+                  case let .data(data) = await RegistryDownload.get(url, userAgent: userAgent, maxBytes: RegistryIcon.maxBytes),
+                  RegistryIcon.accepts(data), let image = NSImage(data: data) else { continue }
+            try? store.saveIcon(data, path: app.icon)
+            model.moreAppIcons[app.icon] = image
         }
     }
 
     private func readInstalled() {
         var found: [String: InstalledCopy] = [:]
-        for app in MoreApp.all {
-            guard let bundleID = app.bundleID, let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { continue }
+        for app in model.moreAppsRegistry?.apps ?? [] {
+            guard let mac = app.mac, let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: mac.bundleID) else { continue }
             // Read from disk each time: Bundle caches its Info.plist, so an update made while MacMax runs would not show.
             let info = NSDictionary(contentsOf: url.appendingPathComponent("Contents/Info.plist"))
-            found[bundleID] = InstalledCopy(url: url, info: info, sourceKey: app.sourceKey)
+            found[mac.bundleID] = InstalledCopy(url: url, info: info, sourceKey: mac.sourceKey)
         }
         model.moreAppsInstalled = found
     }

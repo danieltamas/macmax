@@ -286,13 +286,16 @@ final class PanelModel: ObservableObject {
     /// A newer release exists, even when this copy cannot update itself (a build folder): the header arrow follows it.
     var newerRelease: Bool { standing == .behind }
 
-    // More apps: each app's latest release on GitHub (keyed by repo, nil until asked) and the Mac apps found on this Mac
-    @Published var moreAppReleases: [String: LatestReleaseAnswer] = [:]
+    // More apps: the registry's list (the last good read, else the copy in the bundle), its icons by registry path,
+    // and the Mac apps found on this Mac (keyed by bundle id)
+    @Published var moreAppsRegistry: AppRegistry?
+    /// When the list shown was read; nil for the bundled copy, which goes by the registry's own update time.
+    @Published var moreAppsReadAt: Date?
+    @Published var moreAppIcons: [String: NSImage] = [:]
     @Published var moreAppsInstalled: [String: InstalledCopy] = [:]
     @Published var moreAppsChecking = false
-    @Published var moreAppsCheckedAt: Date?
     @Published var moreAppsProblem: String?
-    /// True for a press on the refresh button: it skips the cache and the 15-minute floor, never GitHub's pause.
+    /// True for a press on the refresh button: it reads even when the last read is under an hour old.
     @Published var refreshMoreApps: (_ byPress: Bool) -> Void = { _ in }
 
     // Settings

@@ -56,7 +56,8 @@ different user, no Homebrew in `/opt/homebrew`, no developer tools), per `docs/R
 - Blocking traffic (Little Snitch, LuLu territory). It needs a Network Extension.
 - The Mac App Store (App Sandbox forbids reading other processes), Windows, Linux.
 - Root helpers, kernel or system extensions, `sudo`, `powermetrics`.
-- Any network call besides the public IP check and the update check.
+- Any network call besides the public IP check, the update check and the More apps list (one file and
+  its icons from github.com/danieltamas/registry, only while that pane is open).
 - Write actions over MCP.
 
 ## Layout

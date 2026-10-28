@@ -14,8 +14,11 @@ Sources/MacMaxCore/      everything testable; imports Foundation, Darwin, IOKit,
   Act/                   ProcessActions, CleanupScanner, CleanupMover, ActionLog
   Agent/                 MCPServer (JSON-RPC over stdio), Tools, Redaction
   Release/               MacMaxRelease (standing, canUpdate), ReleaseCheck, GitHubReleases (the one
-                         unauthenticated `releases/latest` fetch, for the update check and More apps),
+                         unauthenticated `releases/latest` fetch, for the update check),
                          InstalledStanding (an installed copy against a release)
+  Registry/              AppRegistry + RegistryRules (the app list from github.com/danieltamas/registry,
+                         validated per its docs/CONSUMER.md), RegistryStore (~/.macmax/registry),
+                         RegistryIcon, RegistryRefresh (hourly on open), InstalledVersion, RegistryDownload
   Support/               ProcessRunner, Executables, MacMaxHome, Clock, SafeFile
 Sources/MacMax/          SwiftUI app: MacMaxApp, AppStore, RootView, tabs, SettingsView + panes,
                          MenuBarIcon, Theme, Looks, Components, Updater, LoginItem, Notifier, DemoShots
@@ -23,7 +26,8 @@ Sources/MacMaxCLI/       `macmax` (installed name): snapshot, apps, network, ip,
                          history, mcp
 Tests/MacMaxCoreTests/   <Topic>AcceptanceTests (Codex), <Topic>RegressionTests, Fixtures/
 Support/                 Info.plist, toolchain (pinned Xcode build), AppIcon.icns, MenuBarIcon.pdf
-                         MoreApps/ (the other apps' icons for Settings > More apps, from their repos)
+                         Registry/ (the app registry's apps.json and icons, the first list Settings > More
+                         apps shows; scripts/registry-snapshot.sh takes it)
 Brand/                   SVG sources for the icons
 scripts/                 check.sh, bundle.sh, install-from-source.sh, release.sh, render-icons.sh,
                          make-signing-identity.sh, perf.sh, parity.sh, acceptance.sh

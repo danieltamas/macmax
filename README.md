@@ -218,8 +218,9 @@ bugs, and the report is how they get fixed.
 
 MacMax makes three kinds of network request and no others: the IP check (to `1.1.1.1` by default;
 editable or off in Settings, Network), the update check (GitHub's releases API), and, only when you
-open Settings, More apps, the same API for the latest release of each app listed there (at most
-every six hours unless you press refresh). No telemetry, no
+open Settings, More apps, one file listing the other apps and their latest releases
+(`raw.githubusercontent.com/danieltamas/registry`, at most hourly unless you press refresh, plus
+an app's icon the first time it is listed). No telemetry, no
 analytics, no account. Everything it records stays in `~/.macmax` on your Mac, readable only by
 you. Command lines are redacted before they are stored or shown, so tokens in other apps' arguments
 never land in its history. The agent server listens on no port: it talks only to the program that

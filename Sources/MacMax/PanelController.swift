@@ -34,7 +34,7 @@ final class PanelController {
         model.clearHistory = { [weak self] in self?.clearHistory() }
         actions = ActionController(model: model, database: { [weak self] in self?.database })
         updates = UpdateController(model: model, home: home)
-        moreApps = MoreAppsController(model: model)
+        moreApps = MoreAppsController(model: model, home: home)
         model.windowChanged = { [weak self] in self?.showWindowTraffic() }
         model.openSettings = { [model] pane in
             model.settingsPane = pane
