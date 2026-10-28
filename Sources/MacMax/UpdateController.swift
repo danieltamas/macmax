@@ -5,7 +5,7 @@ import SwiftUI
 /// The shared release check and the one installer run. About and the panel header read the model; nothing else asks GitHub.
 @MainActor
 final class UpdateController {
-    private static let endpoint = URL(string: "https://api.github.com/repos/danieltamas/macmax/releases/latest")!
+    private static let repo = "danieltamas/macmax"
     private static let notifiedKey = "updateNotifiedVersion"
 
     private let model: PanelModel
@@ -60,49 +60,22 @@ final class UpdateController {
     }
 
     private func fetch() async {
-        var request = URLRequest(url: Self.endpoint, timeoutInterval: 30)
-        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-        request.setValue("MacMax/\(model.runningVersion)", forHTTPHeaderField: "User-Agent")
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.timeoutIntervalForRequest = 10
-        configuration.timeoutIntervalForResource = 30
-        do {
-            let (data, response) = try await URLSession(configuration: configuration).data(for: request)
-            guard let http = response as? HTTPURLResponse else { return fail("The answer was not HTTP.") }
-            switch http.statusCode {
-            case 200:
-                switch ReleaseParser.parse(data) {
-                case let .ok(info, _, _):
-                    schedule.recordSuccess(at: Date())
-                    model.latestRelease = info
-                    model.releaseCheck = .ready
-                    announce(info)
-                case let .unavailable(reason), let .failed(reason): fail(reason)
-                }
-            case 404:
-                // No release published yet: the honest answer is "none", not a failure.
-                schedule.recordSuccess(at: Date())
-                model.latestRelease = nil
-                model.releaseCheck = .ready
-            case 403, 429:
-                schedule.recordRateLimit(at: Date(), retryAfter: Self.retryDelay(http.value(forHTTPHeaderField: "Retry-After")))
-                fail("GitHub asked MacMax to wait before checking again.")
-            default: fail("GitHub answered \(http.statusCode).")
-            }
-        } catch {
-            fail("GitHub could not be reached.")
+        switch await GitHubReleases.latest(repo: Self.repo, userAgent: "MacMax/\(model.runningVersion)") {
+        case let .release(info):
+            schedule.recordSuccess(at: Date())
+            model.latestRelease = info
+            model.releaseCheck = .ready
+            announce(info)
+        case .none:
+            // No release published yet: the honest answer is "none", not a failure.
+            schedule.recordSuccess(at: Date())
+            model.latestRelease = nil
+            model.releaseCheck = .ready
+        case let .rateLimited(retryAfter):
+            schedule.recordRateLimit(at: Date(), retryAfter: retryAfter)
+            fail("GitHub asked MacMax to wait before checking again.")
+        case let .failed(reason): fail(reason)
         }
-    }
-
-    /// Retry-After is whole seconds or an HTTP date.
-    private static func retryDelay(_ header: String?) -> TimeInterval? {
-        guard let text = header?.trimmingCharacters(in: .whitespaces), !text.isEmpty else { return nil }
-        if let seconds = TimeInterval(text) { return seconds }
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(identifier: "GMT")
-        formatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
-        return formatter.date(from: text).map { $0.timeIntervalSinceNow }
     }
 
     /// A failed check is not "still the same release": no update is offered from the earlier answer.

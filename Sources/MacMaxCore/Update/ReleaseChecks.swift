@@ -4,6 +4,15 @@ public struct ReleaseInfo: Sendable, Equatable {
     public let tag: String
     public let version: String
     public let htmlURL: String?
+    /// When GitHub published it; nil when the answer did not say, which does not make the release any less valid.
+    public let publishedAt: Date?
+
+    public init(tag: String, version: String, htmlURL: String?, publishedAt: Date? = nil) {
+        self.tag = tag
+        self.version = version
+        self.htmlURL = htmlURL
+        self.publishedAt = publishedAt
+    }
 }
 
 public enum ReleaseParser {
@@ -23,21 +32,27 @@ public enum ReleaseParser {
             link = text
         }
         let version = SemanticVersion.text(numbers)
-        return .ok(ReleaseInfo(tag: tag.trimmingCharacters(in: .whitespacesAndNewlines), version: version, htmlURL: link), source: "github", at: now)
+        let published = (object["published_at"] as? String).flatMap { ISO8601DateFormatter().date(from: $0) }
+        return .ok(ReleaseInfo(tag: tag.trimmingCharacters(in: .whitespacesAndNewlines), version: version, htmlURL: link, publishedAt: published),
+                   source: "github", at: now)
     }
 }
 
-/// When a release check may run: at launch and every 24 hours, never twice within 15 minutes, and not while GitHub
-/// has asked for a pause.
+/// When a release check may run: at launch and every `interval` (24 hours for MacMax's own), never twice within 15
+/// minutes, and not while GitHub has asked for a pause.
 public struct ReleaseCheckSchedule: Sendable, Equatable {
     static let floor: TimeInterval = 15 * 60
     static let day: TimeInterval = 24 * 3_600
 
+    private let interval: TimeInterval
     private var lastAttempt: Date?
     private var blockedUntil: Date?
     public private(set) var nextAutomatic: Date
 
-    public init(now: Date) { nextAutomatic = now }
+    public init(now: Date, interval: TimeInterval = 24 * 3_600) {
+        self.interval = interval
+        nextAutomatic = now
+    }
 
     public func mayCheck(at date: Date) -> Bool {
         if let lastAttempt, date < lastAttempt.addingTimeInterval(Self.floor) { return false }
@@ -56,7 +71,7 @@ public struct ReleaseCheckSchedule: Sendable, Equatable {
     public mutating func recordSuccess(at date: Date) {
         lastAttempt = date
         blockedUntil = nil
-        nextAutomatic = date.addingTimeInterval(Self.day)
+        nextAutomatic = date.addingTimeInterval(interval)
     }
 
     /// GitHub answered 403 or 429. Waits as long as it asked, at least 15 minutes and an hour when it did not say, at most a day.

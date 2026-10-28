@@ -22,6 +22,7 @@ final class PanelController {
     private var historyLoader: HistoryLoader?
     private var actions: ActionController?
     private var updates: UpdateController?
+    private var moreApps: MoreAppsController?
     /// The audit reads its thresholds off the main actor; this carries them across.
     private let settings = SettingsBox()
 
@@ -33,6 +34,7 @@ final class PanelController {
         model.clearHistory = { [weak self] in self?.clearHistory() }
         actions = ActionController(model: model, database: { [weak self] in self?.database })
         updates = UpdateController(model: model, home: home)
+        moreApps = MoreAppsController(model: model)
         model.windowChanged = { [weak self] in self?.showWindowTraffic() }
         model.openSettings = { [model] pane in
             model.settingsPane = pane

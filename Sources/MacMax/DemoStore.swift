@@ -115,7 +115,26 @@ enum DemoStore {
             LargeItem(path: "/Users/example/Projects/northwind", bytes: 6_100_000_000, modified: now.addingTimeInterval(-3_600), isProtected: true),
             LargeItem(path: "/Users/example/Library/Containers/ro.example.relay", bytes: 3_400_000_000, modified: now.addingTimeInterval(-86_400 * 3), isProtected: false),
         ]
+        moreApps(model)
         return model
+    }
+
+    /// Made-up versions that show every state a card has: behind, no release yet, released, and unknown.
+    private static func moreApps(_ model: PanelModel) {
+        func release(_ version: String, daysAgo: Double) -> LatestReleaseAnswer {
+            .release(ReleaseInfo(tag: "v\(version)", version: version, htmlURL: nil, publishedAt: now.addingTimeInterval(-86_400 * daysAgo)))
+        }
+        model.moreAppReleases = [
+            "danieltamas/bton": release("2.4.0", daysAgo: 3),
+            "danieltamas/runmyjob": .none,
+            "danieltamas/axon": release("1.6.1", daysAgo: 0.5),
+            "danieltamas/run.dev": release("0.9.3", daysAgo: 12),
+            "danieltamas/cloak": .failed(reason: "GitHub could not be reached."),
+        ]
+        model.moreAppsInstalled = ["ro.danieltamas.bton": InstalledCopy(url: URL(fileURLWithPath: "/Applications/Bton.app"), version: "2.3.2"),
+                                   "ro.danieltamas.rmj": InstalledCopy(url: URL(fileURLWithPath: "/Applications/RMJ.app"), version: nil, source: "a1b2c3d-dirty")]
+        model.moreAppsCheckedAt = now.addingTimeInterval(-4 * 60)
+        model.moreAppsProblem = "Some versions could not be read from GitHub."
     }
 
     private static func series(_ base: Double, _ swing: Double, seed: Double) -> [Double] {

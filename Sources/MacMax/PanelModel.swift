@@ -286,6 +286,15 @@ final class PanelModel: ObservableObject {
     /// A newer release exists, even when this copy cannot update itself (a build folder): the header arrow follows it.
     var newerRelease: Bool { standing == .behind }
 
+    // More apps: each app's latest release on GitHub (keyed by repo, nil until asked) and the Mac apps found on this Mac
+    @Published var moreAppReleases: [String: LatestReleaseAnswer] = [:]
+    @Published var moreAppsInstalled: [String: InstalledCopy] = [:]
+    @Published var moreAppsChecking = false
+    @Published var moreAppsCheckedAt: Date?
+    @Published var moreAppsProblem: String?
+    /// True for a press on the refresh button: it skips the cache and the 15-minute floor, never GitHub's pause.
+    @Published var refreshMoreApps: (_ byPress: Bool) -> Void = { _ in }
+
     // Settings
     @Published var settingsPane: SettingsPane = .general
     /// Nil in the screenshots: edits then change only this model.
