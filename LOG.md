@@ -1,5 +1,13 @@
 # Release log
 
+## 0.4.0 (2026-10-28)
+
+More apps now reads one shared list of the maker's apps, kept in the public danieltamas/registry repository, instead of a list built into MacMax. When a new app joins or an app ships a release, the page shows it without a MacMax update: the list carries each app's copy, icon, install command and latest release, and the registry picks up a new release within the hour. Bton's 0.11.0 is the first release that reached the page this way.
+
+MacMax ships with a copy of the list, so the page is full on first launch and offline, and says how old that copy is. It reads the list again when the page opens and the last read is more than an hour old, and whenever you press refresh. A read that fails or is refused changes nothing on the cards; the header names the problem and the time of the last good read. An app the list describes in a way this MacMax cannot check is left out and counted, never shown half-read.
+
+The page no longer asks GitHub's API about each app: the only request is one file from raw.githubusercontent.com, plus an icon the first time an app appears or its icon changes. README and SECURITY.md list it.
+
 ## 0.3.1 (2026-10-28)
 
 More apps now follows each app's releases instead of showing what was true when MacMax was built. When you open the page, MacMax asks GitHub for the latest release of Bton, RMJ, Axon, Run.dev and Cloak and shows its version and how long ago it came out; the answer is kept for six hours, and the refresh button asks again. An app with no release yet shows In development and no install command, and switches to its install command on its own once its first release is out. A version GitHub could not give shows as Version unknown, never as an older answer.
