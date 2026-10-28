@@ -1,5 +1,13 @@
 # Release log
 
+## 0.4.1 (2026-10-28)
+
+Full Disk Access now stays granted when MacMax updates. Until now every release was a new app to macOS, so each update asked for the grant again. From this release on, every version is signed with the same MacMax certificate, and macOS keeps the grant you gave for the next one. Moving to 0.4.1 asks once more; after that, it does not.
+
+When you turn MacMax on in System Settings, Full Disk Access, System Settings closes MacMax to apply the switch. It did not always open it again, so MacMax could stay closed until you started it by hand. MacMax now opens itself again when that happens within ten minutes of pressing its own Full Disk Access button. Quitting MacMax yourself, with Quit, Restart or Cmd-Q, still closes it.
+
+The app is still not notarized. The release page now carries two zips: MacMax-0.4.1.zip, the signed one that the installer, Homebrew and Update use, and MacMax-0.4.1-adhoc.zip, the same build before signing, which anyone can rebuild byte for byte from the source.
+
 ## 0.4.0 (2026-10-28)
 
 More apps now reads one shared list of the maker's apps, kept in the public danieltamas/registry repository, instead of a list built into MacMax. When a new app joins or an app ships a release, the page shows it without a MacMax update: the list carries each app's copy, icon, install command and latest release, and the registry picks up a new release within the hour. Bton's 0.11.0 is the first release that reached the page this way.
