@@ -13,7 +13,9 @@ Sources/MacMaxCore/      everything testable; imports Foundation, Darwin, IOKit,
   Store/                 Database (SQLite actor), Schema + migrations, Rollups, Retention, Queries
   Act/                   ProcessActions, CleanupScanner, CleanupMover, ActionLog
   Agent/                 MCPServer (JSON-RPC over stdio), Tools, Redaction
-  Release/               MacMaxRelease (standing, canUpdate), ReleaseCheck
+  Release/               MacMaxRelease (standing, canUpdate), ReleaseCheck, GitHubReleases (the one
+                         unauthenticated `releases/latest` fetch, for the update check and More apps),
+                         InstalledStanding (an installed copy against a release)
   Support/               ProcessRunner, Executables, MacMaxHome, Clock, SafeFile
 Sources/MacMax/          SwiftUI app: MacMaxApp, AppStore, RootView, tabs, SettingsView + panes,
                          MenuBarIcon, Theme, Looks, Components, Updater, LoginItem, Notifier, DemoShots

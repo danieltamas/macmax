@@ -1,5 +1,13 @@
 # Release log
 
+## 0.3.1 (2026-10-28)
+
+More apps now follows each app's releases instead of showing what was true when MacMax was built. When you open the page, MacMax asks GitHub for the latest release of Bton, RMJ, Axon, Run.dev and Cloak and shows its version and how long ago it came out; the answer is kept for six hours, and the refresh button asks again. An app with no release yet shows In development and no install command, and switches to its install command on its own once its first release is out. A version GitHub could not give shows as Version unknown, never as an older answer.
+
+For Bton and RMJ, the card also says whether the copy on this Mac is up to date or a newer release is out, with an Open link. A copy built from source says so and makes no claim about updates.
+
+The only new network traffic is those GitHub requests, made only while the page is open; README and SECURITY.md list them.
+
 ## 0.3.0 (2026-10-28)
 
 Settings has a new More apps page with the other open source tools from the maker of MacMax, for a Mac that runs coding agents: Bton and RMJ in the menu bar, Axon, Run.dev and Cloak in the terminal. Each one shows what it does, links to its website and GitHub, and its install command with a copy button. RMJ has no release yet, so it shows as in development with no install command. The page only opens links in your browser when you press them; MacMax still contacts nothing new.
