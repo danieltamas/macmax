@@ -1,5 +1,13 @@
 # Release log
 
+## 0.5.0 (2026-10-29)
+
+The panel footer can now offer "Star on GitHub". When `gh` is installed and logged in, MacMax asks GitHub once, the first time you open the panel, whether your account has starred MacMax. If it has not, a gold capsule glows at the left of the footer, before the sampler state. One press stars the repository through your own `gh`: the capsule shows "Starring..." with a spinner, then goes away. If the star does not go through, the capsule stays, so you can try again.
+
+A yes from GitHub is remembered in `~/.macmax/config.json` (`starred_repo`), and MacMax never asks again. No `gh`, no login or no answer means nothing is shown. There is no close button and no reminder: the capsule only sits in the footer until you star. The glow pauses while the panel is closed and stays still under Reduce Motion, and the footer keeps its height.
+
+The question and the star are the only new network traffic, both to GitHub through your `gh` account and nothing else; README and SECURITY.md list them.
+
 ## 0.4.1 (2026-10-28)
 
 Full Disk Access now stays granted when MacMax updates. Until now every release was a new app to macOS, so each update asked for the grant again. From this release on, every version is signed with the same MacMax certificate, and macOS keeps the grant you gave for the next one. Moving to 0.4.1 asks once more; after that, it does not.
