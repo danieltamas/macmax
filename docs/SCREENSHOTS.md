@@ -53,6 +53,7 @@ rendered in the same run; they are the per-view sources (and, at `--scale 3`, th
 | `history-pair.png` | History over the last hour and over the last week | 926 x 860 |
 | `overview.png`, `apps.png`, `network.png`, `findings.png`, `cleanup.png`, `history.png`, `history-1h.png`, `history-7d.png` | One panel per tab: Overview (verdict WARN, two findings, vitals, identity `tunnel_ok`), Apps sorted by memory with the browser row expanded, Network (1 hour, eight apps), Findings (one CRIT, two WARN), Cleanup, History (24 hours, 1 hour, 7 days) with a memory spike and "who held it" open | 404 x 780 |
 | `this-mac.png`, `battery-and-heat.png`, `leak.png`, `cleanup-results.png`, `cleanup-moving.png`, `large-folders.png`, `old-downloads.png`, `access-prompt.png`, `background-items.png`, `background-item-detail.png`, `uninstall-apps.png` | One card each: This Mac, Battery and heat, the identity card in the `leak` state, the just-moved and last-cleanups cards, a cleanup in progress, Large folders, Old downloads, the permission prompt, Background items closed and open, Uninstall apps | 404 wide |
+| `footer.png`, `footer-star.png`, `footer-starring.png` | The panel footer alone: as usual, with the Star on GitHub offer, and while it stars (the same height in all three; `--stress` puts the longest sampler note beside the offer) | 404 x 34 |
 | `settings-<pane>.png` | One per Settings pane (general, audit, network, cleanup, agent-access, permissions, more-apps, about); `settings-audit.png` shows the rule list | 760 x 540 |
 
 ## Synthetic data (the demo store)

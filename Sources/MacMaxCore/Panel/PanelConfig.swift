@@ -3,7 +3,8 @@ import Foundation
 public enum MenuBarText: String, Codable, Sendable, CaseIterable { case none, cpu, memory, network, country }
 public enum NotifyLevel: String, Codable, Sendable, CaseIterable { case critOnly, warnAndCrit, never }
 
-/// Every setting the app has; `config.json` holds nothing else. Bounds are applied by `ConfigStore`.
+/// Every setting the app has, plus what it remembers (`starredRepo`); `config.json` holds nothing else. Bounds are
+/// applied by `ConfigStore`.
 public struct PanelConfig: Codable, Equatable, Sendable {
     public var samplingSeconds: Int
     public var menuBarText: MenuBarText
@@ -19,6 +20,9 @@ public struct PanelConfig: Codable, Equatable, Sendable {
     public var protectedPaths: [String] = []
     /// Whether `macmax mcp` may answer tool calls. Off until the user turns it on in Settings > Agent access.
     public var agentAccess: Bool = false
+    /// True once GitHub said the user's `gh` account starred MacMax (`RepoStar`); nil until then, so the key is
+    /// written only when there is something to remember.
+    public var starredRepo: Bool?
 
     public static let `default` = PanelConfig(
         samplingSeconds: 10, menuBarText: .none, auditEveryHours: 4, auditOnCriticalPressure: true,
@@ -56,11 +60,12 @@ public struct PanelConfig: Codable, Equatable, Sendable {
         lookName = try values.decodeIfPresent(String.self, forKey: .lookName)
         protectedPaths = try values.decodeIfPresent([String].self, forKey: .protectedPaths) ?? []
         agentAccess = try values.decodeIfPresent(Bool.self, forKey: .agentAccess) ?? false
+        starredRepo = try values.decodeIfPresent(Bool.self, forKey: .starredRepo)
     }
 
     private enum Key: String, CodingKey {
         case samplingSeconds, menuBarText, auditEveryHours, auditOnCriticalPressure, notifyOn, ipCheckEnabled
-        case ipEndpoint, thresholds, disabledRules, lookName, protectedPaths, agentAccess
+        case ipEndpoint, thresholds, disabledRules, lookName, protectedPaths, agentAccess, starredRepo
     }
 
     /// Replaces every out-of-range value by something the app can run with.

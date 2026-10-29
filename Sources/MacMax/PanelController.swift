@@ -28,6 +28,7 @@ final class PanelController {
 
     init() {
         model.configStore = ConfigStore(home: home)
+        model.repoStar = RepoStar(home: home)
         model.runAudit = { [weak self] in self?.auditNow() }
         model.snooze = { [weak self] id in self?.snooze(id) }
         model.loadConnections = { [weak self] id in self?.loadConnections(appKey: id) }

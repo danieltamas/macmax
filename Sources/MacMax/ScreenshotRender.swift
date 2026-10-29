@@ -37,6 +37,12 @@ enum ScreenshotRender {
                 if tab == .history { DemoStore.history(for: model, range: .day, stress: stress) }
                 try write(PanelView(model: model).frame(height: 780), to: url(tab.rawValue.lowercased()))
             }
+            for (name, offer, starring) in [("footer", false, false), ("footer-star", true, false), ("footer-starring", true, true)] {
+                let model = DemoStore.model(stress: stress)
+                model.starOffer = offer
+                model.starring = starring
+                try write(PanelFooter(model: model).frame(width: PanelView.width).background(Backdrop()), to: url(name))
+            }
             let mac = DemoStore.model(stress: stress)
             try write(ThisMacCard(model: mac).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("this-mac"))
             try write(PowerHealthCard(model: mac).padding(14).frame(width: PanelView.width).background(Backdrop()), to: url("battery-and-heat"))

@@ -49,7 +49,13 @@ A verdict color is never used for a resource, and a resource color never signals
    Overview, Apps, Network, Findings, History. Badges: Findings shows its count in the verdict hue;
    when counts do not fit, only the open tab's count shows.
 3. **Content** for the tab, scrolling.
-4. **Footer**: the sampler state ("Sampling every 10 s", or what failed), Restart and Quit.
+4. **Footer**: the sampler state ("Sampling every 10 s", or what failed), Restart and Quit. While
+   GitHub says the user's `gh` account has not starred MacMax, a glowing gold "Star on GitHub" capsule
+   comes first (10 pt before the sampler state, which truncates before it does). The glow is a Core
+   Animation pulse, paused while the panel is hidden and under Reduce Motion. A press stars it through `gh`
+   ("Starring..." with a spinner, disabled); on success the capsule goes and the answer is remembered
+   in `config.json`, and on failure it stays. The capsule never changes the footer's height and has no
+   close button.
 
 ### Overview
 - **Verdict card**: the verdict in words ("2 things are slowing this Mac"), the top findings as one

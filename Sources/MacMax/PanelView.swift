@@ -24,7 +24,7 @@ struct PanelView: View {
                 content.padding(.horizontal, 14).padding(.bottom, 14)
             }
             .scrollIndicators(.hidden)
-            footer
+            PanelFooter(model: model)
         }
         .frame(width: Self.width, height: Self.height)
         .background(Backdrop())
@@ -108,17 +108,28 @@ struct PanelView: View {
         }
     }
 
-    private var footer: some View {
+}
+
+/// The sampler state, after the star offer while there is one, then Restart and Quit. The sampler note gives way
+/// first: it truncates before the offer or the controls do.
+struct PanelFooter: View {
+    @ObservedObject var model: PanelModel
+
+    var body: some View {
         HStack {
-            HStack(spacing: 5) {
-                Circle().fill(model.samplerFailed ? Theme.crit : Theme.ok).frame(width: 6, height: 6)
-                Text(model.samplerNote).font(.meta).foregroundStyle(Theme.textTertiary).lineLimit(1)
+            HStack(spacing: 10) {
+                if model.starOffer { StarOffer(starring: model.starring, star: model.starRepo).layoutPriority(1) }
+                HStack(spacing: 5) {
+                    Circle().fill(model.samplerFailed ? Theme.crit : Theme.ok).frame(width: 6, height: 6)
+                    Text(model.samplerNote).font(.meta).foregroundStyle(Theme.textTertiary).lineLimit(1)
+                }
             }
             Spacer(minLength: 8)
-            AppControls()
+            AppControls().fixedSize()
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
         .overlay(alignment: .top) { Rectangle().fill(Theme.hairline).frame(height: 0.5) }
+        .onAppear { model.refreshStarOffer() }
     }
 }
 

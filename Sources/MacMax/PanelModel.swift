@@ -101,6 +101,12 @@ final class PanelModel: ObservableObject {
     @Published var configProblem: String?
     @Published var samplerNote = "Starting the sampler..."
     @Published var samplerFailed = false
+    /// The footer's "Star on GitHub": shown only while GitHub said MacMax is not starred yet.
+    @Published var starOffer = false
+    @Published var starring = false
+    /// Nil in the screenshots, which never ask GitHub.
+    var repoStar: RepoStar?
+    private var starChecked = false
 
     // Overview
     @Published var vitals: [Vital] = []
@@ -325,6 +331,23 @@ final class PanelModel: ObservableObject {
             configProblem = reason
         } catch {
             configProblem = "The setting could not be saved."
+        }
+    }
+
+    /// Asks GitHub once per run, on the first open, and only while `config.json` does not already say starred.
+    func refreshStarOffer() {
+        guard let repoStar, !starChecked else { return }
+        starChecked = true
+        guard repoStar.shouldOffer() else { return }
+        Task { starOffer = await repoStar.refresh() == .notStarred }
+    }
+
+    func starRepo() {
+        guard let repoStar, !starring else { return }
+        starring = true
+        Task {
+            if await repoStar.star() { starOffer = false }
+            starring = false
         }
     }
 

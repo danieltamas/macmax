@@ -179,7 +179,8 @@ and never writes the database.
 `~/.macmax/config.json`, read before every write, validated on load with every number bounded
 (defect class 12). A file that fails to parse is not overwritten: the app shows a problem in
 Settings and keeps the last valid config in memory, read-only, until the user fixes or resets it.
-Every key is editable in Settings; the file exists for backup and for the CLI.
+Every key is editable in Settings except `starred_repo`, which the app writes once GitHub says the
+user's `gh` account starred MacMax (`RepoStar`); the file exists for backup and for the CLI.
 
 ## CLI
 

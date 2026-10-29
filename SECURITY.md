@@ -32,7 +32,10 @@ caches to the Trash, each only on your press.
    apps is open, the app list in `raw.githubusercontent.com/danieltamas/registry` and the icons it
    names (unauthenticated, read-only, no data about you beyond the request). The list is validated
    whole before use: only https links on a fixed set of hosts, install commands of two fixed forms,
-   and an entry that fails any rule is not shown. All have timeouts. A
+   and an entry that fails any rule is not shown. One authenticated call also goes to
+   `api.github.com`, through the user's own `gh` when it is installed and logged in: whether their
+   account starred MacMax, asked once per run until GitHub says yes and never after, and the star
+   itself only when they press "Star on GitHub". All have timeouts. A
    failed check shows as unknown, never as OK. No telemetry or analytics.
 5. **Updates** are downloaded from this repository's GitHub releases and verified against the
    release's `SHA256SUMS` before anything is replaced. Releases are signed with a self-signed

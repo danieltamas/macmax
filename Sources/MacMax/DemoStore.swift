@@ -11,7 +11,7 @@ enum DemoStore {
     static func model(stress: Bool = false, leak: Bool = false) -> PanelModel {
         let model = PanelModel()
         let long = "Northwind Integrated Development Environment"
-        model.samplerNote = "Sampling every 10 s"
+        model.samplerNote = stress ? "History is unavailable: the database could not be opened." : "Sampling every 10 s"
         model.vitals = vitals(stress: stress)
         model.vitalsState = .ready
         model.identity = identity(leak: leak)
